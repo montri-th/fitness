@@ -3,7 +3,7 @@
   "schemaVersion": "1.5.0",
   "documentType": "product-statement",
   "productId": "citymeter-fitness",
-  "productVersion": "0.2.0",
+  "productVersion": "0.2.1",
   "updatedOn": "2026-10-29",
   "humanDocument": "../PRODUCT_STATEMENT.md",
   "standard": "Landometer Master Brand Brief v0.5.3 §7.2 (Who / What / Which / How) with the §3.7 evidence standard",
@@ -19,7 +19,7 @@
   "dataset_name_th": "ฟิตเนสและสตูดิโอในประเทศไทย",
   "category": "Location · branch network of a declared brand set",
   "outcome_layer": "See → Understand → Decide (act and learn are future extensions)",
-  "status": "public demo 0.2.0 on GitHub Pages; research master, not a market census",
+  "status": "public demo 0.2.1 on GitHub Pages; research master, not a market census",
   "positioning": {
     "one_line_highlight": "แผนที่เมือง 3 มิติของสาขาฟิตเนสและสตูดิโอในไทย ที่บอกว่ากระจุกตรงไหน เป็นแบบไหน และใครอยู่เบื้องหลัง พร้อมหลักฐานรายสาขา",
     "unique_advantage": "format × district × company in one view, every row linked to the brand’s own official page with its check date and status; districts are CityMETER production codes matched from each row’s own data with the method recorded",

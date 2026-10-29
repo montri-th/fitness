@@ -1,4 +1,4 @@
-# Implementation Plan — CityMETER Fitness 0.2.0
+# Implementation Plan — CityMETER Fitness 0.2.1
 
 คู่กับ [implementation-plan.json](implementation-plan.json) · 29 ต.ค. 2569
 
@@ -17,6 +17,7 @@ Static site บน GitHub Pages (main / root) · ES modules ผ่าน import 
 | `js/scales.js` · `js/cues.js` | LDS count LUT + ramp 41 ระดับตามลำดับค่า (`buildRamp`, `rampLegendHTML`), series และรูปทรงของรูปแบบ |
 | `js/map-layers.js` · `js/provinces.js` · `js/pins.js` · `js/building-join.js` | choropleth + ป้าย, กรอบจังหวัด, สัญลักษณ์และหมุด, จุดของสาขาและศูนย์การค้า × อาคาร (`joinBuildings`, `groupPieces`) |
 | `js/venue-xray.js` | อาคารที่ดูอยู่วาดเหนืออาคารอื่นและชื่อถนน (custom layer, scissored depth clear, hit test) |
+| `js/maplibre-guard.js` | กัน TypeError ของ MapLibre 5.6.2 ใน tile cover เมื่อกล้องเอียงซูมออกผ่าน 13–14 (`guardRetainedTiles`, ติดตั้งเมื่อ style โหลด, ใช้เฉพาะรุ่น 5.6.2) |
 | `js/massing.js` · `js/geometry.js` · `js/mvt.js` · `js/map-style.js` · `js/camera.js` · `js/vendors.js` | มวลอาคาร (`featuresOf`, `fitPointsOf`, `obstaclesNear`, `setScene`) basemap กล้อง (`fitBuilding`, `twoPointBearing` จาก Shopping centers) และ loader |
 | `js/chart-model.js` · `js/charts.js` | กราฟ count / mix / brands |
 | `js/navigation.js` · `js/launch.js` | ไอคอน nav-7 + help dialog, หน้าโหลดและ error |
@@ -38,17 +39,19 @@ Static site บน GitHub Pages (main / root) · ES modules ผ่าน import 
 | P11 | มุมมองอาคาร: eye + มุมสองด้าน + zoom to fit กรอบว่าง ทุกทางเข้า, x-ray, อาคารที่บังโปร่ง, ป้ายไม่ทับ, ซูมได้ถึง 21 สำหรับอาคารเล็ก, GeoJSON maxzoom 24 (เจ้าของ 29 ต.ค. 19:47) | P07 | AC26 AC27 | done |
 | P12 | รายการเดียวต่ออาคาร: ศูนย์การค้า × อาคาร, สาขาที่ผูก + สาขาที่จุดตก ไม่นับซ้ำ | P06 P11 | AC28 AC30 | done |
 | P13 | สีครบ 41 ระดับของ LDS ตามลำดับค่า (กติกาประจำของเจ้าของ) ทั้งแผนที่ กรอบจังหวัด กราฟ และคำอธิบาย | P05 | AC29 | done |
-| P14 | เผยแพร่ 0.2.0, verify live, เดินตรวจมุมมองอาคารบนเว็บจริง (desktop และ 390 px สองธีม) | P11–P13 | AC24 AC25 AC26 AC27 | ดู VERIFICATION.md |
+| P14 | เผยแพร่ 0.2.0, verify live, เดินตรวจมุมมองอาคารบนเว็บจริง (desktop และ 390 px สองธีม) | P11–P13 | AC24 AC25 AC26 AC27 | done (เดินตรวจพบ P15) |
+| P15 | กัน TypeError ของ MapLibre 5.6.2 (`_updateRetainedTiles`) ที่พบตอนเดินตรวจ: กล้อง eye บินระหว่างอาคารผ่าน zoom 13–14 บน vector source | P14 | AC31 | done |
+| P16 | เผยแพร่ 0.2.1, verify live, เดินตรวจซ้ำบนเว็บจริงว่า console ไม่มี error | P15 | AC24 AC25 AC31 | ดู VERIFICATION.md |
 
 ## Acceptance criteria
 
-AC01 โหลดครั้งแรก · AC02 ข้อค้นพบแรกค่าเริ่มต้น · AC03 หน่วยเริ่มต้น · AC04 ตัวกรองสถานะ · AC05 ความเป็นสมาชิกพื้นที่ · AC06 conflict · AC07 ค่าเท่ากัน · AC08 EVID-05 · AC09 provenance · AC10 บัตรแบรนด์ · AC11 แผงเขต · AC12 แผงสาขา · AC13 ขอบเขตรายจังหวัด · AC14 focus + quiet · AC15 ศูนย์การค้า · AC16 มุมมองประเทศ · AC17 กราฟ · AC18 ตาราง · AC19 ภาษาไทย · AC20 LDS parity · AC21 ความสะอาดของข้อมูลที่เผยแพร่ · AC22 ใบรับ · AC23 ความสอดคล้องของรุ่น · AC24 ไบต์บนเว็บจริง · AC25 เดินตรวจเว็บจริง · AC26 กล้องมุมมองอาคาร · AC27 ไม่มีอาคารอื่นบัง · AC28 รายการเดียวต่ออาคาร · AC29 สีครบ 41 ระดับ · AC30 ชิ้นอาคารเป็นอาคารเดียว (ข้อความเต็มและวิธีตรวจใน JSON)
+AC01 โหลดครั้งแรก · AC02 ข้อค้นพบแรกค่าเริ่มต้น · AC03 หน่วยเริ่มต้น · AC04 ตัวกรองสถานะ · AC05 ความเป็นสมาชิกพื้นที่ · AC06 conflict · AC07 ค่าเท่ากัน · AC08 EVID-05 · AC09 provenance · AC10 บัตรแบรนด์ · AC11 แผงเขต · AC12 แผงสาขา · AC13 ขอบเขตรายจังหวัด · AC14 focus + quiet · AC15 ศูนย์การค้า · AC16 มุมมองประเทศ · AC17 กราฟ · AC18 ตาราง · AC19 ภาษาไทย · AC20 LDS parity · AC21 ความสะอาดของข้อมูลที่เผยแพร่ · AC22 ใบรับ · AC23 ความสอดคล้องของรุ่น · AC24 ไบต์บนเว็บจริง · AC25 เดินตรวจเว็บจริง · AC26 กล้องมุมมองอาคาร · AC27 ไม่มีอาคารอื่นบัง · AC28 รายการเดียวต่ออาคาร · AC29 สีครบ 41 ระดับ · AC30 ชิ้นอาคารเป็นอาคารเดียว · AC31 ไม่มี error ของ MapLibre เมื่อกล้องเอียงซูมออกจากอาคาร (ข้อความเต็มและวิธีตรวจใน JSON)
 
 ## วิธีทำงานต่อ
 
 1. อ่าน `AGENTS.md` แล้ว `handoff/README.md`, `PRODUCT_STATEMENT.md` และ brief คู่ md/json
 2. รัน `npm test` ก่อนแก้ คงสัญญา row scopes หน่วยตามสถานะ โหมดโฟกัส กติกาค่าเท่ากัน ตัวชี้วัด ขอบเขต และ action ของแผง
-3. ทำทีละงาน คง id ของ invariant INV01–INV24
+3. ทำทีละงาน คง id ของ invariant INV01–INV25
 4. ตรวจการคำนวณบนข้อมูลจริงใน `tests/`
 5. ตรวจหน้าจอภาษาไทยที่ 390 px และ desktop ทั้งสองธีม ถ้า tiles ถูกบล็อกใช้ harness ในเครื่องตรวจ layout แล้วยืนยันภาพจริงบนเว็บ
 6. เพิ่ม cache tag และ version พร้อมกัน เผยแพร่ รัน `npm run verify:live` และเดินตรวจเว็บจริงก่อนรายงาน
@@ -71,3 +74,4 @@ AC01 โหลดครั้งแรก · AC02 ข้อค้นพบแร
 | N12 | มุมมองประเทศ: คำบรรยายกราฟ “สีเดียวกับแผนที่” หมายถึงชั้นเขต/อำเภอ ขณะที่แผนที่แสดงกรอบจังหวัด | developer |
 | N13 | ปุ่มซูม/เข็มทิศของ MapLibre ในธีมมืดยังเป็นพื้นขาว (ผูก token foundation) | developer |
 | N14 | การ์ดบนแผนที่ของมุมมองอาคารบนมือถือเมื่อปิด sheet (ชื่อ + ตัวเลขหลัก) แบบ Shopping centers — รอเจ้าของตัดสิน | owner + developer |
+| N15 | เดโมพี่น้องที่ใช้ MapLibre 5.6.2 กับกล้องเอียง (Shopping centers, Luxury Brands, Restaurants, Pharmacy) น่าจะเจอ error เดียวกันบน vector source: ใส่ guard เดียวกัน หรืออัปเกรด MapLibre หลังตรวจว่าแก้แล้ว | owner + developer |

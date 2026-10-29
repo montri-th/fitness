@@ -3,7 +3,7 @@
   "schemaVersion": "1.5.0",
   "documentType": "implementation-plan",
   "productId": "citymeter-fitness",
-  "productVersion": "0.2.0",
+  "productVersion": "0.2.1",
   "updatedOn": "2026-10-29",
   "brief": "product-brief.json",
   "statement": "product-statement.json",
@@ -37,6 +37,7 @@
       "js/launch.js",
       "js/map-layers.js",
       "js/map-style.js",
+      "js/maplibre-guard.js",
       "js/massing.js",
       "js/model.js",
       "js/mvt.js",
@@ -351,6 +352,38 @@
       "files": [
         "handoff/VERIFICATION.md"
       ],
+      "status": "done (the walk found P15)"
+    },
+    {
+      "id": "P15",
+      "title": "Guard the MapLibre 5.6.2 tile-cover TypeError found in the live walk (pitched building camera zooming out through 13–14 on the vector source)",
+      "dependsOn": [
+        "P14"
+      ],
+      "acceptanceCriteria": [
+        "AC31"
+      ],
+      "files": [
+        "js/maplibre-guard.js",
+        "js/app.js",
+        "tests/maplibre-guard.test.js"
+      ],
+      "status": "done"
+    },
+    {
+      "id": "P16",
+      "title": "Publish 0.2.1, verify live bytes and walk again with the console watched",
+      "dependsOn": [
+        "P15"
+      ],
+      "acceptanceCriteria": [
+        "AC24",
+        "AC25",
+        "AC31"
+      ],
+      "files": [
+        "handoff/VERIFICATION.md"
+      ],
       "status": "see VERIFICATION.md"
     }
   ],
@@ -534,12 +567,18 @@
       "scenario": "Building pieces",
       "expected": "Tile-edge pieces of one outline, building:parts inside a hide_3d outline and parts holding one point are one building; the same OSM id alone never merges",
       "verificationType": "unit"
+    },
+    {
+      "id": "AC31",
+      "scenario": "Tile-cover guard",
+      "expected": "No MapLibre error in the console when the pitched building camera flies between buildings or the user zooms out of a building view through 13–14; the guard is installed only on MapLibre 5.6.2",
+      "verificationType": "unit + browser"
     }
   ],
   "developerWorkflow": [
     "Read AGENTS.md, then handoff/README.md, PRODUCT_STATEMENT.md and the paired human/machine briefs",
     "Run npm test before changes; keep the row scopes, status unit, focus modes, tie rule, metric, frames and coverage contracts and the panel action contract",
-    "Change one bounded task at a time; preserve invariant IDs INV01–INV24",
+    "Change one bounded task at a time; preserve invariant IDs INV01–INV25",
     "Validate calculations with the real data in tests/ (tests/helpers.js loads it once)",
     "Review rendered Thai at 390 px and desktop in both themes; when tiles are blocked use a local harness for layout, then confirm the real-tile look live",
     "Bump the cache tag and versions together; publish; run npm run verify:live and walk the live site before reporting"
@@ -626,6 +665,12 @@
     {
       "id": "N14",
       "title": "Phone building view with the sheet closed: a map card with the name and the main figure, as in Shopping centers — owner to decide",
+      "ownerRole": "owner + developer",
+      "status": "backlog"
+    },
+    {
+      "id": "N15",
+      "title": "Sibling demos on MapLibre 5.6.2 with pitched cameras (Shopping centers, Luxury Brands, Restaurants, Pharmacy) likely meet the same vector-source error: add the same guard, or upgrade MapLibre after checking the fix upstream",
       "ownerRole": "owner + developer",
       "status": "backlog"
     }

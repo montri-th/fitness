@@ -8,8 +8,8 @@ Winning strategy ของชุดข้อมูลนี้ เขียน�
 |---|---|
 | Parent product | CityMETER (City Intelligence Base Layer ของ Landometer) · แกน Location (ทะเบียนกลาง `research.TH.fitness` / Location / TH) |
 | Feature / dataset | Fitness — สาขาฟิตเนสและสตูดิโอของแบรนด์ในชุดข้อมูล ทั่วประเทศไทย ระดับเขต/อำเภอ พร้อมบริษัทเบื้องหลังแบรนด์ |
-| รุ่นเอกสาร | 0.2.0 · 29 ตุลาคม 2569 |
-| สถานะ | Public demo รุ่น 0.2.0 บน GitHub Pages (`https://montri-th.github.io/fitness/`); ชุดข้อมูลเป็น research master ไม่ใช่สำมะโนตลาด |
+| รุ่นเอกสาร | 0.2.1 · 29 ตุลาคม 2569 |
+| สถานะ | Public demo รุ่น 0.2.1 บน GitHub Pages (`https://montri-th.github.io/fitness/`); ชุดข้อมูลเป็น research master ไม่ใช่สำมะโนตลาด |
 | ผู้รับผิดชอบ | Landometer · CityMETER (owner: Montri) |
 | ผู้ใช้หลัก | ทีมขยายสาขาของเครือฟิตเนสและสตูดิโอ · ทีม leasing/asset ของศูนย์การค้า อาคารสำนักงาน และโครงการ mixed-use · นักวิเคราะห์ นักลงทุน และที่ปรึกษาด้านทำเลและธุรกิจ wellness |
 | ชุดข้อมูลที่เกี่ยวข้อง | Shopping Center (ทะเบียนศูนย์การค้า CityMETER — 7 แห่งผูกด้วย venue id) · Building (มวลอาคาร OpenStreetMap ผ่าน OpenFreeMap เป็นบริบท) · Locale Insight (ยังไม่เชื่อม) · โครงสร้างเดียวกับ Luxury Brands, Restaurants และ Pharmacy |
