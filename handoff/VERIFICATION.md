@@ -4,10 +4,35 @@
 
 | รุ่น | commit | Pages | ไบต์บนเว็บ (`npm run verify:live`) |
 |---|---|---|---|
+| 0.3.1 | tag r6 · commit และผลบันทึกในส่วน Live ด้านล่าง | `main` / root · 30 ต.ค. 2569 | ดูส่วน Live |
 | 0.3.0 | `a3fdc80` (tag r4) · `7597b34` (tag r5: ฟอนต์ไอคอนอ้างด้วย hash) · บันทึกผลใน commit ถัดไป | `main` / root · 30 ต.ค. 2569 | 344 ok · 0 failed (commit `a3fdc80` และ `7597b34`) |
 | 0.2.1 | `8e212d0` (guard เอกสาร handoff ผลเดินตรวจ 0.2.0) · อัปเดตเอกสารนี้ใน commit ถัดไป | `main` / root · 29 ต.ค. 2569 | 158 ok · 0 failed (commit `8e212d0`) |
 | 0.2.0 | `621bc47` (โค้ด เอกสาร handoff) · บันทึกผล `c5a1dbd` | `main` / root · 29 ต.ค. 2569 | 157 ok · 0 failed (commit `621bc47`) |
 | 0.1.0 | `d1abf70` (โค้ด ข้อมูล เอกสาร) · อัปเดตเอกสารนี้ใน commit ถัดไป | `main` / root · 29 ต.ค. 2569 | 156 ok · 0 failed (commit `d1abf70`) |
+
+## รุ่น 0.3.1 — ตำแหน่งที่เจ้าของยืนยัน · ลิงก์ข้ามทะเบียนศูนย์การค้า
+
+คำสั่งเจ้าของ 30 ต.ค. 2569 06:23: “map fitness กับ venue ตาม https://montri-th.github.io/shoppingcenter/ ใน registry” และ “Physique 57 Erawan อยู่ที่ <ลิงก์ Google Maps>”
+
+### 0.3.1 · ลิงก์ของเจ้าของ (Owner-stated + Observed fact)
+
+- ลิงก์สั้นของเจ้าของ redirect ไปหน้าสถานที่ “Physique 57 Erawan” บน Google Maps จุดของสถานที่ 13.7440766, 100.540773 (อ่านจาก Location header 30 ต.ค. 2569)
+- ระยะ (haversine): ถึงจุดของ Erawan Bangkok `SC-001278` ในทะเบียน **56 ม.** · ถึงจุดที่หน้าค้นหาสาขาทางการเผยแพร่ (13.7401666, 100.5352367) 739 ม. · จุดของแหล่งถึงจุดของศูนย์ 689 ม.
+
+### 0.3.1 · เขียนชีตวิจัยและอ่านกลับ
+
+- ไฟล์เดิม “CityMETER Fitness Thailand — Research Master 2026-10-26” แก้ล่าสุดก่อนเขียน 30 ต.ค. 2569 00:56 (ไม่มีใครแก้หลังรอบก่อน) · ตรวจหัวคอลัมน์ใหม่ (`AB` notes · `AC` outlet_id · `AO` map_audit_status) และ `AC257` = `POS-FIT-8b70023548ef` (Erawan) ก่อนเขียน
+- เขียน 2 เซลล์ผ่าน Chrome ของเจ้าของ: `AO257` `not_field_audited` → `owner_confirmed_located_in_host_20261030` · `AB257` ต่อท้ายบันทึกเดิม (204 → 513 ตัวอักษร) ว่าเจ้าของยืนยันว่าอยู่ใน Erawan Bangkok พร้อมพิกัดและระยะ · คอลัมน์ที่มี data validation (`W`, `AI`) ไม่แตะ
+- อ่านกลับ: แถบสูตรตรงทั้งสองเซลล์ (hash ของ `AB257` ตรงแผน) และ export .xlsx ทั้งไฟล์ผ่าน Drive เทียบกับ export ก่อนเขียนทุกแท็บทุกเซลล์ (`verify_write.py`): เซลล์ตามแผน 2 ตรง · เซลล์อื่นเปลี่ยน 0
+
+### 0.3.1 · ข้อมูลและ unit tests
+
+- สร้างข้อมูลจาก export หลังเขียน (`meta.exportSha256` `1534fd54…dd387`, registry snapshot `2eb5532` เดิม): ต่างจาก 0.3.0 เฉพาะแถว Physique 57 Erawan (`admin` point → host, จุดของแหล่งไม่อยู่ใน `points`) · `meta.ownerConfirmedHost` 1 แถว (`SC-001278`, 689 ม.) · `points.source` 28 ตรง README ของชีต · วาดจุดของแหล่ง 27 · จุดของศูนย์ 130
+- `npm test`: **99 ผ่าน** — ใหม่: การตรวจแผนที่ของเจ้าของ (`tests/data.test.js`) และข้อความในแผงสาขา + ลิงก์ไป CityMETER ศูนย์การค้า (`tests/views.test.js`)
+
+### 0.3.1 · Live
+
+(บันทึกหลังเผยแพร่)
 
 ## รุ่น 0.3.0 — แบรนด์มาก่อนสาขา · โลโก้ · แผงสั้น · ถามต่อใน Google · ผูกศูนย์การค้า
 

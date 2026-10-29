@@ -73,6 +73,8 @@ export function decodeDataset(json, index) {
   const brands = (json.brands || []).map((b, i) => ({...b, index: i, groupIndex: groups.findIndex(g => g.id === b.group)}));
   const venues = (json.venues || []).map((v, i) => ({...v, index: i}));
   const point = new Map((json.points || []).map(([i, lat, lon, role]) => [i, {lat, lon, role: V.pointRoles?.[role] || ''}]));
+  // Owner map audit: the branch is confirmed inside its linked venue, so the venue's registry point is drawn (meta.ownerConfirmedHost).
+  const ownerHost = new Map((json.meta?.ownerConfirmedHost?.rows || []).map(x => [x.outlet, {on: x.on, sourcePointM: x.sourcePointM ?? null}]));
   const rows = [];
   let dropped = 0;
   for (let i = 0; i < n; i++) {
@@ -94,6 +96,7 @@ export function decodeDataset(json, index) {
       checked: c.checked[i] || '',
       area, province, admin: V.admin?.[c.admin[i]] || 'none', how: V.how?.[c.how[i]] || '', words: c.words[i] || '',
       longitude: pt ? pt.lon : null, latitude: pt ? pt.lat : null, pointRole: pt ? pt.role : '',
+      ownerHost: ownerHost.get(c.key[i]) || null,
     };
     const a = area ? index.byId.get(area) : null;
     const p = province ? PROVINCE_LIST.find(x => x.code === province) : null;

@@ -147,6 +147,13 @@ def read_xlsx(raw):
     return tabs
 
 
+def haversine_m(a, b):
+    """Great-circle distance in metres between two (lat, lon) points."""
+    p1, p2 = math.radians(a[0]), math.radians(b[0])
+    h = math.sin((p2 - p1) / 2) ** 2 + math.cos(p1) * math.cos(p2) * math.sin(math.radians(b[1] - a[1]) / 2) ** 2
+    return 2 * 6371008.8 * math.asin(math.sqrt(h))
+
+
 class Registry:
     """Read-only snapshot of the CityMETER Shopping Centers & Retail Venues registry as published by the Shopping
     Centers demo (data/venues.json + data/details/*.json + data/venue-logos.json at a pinned commit). Every file read
@@ -400,7 +407,7 @@ def main():
 
     cols = {k: [] for k in ('key', 'name', 'brand', 'group', 'segment', 'status', 'statusRaw', 'source', 'url', 'statusUrl', 'checked',
                             'province', 'district', 'admin', 'how', 'words', 'venue', 'scope', 'origin')}
-    points, conflicts, audit = [], [], []
+    points, conflicts, audit, owner_host = [], [], [], []
     stats = collections.Counter()
     seen = set()
     segments = sorted(SEGMENT_GROUP)
@@ -455,6 +462,23 @@ def main():
                 add_venue(rec)
             venue = venue_index[vkey]
             stats['link.acceptedWithPoint' if venues[venue]['latitude'] is not None else 'link.acceptedNoPoint'] += 1
+        # Owner map audit (map_audit_status = owner_confirmed_located_in_host_YYYYMMDD): the owner checked the branch on
+        # the map and confirmed it is inside its accepted venue. The venue's registry reference point is drawn; the
+        # published source point stays in the sheet (and in the 00_README source-point count) but is not used.
+        source_pt = pt
+        audit_status = text(r.get('map_audit_status'))
+        owner_audit = re.fullmatch(r'owner_confirmed_located_in_host_(\d{4})(\d{2})(\d{2})', audit_status)
+        if audit_status and audit_status != 'not_field_audited' and not owner_audit:
+            sys.exit(f'row {i + 2}: unknown map_audit_status {audit_status!r}')
+        if owner_audit:
+            if venue < 0 or venues[venue]['latitude'] is None:
+                sys.exit(f'row {i + 2}: owner-confirmed host location without an accepted venue that has a registry point')
+            on = '-'.join(owner_audit.groups())
+            datetime.date.fromisoformat(on)
+            owner_host.append({'outlet': key, 'venue': venues[venue].get('scId') or venues[venue]['id'], 'on': on,
+                               'sourcePointM': round(haversine_m(pt, (venues[venue]['latitude'], venues[venue]['longitude']))) if pt else None})
+            pt, role = None, ''
+            stats['points.ownerConfirmedHost'] += 1
         how, words, note = '', [], ''
         p_code = d_code = None
         method = None
@@ -543,7 +567,7 @@ def main():
         if pt:
             points.append([i, round(pt[0], 6), round(pt[1], 6), POINT_ROLES.index(role)])
         stats[f'status.{status}'] += 1
-        stats['points.source'] += 1 if pt else 0
+        stats['points.source'] += 1 if source_pt else 0
         stats['points.host'] += 1 if (not pt and host_point) else 0
         stats['links.venue'] += 1 if venue >= 0 else 0
 
@@ -614,6 +638,9 @@ def main():
         'logos': {'brands': '01_BRANDS logo_status + 16_BRAND_LOGOS (data/brand-logos.json, scripts/build-logos.py)',
                   'venues': 'venue logos of the linked venues from the CityMETER Shopping Centers registry snapshot (data/venue-logos.json)'},
         'venueLinks': {k[5:]: v for k, v in sorted(stats.items()) if k.startswith('link.')},
+        'ownerConfirmedHost': {
+            'rule': 'map_audit_status owner_confirmed_located_in_host_YYYYMMDD: the owner confirmed on the map that the branch is inside its accepted venue; the venue registry reference point is drawn and the published source point (kept in the sheet and in points.source) is not',
+            'rows': owner_host},
         'registry': {'dataset': 'CityMETER Shopping Centers & Retail Venues Thailand — Research Master (public snapshot of montri-th/shoppingcenter)',
                      'asOf': getattr(registry, 'as_of', ''), 'commit': a.registry_commit,
                      'files': {'count': len(registry.files),

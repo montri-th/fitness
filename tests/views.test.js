@@ -228,3 +228,21 @@ test('one list per building (owner 2026-10-29): venue-linked rows and rows whose
   const bare = text(renderStore(buildStoreDetail(other, {...common(data, index, rows), building: {key: 'osm:2', others: 2, venue: null}}), ctx));
   assert.ok(bare.includes('จุดตกในอาคารเดียวกับอีก 2 สาขา'));
 });
+
+test('owner-confirmed location reads in the branch facts; a venue links to its page in CityMETER Shopping centers by registry id', () => {
+  const {data, index} = load();
+  const ctx = ctxFor(data, index);
+  const r = data.rows.find(x => x.id === 'POS-FIT-8b70023548ef');
+  const html = renderStore(buildStoreDetail(r, common(data, index, data.rows)), ctx);
+  const t = text(html);
+  assert.ok(t.includes('ตำแหน่งอ้างอิงของศูนย์การค้าในทะเบียน CityMETER ไม่ใช่ทางเข้าสาขา'));
+  assert.ok(t.includes('เจ้าของข้อมูลยืนยัน 30 ต.ค. 2569 ว่าสาขาอยู่ใน Erawan Bangkok · จุดที่หน้าทางการเผยแพร่ห่าง 689 ม. จึงไม่ใช้'));
+  // The note sits in the folded source facts, not on the face of the panel.
+  assert.ok(html.indexOf('เจ้าของข้อมูลยืนยัน') > html.indexOf('<details class="source-details">'));
+  const other = data.rows.find(x => x.venue && x.id !== r.id && x.pointRole === 'host_registry_reference_point');
+  assert.ok(!text(renderStore(buildStoreDetail(other, common(data, index, data.rows)), ctx)).includes('เจ้าของข้อมูลยืนยัน'));
+  const v = data.venues.find(x => x.scId === 'SC-001278');
+  const venueHtml = renderVenue(buildVenueProfile(v.id, common(data, index, data.rows)), ctx);
+  assert.ok(venueHtml.includes('href="https://montri-th.github.io/shoppingcenter/?venue=SC-001278"'));
+  assert.ok(text(venueHtml).includes('ดูศูนย์นี้ใน CityMETER ศูนย์การค้า'));
+});

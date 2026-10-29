@@ -84,7 +84,8 @@ test('points are the source’s own point or the CityMETER venue registry point,
   const {data} = load();
   const withPoint = data.rows.filter(hasPoint);
   assert.equal(withPoint.length, 157);
-  assert.equal(withPoint.filter(r => r.pointRole === 'host_registry_reference_point').length, 129);
+  // 129 rows without a source point + Physique 57 Erawan, whose source point the owner superseded (meta.ownerConfirmedHost)
+  assert.equal(withPoint.filter(r => r.pointRole === 'host_registry_reference_point').length, 130);
   for (const r of withPoint) {
     assert.ok(r.longitude > 97 && r.longitude < 106 && r.latitude > 5 && r.latitude < 21, `${r.id} inside Thailand`);
     assert.ok(r.pointRole, `${r.id} keeps the role of its point`);
@@ -96,6 +97,25 @@ test('points are the source’s own point or the CityMETER venue registry point,
   assert.ok(data.rows.filter(r => !hasPoint(r)).every(r => r.longitude === null && r.latitude === null), 'no (0, 0) stand-ins');
   // A row with its own point inside a district was placed by that point.
   assert.ok(data.rows.filter(r => r.admin === 'point').every(r => hasPoint(r) && r.pointRole !== 'host_registry_reference_point'));
+});
+
+test('owner map audit (2026-10-30): a branch confirmed inside its venue is drawn at the venue registry point, the source point kept as a count', () => {
+  const {data, raw} = load();
+  const audit = raw.meta.ownerConfirmedHost;
+  assert.equal(audit.rows.length, 1);
+  assert.deepEqual(audit.rows[0], {outlet: 'POS-FIT-8b70023548ef', venue: 'SC-001278', on: '2026-10-30', sourcePointM: 689});
+  const r = data.rows.find(x => x.id === 'POS-FIT-8b70023548ef');
+  assert.equal(r.venue.scId, 'SC-001278');
+  assert.equal(r.admin, 'host');
+  assert.equal(r.pointRole, 'host_registry_reference_point');
+  assert.deepEqual([r.latitude, r.longitude], [r.venue.latitude, r.venue.longitude]);
+  assert.deepEqual(r.ownerHost, {on: '2026-10-30', sourcePointM: 689});
+  assert.ok(!raw.points.some(([i]) => raw.cols.key[i] === r.id), 'the superseded source point is not published as a drawn point');
+  // The 00_README cross-check still counts the published source points (28); 27 are drawn.
+  assert.equal(raw.meta.counts['points.source'], 28);
+  assert.equal(raw.points.length, 27);
+  assert.equal(raw.meta.counts['points.ownerConfirmedHost'], 1);
+  assert.ok(data.rows.filter(x => x.ownerHost).length === 1);
 });
 
 test('venues: CityMETER Shopping Center registry records by id; a point decides the district, no point means no district', () => {

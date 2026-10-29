@@ -8,11 +8,11 @@ const fresh = () => buildAreaIndex(readJSON('data/area-index.json'));
 
 test('frames load on demand per province: idempotent, merged, outlines attached to the index records', async () => {
   const index = fresh(), calls = [], loads = [];
-  const store = createFrameStore({index, version: '20261030-r5', fetchJSON: async url => { calls.push(url); return readJSON(`data/frames/${url.match(/frames\/(\w+)\.json/)[1]}.json`); }, onLoad: code => loads.push(code)});
+  const store = createFrameStore({index, version: '20261030-r6', fetchJSON: async url => { calls.push(url); return readJSON(`data/frames/${url.match(/frames\/(\w+)\.json/)[1]}.json`); }, onLoad: code => loads.push(code)});
   assert.equal(index.byId.get('1039').feature, null, 'the index works without geometry');
   assert.deepEqual(recordBounds(index.byId.get('1039')), [[100.5501, 13.7047], [100.6068, 13.7485]], 'bbox fallback before the outline arrives');
   await Promise.all([store.ensure('BKK'), store.ensure('BKK')]);
-  assert.deepEqual(calls, ['data/frames/BKK.json?v=20261030-r5'], 'one request per province, versioned by the release');
+  assert.deepEqual(calls, ['data/frames/BKK.json?v=20261030-r6'], 'one request per province, versioned by the release');
   assert.deepEqual(loads, ['BKK']);
   assert.ok(index.byId.get('1039').feature, 'outline attached');
   assert.equal(store.areas().features.length, 50);

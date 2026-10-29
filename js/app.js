@@ -101,7 +101,8 @@ const values = () => Object.fromEntries(FIELDS.map(k => [k, $(k).value]));
 const unit = () => unitWords($('status').value);
 const rowById = id => state.rowById.get(id) || null;
 const areaById = id => state.index.byId.get(id) || null;
-const venueById = id => state.data.venues.find(v => v.id === id) || null;
+// A venue by its id (CityMETER UUID) or its registry id (links from CityMETER Shopping centers use the registry id).
+const venueById = id => (id && (state.data.venues.find(v => v.id === id) || state.data.venues.find(v => v.scId === id))) || null;
 const hasVenuePoint = v => Number.isFinite(v?.latitude) && Number.isFinite(v?.longitude);
 /** The venue's home for navigation (its point's district, else the district all its linked rows share). */
 const homeOf = v => venueHome(v, state.data.rows, state.index);
@@ -1421,7 +1422,7 @@ function restoreFromURL() {
   for (const f of FIELDS) if (p.has(f)) { const v = f === 'province' ? provinceCodeFrom(p.get(f)) : p.get(f); if (f === 'search' || [...($(f).options || [])].some(o => o.value === v)) $(f).value = v; }
   if (['count', 'mix', 'brands'].includes(p.get('view'))) state.view = p.get('view');
   if (p.get('area') && areaById(p.get('area'))) state.selectedArea = p.get('area');
-  else if (p.get('venue') && venueById(p.get('venue'))) state.selectedVenue = p.get('venue');
+  else if (p.get('venue') && venueById(p.get('venue'))) state.selectedVenue = venueById(p.get('venue')).id;
   const areas = p.get('areas') || '';
   if (areas === 'all') { state.autoFocus = false; state.focusAreaIds = []; }
   else state.focusAreaIds = [...new Set(areas.split(','))].filter(id => areaById(id)).slice(0, 3);

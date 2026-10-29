@@ -24,6 +24,9 @@ import {ROLE_TH} from './profile-model.js';
 import {brandLogoMarkup, venueLogoMarkup} from './logos.js';
 import {actionBar, branchLabel} from './ask.js';
 
+/** The venue's page in CityMETER Shopping centers (deep link by registry id). */
+export const SHOPPING_SITE = 'https://montri-th.github.io/shoppingcenter/';
+
 const NUMBER = new Intl.NumberFormat('th-TH', {maximumFractionDigits: 0});
 export const esc = v => String(v ?? '').replace(/[&<>"']/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[c]));
 export const num = n => NUMBER.format(n);
@@ -396,7 +399,7 @@ export function renderVenue(p, ctx = {}) {
       ${brandStrip(p.rows)}
       <p class="hint">${p.inBuilding ? `${esc(unit.one)}ที่ผูกกับศูนย์การค้านี้ และที่จุดตกในอาคารเดียวกัน` : `${esc(unit.one)}ที่ชุดข้อมูลผูกกับศูนย์การค้านี้`}${p.all > p.linked ? ` · ผูกไว้ทุกสถานะ ${num(p.all)} รายการ` : ''}</p>
       ${actionBar({kind: 'venue', venue: v, area: p.area ? {place: placeName(p.area), province: prov} : null, point})}
-      <div class="detail-actions">${p.area ? link(productionLink({province: p.area.province, area: p.area.id}), 'ดูเขตนี้ใน CityMETER', 'btn quiet source-link') : ''}</div>
+      <div class="detail-actions">${v.scId ? link(`${SHOPPING_SITE}?venue=${encodeURIComponent(v.scId)}`, 'ดูศูนย์นี้ใน CityMETER ศูนย์การค้า', 'btn quiet source-link') : ''}${p.area ? link(productionLink({province: p.area.province, area: p.area.id}), 'ดูเขตนี้ใน CityMETER', 'btn quiet source-link') : ''}</div>
     </section>
 `;
   const boundary = point
@@ -452,8 +455,10 @@ export function renderStore(d, ctx = {}) {
     : bd.venue && bd.venue.id !== r.venue?.id ? `<button type="button" class="fact-chip" data-action="select-venue" data-id="${esc(bd.venue.id)}"><i class="pictogram pic-building" aria-hidden="true"></i>จุดตกในอาคารเดียวกับ ${esc(bd.venue.name)}${bd.others ? ` · อีก ${num(bd.others)} ${esc(unit.one)}ในอาคารนี้` : ''}</button>`
     : bd.venue ? (bd.others ? `<button type="button" class="fact-chip" data-action="select-venue" data-id="${esc(bd.venue.id)}"><i class="pictogram pic-building" aria-hidden="true"></i>อีก ${num(bd.others)} ${esc(unit.one)}ในอาคารนี้</button>` : '')
     : bd.others ? `<button type="button" class="fact-chip" data-action="select-building" data-id="${esc(bd.key)}"><i class="pictogram pic-building" aria-hidden="true"></i>จุดตกในอาคารเดียวกับอีก ${num(bd.others)} ${esc(unit.one)}</button>` : '';
+  const ownerHost = r.ownerHost && host
+    ? `<br><span class="hint">เจ้าของข้อมูลยืนยัน ${esc(thaiDate(r.ownerHost.on))} ว่าสาขาอยู่ใน ${esc(r.venue?.name || 'ศูนย์การค้านี้')}${r.ownerHost.sourcePointM ? ` · จุดที่หน้าทางการเผยแพร่ห่าง ${num(r.ownerHost.sourcePointM)} ม. จึงไม่ใช้` : ''}</span>` : '';
   const point = coords
-    ? `<span class="data-number">${esc(coords)}</span><br><span class="hint">${esc(POINT_ROLE_TH[r.pointRole] || 'จุดที่แหล่งเผยแพร่')}</span>`
+    ? `<span class="data-number">${esc(coords)}</span><br><span class="hint">${esc(POINT_ROLE_TH[r.pointRole] || 'จุดที่แหล่งเผยแพร่')}</span>${ownerHost}`
     : '<span>แหล่งไม่เผยแพร่พิกัด</span><br><span class="hint">จึงไม่มีหมุดบนแผนที่ สาขายังนับอยู่ในพื้นที่ตามที่อยู่</span>';
   const statusUrl = r.statusUrl && r.statusUrl !== r.url ? ` · ${link(r.statusUrl, 'หน้าที่ระบุสถานะ')}` : '';
   return `<section class="detail-head store">

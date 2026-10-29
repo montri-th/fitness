@@ -3,7 +3,7 @@
   "schemaVersion": "1.5.0",
   "documentType": "implementation-plan",
   "productId": "citymeter-fitness",
-  "productVersion": "0.3.0",
+  "productVersion": "0.3.1",
   "updatedOn": "2026-10-30",
   "brief": "product-brief.json",
   "statement": "product-statement.json",
@@ -498,6 +498,41 @@
       "files": [
         "handoff/VERIFICATION.md"
       ],
+      "status": "done (0.3.0, see VERIFICATION.md)"
+    },
+    {
+      "id": "P23",
+      "title": "Owner map audit and registry cross-links (owner 2026-10-30 06:23): write the owner’s Physique 57 Erawan location into the research sheet, draw owner-confirmed branches at their venue point, link venues to CityMETER Shopping centers by registry id",
+      "dependsOn": [
+        "P21"
+      ],
+      "acceptanceCriteria": [
+        "AC37",
+        "AC38"
+      ],
+      "files": [
+        "scripts/build-data.py",
+        "js/model.js",
+        "js/panel.js",
+        "js/app.js",
+        "(internal) 02_STORES"
+      ],
+      "status": "done (written 2026-10-30, read back)"
+    },
+    {
+      "id": "P24",
+      "title": "Publish 0.3.1, verify live bytes, walk Physique 57 Erawan and a venue cross-link both ways",
+      "dependsOn": [
+        "P23"
+      ],
+      "acceptanceCriteria": [
+        "AC24",
+        "AC37",
+        "AC38"
+      ],
+      "files": [
+        "handoff/VERIFICATION.md"
+      ],
       "status": "see VERIFICATION.md"
     }
   ],
@@ -717,12 +752,24 @@
       "scenario": "Venue links written back",
       "expected": "Every planned cell of 02_STORES reads back with the new value on the row of the same outlet_id; the rebuild places the accepted rows at their venue points and keeps held candidates unlinked; no district changes against the address",
       "verificationType": "sheet read-back + unit"
+    },
+    {
+      "id": "AC37",
+      "scenario": "Owner-confirmed location",
+      "expected": "Physique 57 Bangkok · Erawan (POS-FIT-8b70023548ef) is drawn at the Erawan Bangkok registry point (SC-001278) and placed in ปทุมวัน by its host; its folded facts read “เจ้าของข้อมูลยืนยัน 30 ต.ค. 2569 ว่าสาขาอยู่ใน Erawan Bangkok · จุดที่หน้าทางการเผยแพร่ห่าง 689 ม. จึงไม่ใช้”; meta.counts points.source stays 28 (00_README) and 27 source points are drawn",
+      "verificationType": "unit + live"
+    },
+    {
+      "id": "AC38",
+      "scenario": "Registry cross-links",
+      "expected": "?venue=SC-001278 opens the Erawan Bangkok venue panel; every venue panel with a registry id links to https://montri-th.github.io/shoppingcenter/?venue=<registry id>",
+      "verificationType": "unit + live"
     }
   ],
   "developerWorkflow": [
     "Read AGENTS.md, then handoff/README.md, PRODUCT_STATEMENT.md and the paired human/machine briefs",
     "Run npm test before changes; keep the row scopes, status unit, focus modes, tie rule, metric, frames and coverage contracts and the panel action contract",
-    "Change one bounded task at a time; preserve invariant IDs INV01–INV29",
+    "Change one bounded task at a time; preserve invariant IDs INV01–INV31",
     "Validate calculations with the real data in tests/ (tests/helpers.js loads it once)",
     "Review rendered Thai at 390 px and desktop in both themes; when tiles are blocked use a local harness for layout, then confirm the real-tile look live",
     "Bump the cache tag and versions together; publish; run npm run verify:live and walk the live site before reporting"
@@ -833,6 +880,12 @@
     {
       "id": "N19",
       "title": "Physique 57 Bangkok (Erawan): the source point is 688 m from Erawan Bangkok, the venue its address links to — check the source point",
+      "ownerRole": "research",
+      "status": "done (0.3.1: the owner located the studio at Erawan Bangkok on 2026-10-30; owner map audit in the sheet, the venue point drawn)"
+    },
+    {
+      "id": "N21",
+      "title": "Add the owner map-audit value (map_audit_status owner_confirmed_located_in_host_YYYYMMDD) to 06_DATA_DICTIONARY of the research sheet",
       "ownerRole": "research",
       "status": "backlog"
     },

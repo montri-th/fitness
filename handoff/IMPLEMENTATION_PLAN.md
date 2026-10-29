@@ -1,4 +1,4 @@
-# Implementation Plan — CityMETER Fitness 0.3.0
+# Implementation Plan — CityMETER Fitness 0.3.1
 
 คู่กับ [implementation-plan.json](implementation-plan.json) · 30 ต.ค. 2569
 
@@ -49,17 +49,19 @@ Static site บน GitHub Pages (main / root) · ES modules ผ่าน import 
 | P19 | แผงสั้นลง: บล็อกตัวตน fact chips ป้ายสถานะ แหล่งพับไว้ ภาษาไทยเป็นธรรมชาติ | P18 | AC09 AC12 AC19 | done |
 | P20 | คำถามถัดไปของแต่ละมุมมอง: Google AI Mode, Maps, Street View (`js/ask.js`) + pictogram 4 แบบ | P19 | AC34 | done |
 | P21 | ผูกสาขากับศูนย์การค้าระดับงานวิจัย (เจ้าของ 29 ต.ค. “ผูกแล้วเขียนกลับเข้าชีตวิจัย”): จับคู่จากหลักฐาน เขียน id สถานะ และหลักฐานลงชีต export ใหม่ แล้วสร้างข้อมูลใหม่ | P04 | AC36 | done — เขียน 908 เซลล์ 30 ต.ค. อ่านกลับตรงทุกเซลล์ |
-| P22 | เผยแพร่ 0.3.0, verify live, เดินตรวจแบรนด์ก่อนสาขา โลโก้ และปุ่ม Google (desktop และ 390 px สองธีม) | P18–P20 | AC24 AC25 AC32 AC34 AC35 | ดู VERIFICATION.md |
+| P22 | เผยแพร่ 0.3.0, verify live, เดินตรวจแบรนด์ก่อนสาขา โลโก้ และปุ่ม Google (desktop และ 390 px สองธีม) | P18–P20 | AC24 AC25 AC32 AC34 AC35 | done (0.3.0) |
+| P23 | ตำแหน่งที่เจ้าของยืนยันและลิงก์ข้ามทะเบียน (เจ้าของ 30 ต.ค. 06:23): เขียนตำแหน่ง Physique 57 Erawan ลงชีตวิจัยเป็นการตรวจแผนที่ของเจ้าของ วาดที่จุดของศูนย์ที่ผูก ลิงก์แผงศูนย์ไป CityMETER ศูนย์การค้าด้วยรหัสทะเบียน | P21 | AC37 AC38 | done (เขียน 30 ต.ค. อ่านกลับแล้ว) |
+| P24 | เผยแพร่ 0.3.1, verify live, เดินตรวจ Physique 57 Erawan และลิงก์ศูนย์สองทาง | P23 | AC24 AC37 AC38 | ดู VERIFICATION.md |
 
 ## Acceptance criteria
 
-AC01 โหลดครั้งแรก · AC02 ข้อค้นพบแรกค่าเริ่มต้น · AC03 หน่วยเริ่มต้น · AC04 ตัวกรองสถานะ · AC05 ความเป็นสมาชิกพื้นที่ · AC06 conflict · AC07 ค่าเท่ากัน · AC08 EVID-05 · AC09 provenance · AC10 บัตรแบรนด์ · AC11 แผงเขต · AC12 แผงสาขา · AC13 ขอบเขตรายจังหวัด · AC14 focus + quiet · AC15 ศูนย์การค้า · AC16 มุมมองประเทศ · AC17 กราฟ · AC18 ตาราง · AC19 ภาษาไทย · AC20 LDS parity · AC21 ความสะอาดของข้อมูลที่เผยแพร่ · AC22 ใบรับ · AC23 ความสอดคล้องของรุ่น · AC24 ไบต์บนเว็บจริง · AC25 เดินตรวจเว็บจริง · AC26 กล้องมุมมองอาคาร · AC27 ไม่มีอาคารอื่นบัง · AC28 รายการเดียวต่ออาคาร · AC29 สีครบ 41 ระดับ · AC30 ชิ้นอาคารเป็นอาคารเดียว · AC31 ไม่มี error ของ MapLibre เมื่อกล้องเอียงซูมออกจากอาคาร · AC32 แบรนด์มาก่อนสาขา · AC33 ทะเบียนโลโก้ · AC34 ปุ่มถามต่อใน Google · AC35 URL `?search=` · AC36 การผูกศูนย์การค้าเขียนกลับและอ่านกลับแล้ว (ข้อความเต็มและวิธีตรวจใน JSON)
+AC01 โหลดครั้งแรก · AC02 ข้อค้นพบแรกค่าเริ่มต้น · AC03 หน่วยเริ่มต้น · AC04 ตัวกรองสถานะ · AC05 ความเป็นสมาชิกพื้นที่ · AC06 conflict · AC07 ค่าเท่ากัน · AC08 EVID-05 · AC09 provenance · AC10 บัตรแบรนด์ · AC11 แผงเขต · AC12 แผงสาขา · AC13 ขอบเขตรายจังหวัด · AC14 focus + quiet · AC15 ศูนย์การค้า · AC16 มุมมองประเทศ · AC17 กราฟ · AC18 ตาราง · AC19 ภาษาไทย · AC20 LDS parity · AC21 ความสะอาดของข้อมูลที่เผยแพร่ · AC22 ใบรับ · AC23 ความสอดคล้องของรุ่น · AC24 ไบต์บนเว็บจริง · AC25 เดินตรวจเว็บจริง · AC26 กล้องมุมมองอาคาร · AC27 ไม่มีอาคารอื่นบัง · AC28 รายการเดียวต่ออาคาร · AC29 สีครบ 41 ระดับ · AC30 ชิ้นอาคารเป็นอาคารเดียว · AC31 ไม่มี error ของ MapLibre เมื่อกล้องเอียงซูมออกจากอาคาร · AC32 แบรนด์มาก่อนสาขา · AC33 ทะเบียนโลโก้ · AC34 ปุ่มถามต่อใน Google · AC35 URL `?search=` · AC36 การผูกศูนย์การค้าเขียนกลับและอ่านกลับแล้ว (ข้อความเต็มและวิธีตรวจใน JSON) · AC37 ตำแหน่งที่เจ้าของยืนยัน (Physique 57 Erawan ที่จุดของ Erawan Bangkok; จุดของแหล่งยังนับ 28 วาด 27) · AC38 ลิงก์ข้ามทะเบียน (`?venue=SC-001278` และลิงก์ไป CityMETER ศูนย์การค้า)
 
 ## วิธีทำงานต่อ
 
 1. อ่าน `AGENTS.md` แล้ว `handoff/README.md`, `PRODUCT_STATEMENT.md` และ brief คู่ md/json
 2. รัน `npm test` ก่อนแก้ คงสัญญา row scopes หน่วยตามสถานะ โหมดโฟกัส กติกาค่าเท่ากัน ตัวชี้วัด ขอบเขต และ action ของแผง
-3. ทำทีละงาน คง id ของ invariant INV01–INV29
+3. ทำทีละงาน คง id ของ invariant INV01–INV31
 4. ตรวจการคำนวณบนข้อมูลจริงใน `tests/`
 5. ตรวจหน้าจอภาษาไทยที่ 390 px และ desktop ทั้งสองธีม ถ้า tiles ถูกบล็อกใช้ harness ในเครื่องตรวจ layout แล้วยืนยันภาพจริงบนเว็บ
 6. เพิ่ม cache tag และ version พร้อมกัน เผยแพร่ รัน `npm run verify:live` และเดินตรวจเว็บจริงก่อนรายงาน
@@ -85,6 +87,7 @@ AC01 โหลดครั้งแรก · AC02 ข้อค้นพบแร
 | N16 | ทะเบียนศูนย์การค้าซ้ำที่พบตอนผูก (Pantip Lifestyle Hub, The Walk Kaset-Nawamin, The Walk Ratchapreuk): รวมหรืออธิบายในทะเบียน แถวเหล่านี้พักไว้ก่อน | registry team |
 | N17 | `16_BRAND_LOGOS` ระบุพื้นสว่างให้ The Cult Fitness Society, Red Rock Canyon Climbing Gym, Fitness7 แต่ส่วนสีขาวของโลโก้ต้องใช้พื้นมืด: แก้คลังโลโก้ | research |
 | N18 | 15 ศูนย์ที่ผูกแล้วยังไม่มี uuid ของ CityMETER และ 13 ศูนย์ไม่มีจุดอ้างอิง (16 และ 14 แถว) · ทะเบียนระบุรหัสเขตของ Central Rama 9 (1026) และ Lasalle’s Avenue (1101) ไม่ตรงจุดของตัวเอง (1017, 1047): เติม id จุด และเขต | registry team |
-| N19 | Physique 57 Bangkok (Erawan): จุดของแหล่งห่าง Erawan Bangkok ที่ที่อยู่ผูกไว้ 688 ม. — ตรวจจุดของแหล่ง | research |
+| N19 | ~~Physique 57 Bangkok (Erawan): จุดของแหล่งห่าง Erawan Bangkok ที่ที่อยู่ผูกไว้ 688 ม. — ตรวจจุดของแหล่ง~~ — เสร็จใน 0.3.1: เจ้าของยืนยัน 30 ต.ค. 2569 ว่าอยู่ใน Erawan Bangkok (P23) | research |
 | N20 | ระบายสีอาคารที่มีสาขาตามตัวกรอง (เช่น ค้น “jet”) ในโฟกัส ไม่ใช่เฉพาะอาคารที่กำลังดู — ต้องมี map role ของ LDS สำหรับ highlight รอง; รอเจ้าของตัดสิน | owner + developer |
+| N21 | เพิ่มค่าการตรวจแผนที่ของเจ้าของ (`map_audit_status` = `owner_confirmed_located_in_host_YYYYMMDD`) ใน `06_DATA_DICTIONARY` ของชีตวิจัย | research |
 | N15 | เดโมพี่น้องที่ใช้ MapLibre 5.6.2 กับกล้องเอียง (Shopping centers, Luxury Brands, Restaurants, Pharmacy) น่าจะเจอ error เดียวกันบน vector source: ใส่ guard เดียวกัน หรืออัปเกรด MapLibre หลังตรวจว่าแก้แล้ว | owner + developer |
