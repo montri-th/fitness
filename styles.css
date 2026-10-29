@@ -145,7 +145,7 @@ input[type="search"]::-webkit-search-cancel-button { -webkit-appearance: none; }
    The glyph is decorative (aria-hidden); the text label carries the meaning. Hidden until the font loads. */
 @font-face {
   font-family: "LDS Material Symbols Rounded Pictogram";
-  src: url("assets/icons/material-pictogram-300.woff2") format("woff2");
+  src: url("assets/icons/material-pictogram-300.woff2?v=73ec4866") format("woff2");
   font-style: normal; font-weight: 300; font-display: block;
   unicode-range: U+EAD5, U+EA12, U+E54C, U+E55B, U+E7F1, U+F09A, U+EA49, U+E72C, U+E65F, U+E56E, U+E0C8, U+EA40;
 }

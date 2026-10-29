@@ -4,7 +4,7 @@
    with state; selection is shown by surface, text and outline instead. */
 @font-face {
   font-family: "LDS Material Symbols Rounded Nav";
-  src: url("assets/icons/material-nav-300.woff2") format("woff2");
+  src: url("assets/icons/material-nav-300.woff2?v=d7e28310") format("woff2");
   font-style: normal; font-weight: 300; font-display: block;
   unicode-range: U+E518, U+E51C, U+E5CD, U+E5D2, U+E89E, U+EB37, U+F233;
 }

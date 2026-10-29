@@ -722,7 +722,7 @@
   "developerWorkflow": [
     "Read AGENTS.md, then handoff/README.md, PRODUCT_STATEMENT.md and the paired human/machine briefs",
     "Run npm test before changes; keep the row scopes, status unit, focus modes, tie rule, metric, frames and coverage contracts and the panel action contract",
-    "Change one bounded task at a time; preserve invariant IDs INV01–INV28",
+    "Change one bounded task at a time; preserve invariant IDs INV01–INV29",
     "Validate calculations with the real data in tests/ (tests/helpers.js loads it once)",
     "Review rendered Thai at 390 px and desktop in both themes; when tiles are blocked use a local harness for layout, then confirm the real-tile look live",
     "Bump the cache tag and versions together; publish; run npm run verify:live and walk the live site before reporting"

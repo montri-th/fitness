@@ -11,7 +11,7 @@ Live: [Fitness](https://montri-th.github.io/fitness/) · Source: [GitHub](https:
 | คนอ่าน | เครื่องอ่าน | ใช้ทำอะไร |
 |---|---|---|
 | [../PRODUCT_STATEMENT.md](../PRODUCT_STATEMENT.md) | [product-statement.json](product-statement.json) | Winning strategy: Who / What / Which / How, quality bar, ป้ายหลักฐาน, hypotheses — อ่านก่อนเปลี่ยนสิ่งที่หน้าแรกบอก |
-| [PRODUCT_BRIEF.md](PRODUCT_BRIEF.md) | [product-brief.json](product-brief.json) | row scopes, หน่วยนับตามสถานะ, first Aha และกติกาค่าเท่ากัน, ตัวชี้วัด ความครอบคลุม ขอบเขตรายจังหวัด รูปทรงรูปแบบ แผนที่ focus/quiet, มุมมองอาคาร, breadcrumb, แผง, อาคาร, กราฟ, ตัวตนแบรนด์, ปุ่มถามต่อ, การผูกศูนย์การค้า, invariants INV01–INV28 |
+| [PRODUCT_BRIEF.md](PRODUCT_BRIEF.md) | [product-brief.json](product-brief.json) | row scopes, หน่วยนับตามสถานะ, first Aha และกติกาค่าเท่ากัน, ตัวชี้วัด ความครอบคลุม ขอบเขตรายจังหวัด รูปทรงรูปแบบ แผนที่ focus/quiet, มุมมองอาคาร, breadcrumb, แผง, อาคาร, กราฟ, ตัวตนแบรนด์, ปุ่มถามต่อ, การผูกศูนย์การค้า, invariants INV01–INV29 |
 | [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md) | [implementation-plan.json](implementation-plan.json) | โมดูล งาน P01–P22 acceptance AC01–AC36 backlog N01–N20 วิธีทำงานต่อ |
 | [VERIFICATION.md](VERIFICATION.md) | `handoff-manifest.json` (ใน bundle) | ผลตรวจแยกระดับ (unit / LDS parity / rendered / live) และ hash ของทุกไฟล์ |
 | README นี้ | [handoff.schema.json](handoff.schema.json) | สัญญาโครงสร้างของ JSON (schema 1.5.0, ตรวจใน `tests/release.test.js`) |

@@ -59,7 +59,7 @@ AC01 โหลดครั้งแรก · AC02 ข้อค้นพบแร
 
 1. อ่าน `AGENTS.md` แล้ว `handoff/README.md`, `PRODUCT_STATEMENT.md` และ brief คู่ md/json
 2. รัน `npm test` ก่อนแก้ คงสัญญา row scopes หน่วยตามสถานะ โหมดโฟกัส กติกาค่าเท่ากัน ตัวชี้วัด ขอบเขต และ action ของแผง
-3. ทำทีละงาน คง id ของ invariant INV01–INV28
+3. ทำทีละงาน คง id ของ invariant INV01–INV29
 4. ตรวจการคำนวณบนข้อมูลจริงใน `tests/`
 5. ตรวจหน้าจอภาษาไทยที่ 390 px และ desktop ทั้งสองธีม ถ้า tiles ถูกบล็อกใช้ harness ในเครื่องตรวจ layout แล้วยืนยันภาพจริงบนเว็บ
 6. เพิ่ม cache tag และ version พร้อมกัน เผยแพร่ รัน `npm run verify:live` และเดินตรวจเว็บจริงก่อนรายงาน
