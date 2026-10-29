@@ -1,0 +1,501 @@
+{
+  "$schema": "./handoff.schema.json",
+  "schemaVersion": "1.5.0",
+  "documentType": "implementation-plan",
+  "productId": "citymeter-fitness",
+  "productVersion": "0.1.0",
+  "updatedOn": "2026-10-29",
+  "brief": "product-brief.json",
+  "statement": "product-statement.json",
+  "humanPlan": "IMPLEMENTATION_PLAN.md",
+  "architecture": {
+    "runtime": "static site (GitHub Pages); ES modules with an import map; MapLibre GL 5.6.2 from unpkg; OpenFreeMap tiles",
+    "commands": {
+      "start": "npm start",
+      "test": "npm test",
+      "lds": "npm run check:lds -- --lds <file>",
+      "manifest": "npm run handoff:manifest",
+      "bundle": "npm run handoff:bundle",
+      "live": "npm run verify:live"
+    },
+    "libraries": [
+      "maplibre-gl 5.6.2 (pinned, unpkg)",
+      "earcut (vendored, ISC)"
+    ],
+    "modules": [
+      "js/app.js",
+      "js/area-insight.js",
+      "js/areas.js",
+      "js/breadcrumb.js",
+      "js/building-join.js",
+      "js/camera.js",
+      "js/chart-model.js",
+      "js/charts.js",
+      "js/cues.js",
+      "js/frames.js",
+      "js/geometry.js",
+      "js/launch.js",
+      "js/map-layers.js",
+      "js/map-style.js",
+      "js/massing.js",
+      "js/model.js",
+      "js/mvt.js",
+      "js/navigation.js",
+      "js/panel.js",
+      "js/pins.js",
+      "js/profile-model.js",
+      "js/provinces.js",
+      "js/scales.js",
+      "js/vendors.js"
+    ]
+  },
+  "selection": {
+    "filterFields": [
+      "search",
+      "status",
+      "group",
+      "province",
+      "brand"
+    ],
+    "queryFields": [
+      "search",
+      "status",
+      "group",
+      "province",
+      "brand",
+      "area",
+      "venue",
+      "areas",
+      "view",
+      "store",
+      "view3d"
+    ],
+    "rowScopes": {
+      "scopeRows": "rows after search, status, format, province and brand filters, before any district/venue selection or focus — the Aha base, the choropleth, the charts and every rank",
+      "baseRows": "scopeRows narrowed by the selected เขต/อำเภอ or CityMETER venue",
+      "rows": "baseRows narrowed by the district focus — pins with detail, counters, the table"
+    },
+    "panelActions": [
+      "select-area",
+      "select-venue",
+      "select-store",
+      "select-building",
+      "select-province",
+      "filter-brand",
+      "set-status",
+      "back",
+      "explore-top",
+      "clear-focus",
+      "open-charts",
+      "open-table",
+      "clear-filter",
+      "leave-area"
+    ]
+  },
+  "tasks": [
+    {
+      "id": "P01",
+      "title": "Read the research master export of record and record its hash; split tabs",
+      "dependsOn": [],
+      "acceptanceCriteria": [
+        "AC22"
+      ],
+      "files": [
+        "(internal) sheet export"
+      ],
+      "status": "done"
+    },
+    {
+      "id": "P02",
+      "title": "Read production base info with receipts; build the district index and per-province frames from the pharmacy outlines",
+      "dependsOn": [
+        "P01"
+      ],
+      "acceptanceCriteria": [
+        "AC13",
+        "AC22"
+      ],
+      "files": [
+        "scripts/build-boundaries.py",
+        "scripts/build-receipts.py",
+        "data/area-index.json",
+        "data/frames/",
+        "data/provinces.geojson",
+        "data/boundary-receipts.json"
+      ],
+      "status": "done"
+    },
+    {
+      "id": "P03",
+      "title": "Resolve districts from each row’s own point, venue or address; confirm edge points on full-resolution geometry; report conflicts",
+      "dependsOn": [
+        "P02"
+      ],
+      "acceptanceCriteria": [
+        "AC05",
+        "AC06"
+      ],
+      "files": [
+        "scripts/admin_text.py",
+        "scripts/fetch-edge-geometry.py",
+        "scripts/build-data.py"
+      ],
+      "status": "done"
+    },
+    {
+      "id": "P04",
+      "title": "Build data/fitness.json with statuses, formats, brands, companies, relationships, venues; cross-check the sheet’s headline figures",
+      "dependsOn": [
+        "P03"
+      ],
+      "acceptanceCriteria": [
+        "AC03",
+        "AC04",
+        "AC21"
+      ],
+      "files": [
+        "scripts/build-data.py",
+        "data/fitness.json"
+      ],
+      "status": "done"
+    },
+    {
+      "id": "P05",
+      "title": "Adapt model, areas, insight, scales and cues: count family, status unit, tie-safe Aha, studio personality",
+      "dependsOn": [
+        "P04"
+      ],
+      "acceptanceCriteria": [
+        "AC02",
+        "AC07",
+        "AC08"
+      ],
+      "files": [
+        "js/model.js",
+        "js/areas.js",
+        "js/area-insight.js",
+        "js/scales.js",
+        "js/cues.js"
+      ],
+      "status": "done"
+    },
+    {
+      "id": "P06",
+      "title": "Panel views: overview, brand card, district, venue, building, branch; one provenance line per view",
+      "dependsOn": [
+        "P05"
+      ],
+      "acceptanceCriteria": [
+        "AC09",
+        "AC10",
+        "AC11",
+        "AC12"
+      ],
+      "files": [
+        "js/profile-model.js",
+        "js/panel.js",
+        "js/breadcrumb.js"
+      ],
+      "status": "done"
+    },
+    {
+      "id": "P07",
+      "title": "Map: district choropleth, province frames, pins, massing, building join, camera presets incl. venue eye view",
+      "dependsOn": [
+        "P05"
+      ],
+      "acceptanceCriteria": [
+        "AC13",
+        "AC14",
+        "AC15",
+        "AC16"
+      ],
+      "files": [
+        "js/app.js",
+        "js/map-layers.js",
+        "js/provinces.js",
+        "js/pins.js",
+        "js/massing.js",
+        "js/camera.js"
+      ],
+      "status": "done"
+    },
+    {
+      "id": "P08",
+      "title": "Charts (count, mix, brands) and table",
+      "dependsOn": [
+        "P05"
+      ],
+      "acceptanceCriteria": [
+        "AC17",
+        "AC18"
+      ],
+      "files": [
+        "js/chart-model.js",
+        "js/charts.js",
+        "js/app.js"
+      ],
+      "status": "done"
+    },
+    {
+      "id": "P09",
+      "title": "Copy, help, docs, handoff JSON; LDS parity",
+      "dependsOn": [
+        "P06",
+        "P07",
+        "P08"
+      ],
+      "acceptanceCriteria": [
+        "AC19",
+        "AC20",
+        "AC23"
+      ],
+      "files": [
+        "index.html",
+        "README.md",
+        "DATA_METHOD.md",
+        "PRODUCT_STATEMENT.md",
+        "handoff/"
+      ],
+      "status": "done"
+    },
+    {
+      "id": "P10",
+      "title": "Publish on GitHub Pages, verify live bytes and walk the live site (desktop and 390 px, both themes)",
+      "dependsOn": [
+        "P09"
+      ],
+      "acceptanceCriteria": [
+        "AC01",
+        "AC24",
+        "AC25"
+      ],
+      "files": [
+        "handoff/VERIFICATION.md"
+      ],
+      "status": "see VERIFICATION.md"
+    }
+  ],
+  "acceptanceCriteria": [
+    {
+      "id": "AC01",
+      "scenario": "HTTP/HTTPS first load",
+      "expected": "Data and panel ready before the map; citymeter:ready dismisses the launch overlay; no console error from the product",
+      "verificationType": "browser"
+    },
+    {
+      "id": "AC02",
+      "scenario": "Default first Aha",
+      "expected": "38% ของสาขาในกรุงเทพมหานครที่ระบุเขตได้ อยู่ใน 3 เขตนี้ — วัฒนา · ปทุมวัน · คลองเตย, 56 จาก 147, อีก 39 ระบุได้แค่จังหวัด, สตูดิโอ 63% (35/56) vs 31% (28/91), นอกกรุงเทพมหานคร: อำเภอเมืองภูเก็ต 17; computed, not constants",
+      "verificationType": "unit + browser"
+    },
+    {
+      "id": "AC03",
+      "scenario": "Default unit",
+      "expected": "352 สาขา (listed); announced 19 / closed 2 / review 5 named apart in one line",
+      "verificationType": "unit"
+    },
+    {
+      "id": "AC04",
+      "scenario": "Status filter",
+      "expected": "Every word becomes รายการ; provenance clause follows the status; nothing added across statuses",
+      "verificationType": "unit + browser"
+    },
+    {
+      "id": "AC05",
+      "scenario": "Membership",
+      "expected": "Placed rows sit in an index district of their own province with method point/host/address; province-only, none and conflict rows have no district",
+      "verificationType": "unit"
+    },
+    {
+      "id": "AC06",
+      "scenario": "Conflict",
+      "expected": "The one province conflict is placed nowhere and listed in meta.conflicts; its branch view says so",
+      "verificationType": "unit"
+    },
+    {
+      "id": "AC07",
+      "scenario": "Ties",
+      "expected": "Jetts → ปทุมวัน only; Fitness First → spread (11 เขต เขตละ 1); outside ties listed; an outside top of 1 hidden",
+      "verificationType": "unit"
+    },
+    {
+      "id": "AC08",
+      "scenario": "EVID-05",
+      "expected": "Districts without rows are measured_zero (lowest class + zero outline); no_data unused; unplaced rows never shown as 0",
+      "verificationType": "unit + browser"
+    },
+    {
+      "id": "AC09",
+      "scenario": "Provenance",
+      "expected": "Every panel view ends with exactly one dataset · source · date · boundary line and the unit clause",
+      "verificationType": "unit"
+    },
+    {
+      "id": "AC10",
+      "scenario": "Brand card",
+      "expected": "Companies grouped per company with roles and evidence links; investors one level up; same-company brands by id; registry caveat; no “independent”",
+      "verificationType": "unit + browser"
+    },
+    {
+      "id": "AC11",
+      "scenario": "District panel",
+      "expected": "Rank national and in province, studio share, share of the province with numerator/denominator, format bars, brand chips, venues, branches, production link",
+      "verificationType": "browser"
+    },
+    {
+      "id": "AC12",
+      "scenario": "Branch panel",
+      "expected": "Status pill and source meaning, place method, point role or “แหล่งไม่เผยแพร่พิกัด”, venue link, building, official source link, check date, id",
+      "verificationType": "unit + browser"
+    },
+    {
+      "id": "AC13",
+      "scenario": "Frames",
+      "expected": "77 frame files, 928 districts; loaded per province on demand; versioned with the release tag",
+      "verificationType": "unit + browser"
+    },
+    {
+      "id": "AC14",
+      "scenario": "Focus + quiet",
+      "expected": "Only the focus carries fills, cue symbols and rounded massing; the rest is quiet; auto focus releases off screen",
+      "verificationType": "browser"
+    },
+    {
+      "id": "AC15",
+      "scenario": "Venue view",
+      "expected": "Breadcrumb ประเทศไทย › จังหวัด › เขต › venue; eye preset; only the venue’s rows in detail",
+      "verificationType": "browser"
+    },
+    {
+      "id": "AC16",
+      "scenario": "Country view",
+      "expected": "Province frames count-filled below zoom 8; click drills into the province",
+      "verificationType": "browser"
+    },
+    {
+      "id": "AC17",
+      "scenario": "Charts",
+      "expected": "Count bars sorted with map colours; matrix cells equal and summing to the district; brand bars in format series with cues",
+      "verificationType": "unit + browser"
+    },
+    {
+      "id": "AC18",
+      "scenario": "Table",
+      "expected": "Branch, brand, status, district/province, place method, point; paged 25; opens the branch",
+      "verificationType": "browser"
+    },
+    {
+      "id": "AC19",
+      "scenario": "Thai copy",
+      "expected": "Short natural Thai, units on numbers, no market/sales/footfall wording, no static counts in copy",
+      "verificationType": "review"
+    },
+    {
+      "id": "AC20",
+      "scenario": "LDS parity",
+      "expected": "check-lds-parity reports 0 failures against the LDS 0.9.7 source file",
+      "verificationType": "script"
+    },
+    {
+      "id": "AC21",
+      "scenario": "Publication hygiene",
+      "expected": "No address, phone, map link, notes, README text or private document link in the tree",
+      "verificationType": "unit"
+    },
+    {
+      "id": "AC22",
+      "scenario": "Receipts",
+      "expected": "Base and geometry receipts published; digests match the index and the dataset meta",
+      "verificationType": "unit"
+    },
+    {
+      "id": "AC23",
+      "scenario": "Release consistency",
+      "expected": "One cache tag; one product version across package.json, design-intent.json and handoff JSON",
+      "verificationType": "unit"
+    },
+    {
+      "id": "AC24",
+      "scenario": "Live bytes",
+      "expected": "npm run verify:live: every published file matches the manifest",
+      "verificationType": "script"
+    },
+    {
+      "id": "AC25",
+      "scenario": "Live walk",
+      "expected": "Desktop and 390 px, light and dark, with the real basemap and massing; findings recorded in VERIFICATION.md",
+      "verificationType": "browser"
+    }
+  ],
+  "developerWorkflow": [
+    "Read AGENTS.md, then handoff/README.md, PRODUCT_STATEMENT.md and the paired human/machine briefs",
+    "Run npm test before changes; keep the row scopes, status unit, focus modes, tie rule, metric, frames and coverage contracts and the panel action contract",
+    "Change one bounded task at a time; preserve invariant IDs INV01–INV20",
+    "Validate calculations with the real data in tests/ (tests/helpers.js loads it once)",
+    "Review rendered Thai at 390 px and desktop in both themes; when tiles are blocked use a local harness for layout, then confirm the real-tile look live",
+    "Bump the cache tag and versions together; publish; run npm run verify:live and walk the live site before reporting"
+  ],
+  "backlog": [
+    {
+      "id": "N01",
+      "title": "Brand logo registry (original bytes, sha256, role) and logos at detail zoom",
+      "ownerRole": "research + developer",
+      "status": "backlog"
+    },
+    {
+      "id": "N02",
+      "title": "Check the terms of use of each official source before any commercial or production use; record the decision",
+      "ownerRole": "owner / legal",
+      "status": "backlog"
+    },
+    {
+      "id": "N03",
+      "title": "Scheduled re-check of the brands with a change log (opened, closed, announced) and a dated archive",
+      "ownerRole": "data engineer",
+      "status": "backlog"
+    },
+    {
+      "id": "N04",
+      "title": "Link Locale Insight ids for neighbourhood context (id join only)",
+      "ownerRole": "data engineer",
+      "status": "backlog"
+    },
+    {
+      "id": "N05",
+      "title": "Verify companies against the company registry and record registration ids",
+      "ownerRole": "research",
+      "status": "backlog"
+    },
+    {
+      "id": "N06",
+      "title": "Link more branches to CityMETER venues by venue id (research), never by name",
+      "ownerRole": "research",
+      "status": "backlog"
+    },
+    {
+      "id": "N07",
+      "title": "Reduce unplaced branches: ask the research round for district words or source points where official pages have them",
+      "ownerRole": "research",
+      "status": "backlog"
+    },
+    {
+      "id": "N08",
+      "title": "Field-check a sample of listed branches to measure the gap between “listed” and open",
+      "ownerRole": "research",
+      "status": "backlog"
+    },
+    {
+      "id": "N09",
+      "title": "Production dataset in CityMETER (d= parameter) once a product dataset id exists",
+      "ownerRole": "owner + platform",
+      "status": "backlog"
+    },
+    {
+      "id": "N10",
+      "title": "Validate hypotheses H1–H5 with external users",
+      "ownerRole": "owner / product",
+      "status": "backlog"
+    }
+  ]
+}

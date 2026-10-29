@@ -1,0 +1,497 @@
+{
+  "$schema": "./handoff.schema.json",
+  "schemaVersion": "1.5.0",
+  "documentType": "product-brief",
+  "productId": "citymeter-fitness",
+  "productVersion": "0.1.0",
+  "updatedOn": "2026-10-29",
+  "datasetCheckedOn": "2026-10-26",
+  "language": "th (UI) · en (contracts)",
+  "productName": "CityMETER · Fitness",
+  "repository": "https://github.com/montri-th/fitness",
+  "liveUrl": "https://montri-th.github.io/fitness/",
+  "productStatement": "../PRODUCT_STATEMENT.md",
+  "job": "สาขาฟิตเนสกระจุกอยู่ตรงไหน และเป็นฟิตเนสแบบไหน — and who is behind the brands",
+  "audiences": [
+    "expansion teams of fitness and studio chains",
+    "leasing and asset teams of shopping centres, offices and mixed-use projects",
+    "analysts, investors and advisors in location and wellness"
+  ],
+  "journey": [
+    "first Aha in 3D (focused districts of the leading province)",
+    "district panel (format mix, brands, venues, branches)",
+    "brand card (companies with evidence, same-company brands)",
+    "branch (status, place method, point role, official source)",
+    "charts and table",
+    "CityMETER production deep link"
+  ],
+  "changesSince": "first release (structure carried over from CityMETER · Luxury Brands 0.5 / Restaurants 0.5 / Pharmacy 0.1.1)",
+  "rowScopes": {
+    "scopeRows": "rows after search, status, format, province and brand filters, before any district/venue selection or focus — the Aha base, the choropleth, the charts and every rank",
+    "baseRows": "scopeRows narrowed by the selected เขต/อำเภอ or CityMETER venue",
+    "rows": "baseRows narrowed by the district focus — pins with detail, counters, the table"
+  },
+  "firstAha": {
+    "scope": "scopeRows",
+    "ranking": "เขต/อำเภอ by listed rows (then distinct brands, then name) inside the home province = the province holding the most rows placed at district level; up to three; never cut through a tie: when the next district equals the last shown, only districts strictly above it remain; none left → spread",
+    "headlineTemplate": "{share}% ของ{สาขา|รายการ}ใน{home}ที่ระบุ{เขต|อำเภอ}ได้ อยู่ใน {n} {เขต|อำเภอ}นี้ (one district: อยู่ใน{เขตX})",
+    "numerator": "rows of the focused districts (matched membership)",
+    "denominator": "rows of the home province that carry a district (rows placed only at province level are stated apart)",
+    "personality": "studio share of the focus rows against the rest of the home province’s placed rows, both bases stated; shown when both sides have ≥ 10 rows and no format filter is set",
+    "secondaryFinding": "district(s) with the most rows outside the home province, every district tied at that count; hidden with a province filter and when the top is 1",
+    "spread": "{n} {เขต|อำเภอ}ใน{home} มี{สาขา}{เขต}ละ {k} {สาขา}เท่ากัน — the camera frames those districts, no share is shown",
+    "defaultFocus": "auto",
+    "defaultCamera": "city preset, fitPitched over the focused districts (outline vertices when loaded, bbox corners before)",
+    "action": "ดูทุกพื้นที่ (?areas=all); เปรียบเทียบพื้นที่ (opens charts); district names are links",
+    "model": "js/area-insight.js#summarizeAreaInsight",
+    "filter": "js/area-insight.js#filterAreaRows",
+    "defaultSnapshot": {
+      "asOf": "2026-10-26",
+      "unit": "listed",
+      "home": "BKK",
+      "areaIds": [
+        "1039",
+        "1007",
+        "1033"
+      ],
+      "names": [
+        "วัฒนา",
+        "ปทุมวัน",
+        "คลองเตย"
+      ],
+      "rows": [
+        21,
+        19,
+        16
+      ],
+      "count": 56,
+      "homePlaced": 147,
+      "homeRows": 186,
+      "homeUnplaced": 39,
+      "sharePercent": 38,
+      "studio": {
+        "focus": 35,
+        "focusTotal": 56,
+        "rest": 28,
+        "restTotal": 91
+      },
+      "outside": {
+        "id": "8301",
+        "name": "เมืองภูเก็ต",
+        "province": "PKT",
+        "count": 17
+      },
+      "note": "regression fixture (tests/insight.test.js), never a UI constant"
+    },
+    "fallbacks": {
+      "noRows": "ไม่พบสาขาตามตัวกรองนี้ + ดูทุกสถานะ (when other statuses have rows) + ล้างตัวกรอง",
+      "noDistrict": "{n} สาขาตามตัวกรอง — ยังระบุเขต/อำเภอไม่ได้ + ดูรายชื่อ",
+      "spread": "see spread",
+      "explicit": "กำลังสำรวจ {n} เขต/อำเภอ + ดูทุกพื้นที่"
+    }
+  },
+  "countingUnitContract": {
+    "default": "listed — the official source still lists the branch on the check date (สาขา)",
+    "alternatives": [
+      "announced",
+      "closed",
+      "review",
+      "all"
+    ],
+    "words": {
+      "listed": "สาขา",
+      "other": "รายการ"
+    },
+    "rule": "never add statuses into one figure; the overview names the other statuses of the same filters in one line; js/model.js#unitWords and filterRows"
+  },
+  "metricContract": {
+    "areas": "count of rows per เขต/อำเภอ (LDS count)",
+    "provinces": "count of rows per province frame (LDS count)",
+    "eligibility": "none — counts are totals; ties are never cut (firstAha.ranking)",
+    "combined": "Σ rows of the focused districts ÷ the home province’s placed rows (a share, numerator and denominator shown)",
+    "notDrawn": "no per-area or per-person density: the research covers a declared set of brands",
+    "classes": "geometric 1–2–5, ratio 2, closed integer intervals, last closed at the observed maximum (js/scales.js#geometricBreaks)"
+  },
+  "coverageContract": {
+    "covered": "every เขต/อำเภอ of the 77 provinces is in the research scope (official branch lists of the brands)",
+    "states": {
+      "measured": "count class",
+      "measured_zero": "lowest class + zero outline — none of the brands lists a branch there",
+      "no_data": "kept for the contract, unused",
+      "out_of_scope": "not drawn"
+    },
+    "unplaced": "rows without a district are counted apart (province only, no province, conflict), never shown as 0"
+  },
+  "categoricalCueContract": {
+    "registry": "LDS 0.9.7 categorical landometer-series-10-v8 with series shape cues (DATAVIZ-05)",
+    "bindBy": "stable format group id (js/cues.js#GROUP_SERIES)",
+    "groups": [
+      {
+        "id": "gym",
+        "th": "ยิม/ฟิตเนสคลับ",
+        "series": 2,
+        "cue": "square",
+        "segments": [
+          "gym_club",
+          "gym_chain",
+          "gym_independent"
+        ]
+      },
+      {
+        "id": "ems",
+        "th": "ฟิตเนส EMS",
+        "series": 3,
+        "cue": "triangle",
+        "segments": [
+          "gym_chain_ems"
+        ]
+      },
+      {
+        "id": "training",
+        "th": "เทรนนิ่ง/PT",
+        "series": 9,
+        "cue": "dash",
+        "segments": [
+          "strength_functional_pt"
+        ]
+      },
+      {
+        "id": "pilates",
+        "th": "พิลาทิส/บาร์เร่",
+        "series": 1,
+        "cue": "circle",
+        "segments": [
+          "pilates_barre_lagree",
+          "pilates_reformer",
+          "pilates_hot_mat",
+          "pilates_multiclass"
+        ]
+      },
+      {
+        "id": "boutique",
+        "th": "คลาสบูทีค/เต้น",
+        "series": 4,
+        "cue": "diamond",
+        "segments": [
+          "boutique_multiclass",
+          "dance_fitness"
+        ]
+      },
+      {
+        "id": "yoga",
+        "th": "โยคะ/แอเรียล",
+        "series": 7,
+        "cue": "hexagon",
+        "segments": [
+          "yoga_aerial_pole",
+          "yoga"
+        ]
+      },
+      {
+        "id": "combat",
+        "th": "มวย/ต่อสู้",
+        "series": 5,
+        "cue": "cross",
+        "segments": [
+          "combat_fitness"
+        ]
+      },
+      {
+        "id": "climb",
+        "th": "ปีนผา/มูฟเมนต์",
+        "series": 10,
+        "cue": "plus",
+        "segments": [
+          "climbing_bouldering",
+          "parkour_movement"
+        ]
+      },
+      {
+        "id": "special",
+        "th": "บริการเฉพาะ",
+        "series": 8,
+        "cue": "ring",
+        "segments": [
+          "kids_activity",
+          "fitness_retreat_multisport",
+          "self_practice_rental"
+        ]
+      }
+    ],
+    "noStar": "series 6 (star) unused — it would read as a rating",
+    "family": {
+      "gym": [
+        "gym",
+        "ems"
+      ],
+      "studio": [
+        "training",
+        "pilates",
+        "boutique",
+        "yoga",
+        "combat",
+        "climb"
+      ],
+      "special": [
+        "special"
+      ]
+    }
+  },
+  "framesContract": {
+    "index": "data/area-index.json — 928 districts and 77 provinces, no geometry (codes, names, production areaSqm, label, bbox)",
+    "frames": "data/frames/{CODE}.json — district outlines per province (77 files)",
+    "loading": "the selection’s provinces at once; the provinces under the map at district zoom (≤ 6 per move); never all 77 up front; versioned with the release tag",
+    "failure": "reported and retried on the next request; panels, charts and table never depend on outlines"
+  },
+  "mapFocusContract": {
+    "principle": "detail only for the focused part — the selected district, the venue, the automatic or explicit focus; everything else visible but quiet",
+    "states": {
+      "auto": "default top districts; released when none of them is on screen",
+      "explicit": "?areas=a,b,c",
+      "none": "?areas=all"
+    },
+    "choropleth": "LDS count classes under the basemap’s first line layer; zoom 8–14.5; the selected จังหวัด from zoom 4 (province view); measured_zero = lowest class + 2 px zero outline"
+  },
+  "buildingJoinContract": {
+    "buildings": "focus-tier OpenStreetMap footprints the map draws (js/massing.js)",
+    "points": "rows with a point (the source’s own point or the CityMETER venue reference point)",
+    "rule": "point inside the footprint (smallest when nested) — “จุดตกในอาคาร”, never “ตั้งอยู่ใน”",
+    "click": "one row → branch; several → building panel; none → falls through to the district",
+    "neverChanges": "any count, membership or venue link"
+  },
+  "interactionContract": {
+    "mapClicks": "focus pin → focus building → province view district / province frame (below zoom 8) → district (area-hit)",
+    "quietDots": "never focusable or clickable",
+    "keyboard": "roving tabindex over HTML pins from zoom 15.5; roving tablist for chart views; visible focus everywhere"
+  },
+  "basemapContract": {
+    "generator": "js/map-style.js (no hosted style URL)",
+    "tiles": "https://tiles.openfreemap.org/planet (OpenMapTiles schema)",
+    "palette": "--basemap-* tokens of assets/theme.css; data colours never set there"
+  },
+  "massingContract": {
+    "cityTier": "basemap building extrusions, quiet, faded with distance from the focus",
+    "focusTier": "rounded footprints from z14 tiles in the focus regions (≤ 16 tiles nearest the camera; from zoom 12 in 3D when complete, else 13)",
+    "hostTier": "unused (no host geometry in this product)",
+    "rounding": "roundingRadiusM(zoom) 3–12 m",
+    "enclosure": "encloseOffsetM keeps the rounded shape around the original outline"
+  },
+  "cameraContract": {
+    "presets": {
+      "plan": "pitch 0",
+      "city": "pitch 56 · bearing 28 · fov 36.87 (overview)",
+      "model": "pitch 60 · fov 14 (district, branch)",
+      "eye": "pitch 75 · fov 24 (venue, building, branch at its venue’s point)"
+    },
+    "fitting": "fitPitched: flat fit, then zoom out until every outline vertex is inside the padded viewport, then in while it still fits; pitch ≤ 90 − fov/2 − 3"
+  },
+  "breadcrumbContract": {
+    "levels": [
+      "ประเทศไทย",
+      "จังหวัด",
+      "เขต/อำเภอ",
+      "ศูนย์การค้า (venue mode)"
+    ],
+    "productionPath": "/v3/citymeter/{abbrEn}/D/{district code}",
+    "demoQuery": "?province=BKK&area=1039 · ?venue={CityMETER venue uuid} · ?store={row id}",
+    "provinceCodes": "production abbrEn from base info (data/area-index.json provinces[].id)"
+  },
+  "provinceContract": {
+    "frames": "data/provinces.geojson",
+    "fill": "count classes below zoom 8 without a province filter",
+    "labels": "ink chips to zoom 9",
+    "unknown": "rows without a province listed apart (ไม่ระบุจังหวัด)"
+  },
+  "pictogramContract": {
+    "file": "assets/icons/material-pictogram-300.woff2",
+    "sha256": "33d9084bbd26b976d5c42002a0c669618573c21123567247816e9e694671c7b0",
+    "used": {
+      "brand": "แบรนด์",
+      "store": "สาขา",
+      "venue": "ศูนย์การค้า",
+      "area": "เขต/อำเภอ",
+      "province": "จังหวัด",
+      "segment": "รูปแบบ"
+    },
+    "unused": [
+      "exclusive (star)",
+      "gla"
+    ],
+    "status": "owner test exception 2026-10-22, text carries the meaning"
+  },
+  "panel": {
+    "modes": [
+      "overview (+ brand card with a brand filter)",
+      "area",
+      "venue",
+      "building",
+      "store"
+    ],
+    "actions": [
+      "select-area",
+      "select-venue",
+      "select-store",
+      "select-building",
+      "select-province",
+      "filter-brand",
+      "set-status",
+      "back",
+      "explore-top",
+      "clear-focus",
+      "open-charts",
+      "open-table",
+      "clear-filter",
+      "leave-area"
+    ],
+    "models": {
+      "overview": "buildOverview",
+      "area": "buildAreaProfile",
+      "brand": "buildBrandProfile",
+      "venue": "buildVenueProfile",
+      "building": "buildBuildingProfile",
+      "store": "buildStoreDetail"
+    },
+    "provenance": "one line per view: ชุดข้อมูล CityMETER Fitness · แหล่ง หน้าทางการของแต่ละแบรนด์ · ตรวจ {date} · ขอบเขต {boundary} + unit clause"
+  },
+  "data": {
+    "rows": "data/fitness.json (columnar cols + vocab + points + brands + companies + relationships + venues)",
+    "index": "data/area-index.json",
+    "frames": "data/frames/{CODE}.json",
+    "provinces": "data/provinces.geojson",
+    "receipts": "data/boundary-receipts.json",
+    "counts": {
+      "rows": 378,
+      "listed": 352,
+      "placedListed": 252,
+      "brands": 126,
+      "companies": 44,
+      "relationships": 48,
+      "venues": 7
+    }
+  },
+  "visualSystem": {
+    "lds": {
+      "version": "0.9.7",
+      "release": "v0.9.7-owner.1",
+      "revision": "standalone-0.9.7-r1",
+      "colorSetId": "color-srgb-10",
+      "sha256": "d3085cbc0a50195f1cbf0c77b1d77c0d19b84364daf2948eb367348d65432d96"
+    },
+    "analytical": "count (scaleVersion 4ff5c1fb4be71ecd13c48685b38371b528bcd4ce369ce964a75354c2eb4d0980), identical HEX on both themes",
+    "parity": "scripts/check-lds-parity.mjs — 115 checks against the source file"
+  },
+  "invariants": [
+    {
+      "id": "INV01",
+      "rule": "One row with a point owns one symbol; no clustering or aggregation, including quiet context dots"
+    },
+    {
+      "id": "INV02",
+      "rule": "Membership is the district matched at build time from the row’s own data (row.admin, row.how); never re-assign by point-in-polygon on display coordinates or by a name at runtime"
+    },
+    {
+      "id": "INV03",
+      "rule": "The default unit is listed rows (สาขา); other statuses are รายการ and never added to it"
+    },
+    {
+      "id": "INV04",
+      "rule": "Counts only: no per-area or per-person density, no market share, size, members, sales or footfall wording"
+    },
+    {
+      "id": "INV05",
+      "rule": "Missing is never zero: rows without a district are counted apart and named; a district without rows is measured_zero of this dataset"
+    },
+    {
+      "id": "INV06",
+      "rule": "The Aha never cuts through a tie; all-equal districts read as spread"
+    },
+    {
+      "id": "INV07",
+      "rule": "Numerator and denominator of every share are on screen; the studio comparison states both bases"
+    },
+    {
+      "id": "INV08",
+      "rule": "Brands, companies and venues join by the sheet’s ids only; names are search keys"
+    },
+    {
+      "id": "INV09",
+      "rule": "Company names are source-stated, not registry-certified; a missing record never reads as independent"
+    },
+    {
+      "id": "INV10",
+      "rule": "Points are never invented or moved; display slots for co-located pins keep a leader to the anchor"
+    },
+    {
+      "id": "INV11",
+      "rule": "Format colour always travels with its series shape cue; no star"
+    },
+    {
+      "id": "INV12",
+      "rule": "Analytical colours are the LDS count LUT, identical on both themes; EVID-05 treatments use the dataState tokens"
+    },
+    {
+      "id": "INV13",
+      "rule": "Every panel view ends with exactly one provenance line (dataset · source · date · boundary + unit clause)"
+    },
+    {
+      "id": "INV14",
+      "rule": "Focus + quiet: detail only for the focused part; the automatic focus releases off screen, a user focus or selection never does"
+    },
+    {
+      "id": "INV15",
+      "rule": "Outlines load per province on demand; panels, charts and table work without them"
+    },
+    {
+      "id": "INV16",
+      "rule": "“จุดตกในอาคาร”, never “ตั้งอยู่ใน”; the building join never changes a count"
+    },
+    {
+      "id": "INV17",
+      "rule": "Breadcrumb uses production codes and /D/ deep links; a branch is the heading, never a crumb"
+    },
+    {
+      "id": "INV18",
+      "rule": "No addresses, phone numbers, map links, researcher notes or README text in the published data; https public links only"
+    },
+    {
+      "id": "INV19",
+      "rule": "One release cache tag on every entry and module; versions agree across package.json, design-intent.json and the handoff JSON"
+    },
+    {
+      "id": "INV20",
+      "rule": "Every 3D preset keeps pitch ≤ 90 − fov/2 − 3"
+    }
+  ],
+  "chartContracts": [
+    {
+      "viewKey": "count",
+      "title": "จำนวนสาขา",
+      "question": "เขต/อำเภอไหนมีสาขามากที่สุด",
+      "encoding": "sorted horizontal bars, map class colour, value beside the bar",
+      "metric": "rows per district + distinct brands",
+      "scope": "scopeRows, top 20 of all ranked districts; unplaced rows stated in the caption"
+    },
+    {
+      "viewKey": "mix",
+      "title": "รูปแบบ",
+      "question": "เขตที่มีสาขามากเป็นฟิตเนสแบบไหน",
+      "encoding": "district × format matrix, equal cells, count classes, cue in headers",
+      "metric": "rows per cell",
+      "scope": "top 12 districts of the count view"
+    },
+    {
+      "viewKey": "brands",
+      "title": "แบรนด์",
+      "question": "แบรนด์ใดมีสาขามากที่สุดในตัวกรองนี้",
+      "encoding": "sorted horizontal bars in the brand’s format series with its cue",
+      "metric": "rows per brand (all placements)",
+      "scope": "top 20 of all brands found"
+    }
+  ],
+  "delivery": {
+    "site": "GitHub Pages from main /root",
+    "handoff": "dist/CityMETER-Fitness-Developer-Handoff.zip (START_HERE.md, RELEASE_RECEIPT.json, evidence/, source/)",
+    "liveCheck": "npm run verify:live",
+    "cacheTag": "?v=20261029-r1 on every entry file and, through the import map in index.html, on every ES module; the frame files take the same tag from import.meta.url; bump it with package.json version (tests/release.test.js)"
+  }
+}

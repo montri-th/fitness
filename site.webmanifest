@@ -1,0 +1,24 @@
+{
+  "name": "Fitness · CityMETER",
+  "short_name": "Fitness",
+  "description": "สาขาฟิตเนสกระจุกอยู่ตรงไหน และเป็นฟิตเนสแบบไหน — แผนที่ระดับเขต/อำเภอของสาขาฟิตเนสและสตูดิโอทั่วประเทศ",
+  "lang": "th",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#F6F7F3",
+  "theme_color": "#F6F7F3",
+  "icons": [
+    {
+      "src": "assets/icons/icon-portfolio-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "assets/icons/icon-portfolio-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

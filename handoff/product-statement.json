@@ -1,0 +1,254 @@
+{
+  "$schema": "./handoff.schema.json",
+  "schemaVersion": "1.5.0",
+  "documentType": "product-statement",
+  "productId": "citymeter-fitness",
+  "productVersion": "0.1.0",
+  "updatedOn": "2026-10-29",
+  "humanDocument": "../PRODUCT_STATEMENT.md",
+  "standard": "Landometer Master Brand Brief v0.5.3 §7.2 (Who / What / Which / How) with the §3.7 evidence standard",
+  "evidenceLabels": [
+    "Observed fact",
+    "Owner-stated",
+    "Inference",
+    "Hypothesis",
+    "Project evidence"
+  ],
+  "dataset_id": "research.TH.fitness",
+  "dataset_name_en": "CityMETER Fitness",
+  "dataset_name_th": "ฟิตเนสและสตูดิโอในประเทศไทย",
+  "category": "Location · branch network of a declared brand set",
+  "outcome_layer": "See → Understand → Decide (act and learn are future extensions)",
+  "status": "public demo 0.1.0 on GitHub Pages; research master, not a market census",
+  "positioning": {
+    "one_line_highlight": "แผนที่เมือง 3 มิติของสาขาฟิตเนสและสตูดิโอในไทย ที่บอกว่ากระจุกตรงไหน เป็นแบบไหน และใครอยู่เบื้องหลัง พร้อมหลักฐานรายสาขา",
+    "unique_advantage": "format × district × company in one view, every row linked to the brand’s own official page with its check date and status; districts are CityMETER production codes matched from each row’s own data with the method recorded",
+    "unique_vs_competitors": "map search shows points, brand locators one brand at a time, class-booking apps only their partners, company searches no locations — none of them reads format concentration by district with the companies behind the brands and per-row evidence"
+  },
+  "users": {
+    "primary_users": [
+      "expansion teams of fitness and studio chains",
+      "leasing and asset teams of shopping centres, offices and mixed-use projects",
+      "analysts, investors and advisors in location and wellness"
+    ],
+    "functional_needs": [
+      "see where branches of peer brands cluster by district",
+      "see whether a district is studio-led or gym-led",
+      "see which company operates or invests behind a brand, with evidence",
+      "separate listed branches from announced, closed and unclear ones",
+      "compare districts and brands quickly"
+    ],
+    "emotional_needs": [
+      "not open next to a competitor unknowingly",
+      "defend a shortlist with sources and dates",
+      "reach the right decision maker of a brand"
+    ],
+    "trigger_voice_in_head": [
+      "แถวนี้มีพิลาทิสกี่ที่แล้ว?",
+      "ยิมเครือใหญ่อยู่เขตไหนบ้าง?",
+      "แบรนด์นี้ใครถือสิทธิ์ในไทย?",
+      "ตัวเลขนี้นับอะไร ตรวจเมื่อไร?"
+    ],
+    "value_proposition": "answer where, which format and who in one screen within a minute, every number traceable to an official page",
+    "evidence": "Hypothesis — not yet validated with external users (hypotheses_to_validate)"
+  },
+  "problem": {
+    "statement": "fitness branch information is scattered across each brand’s locator, social pages and booking apps; none shows which format concentrates in which district and who is behind the brands",
+    "urgency": "fitness sites tie up long leases and fixed fit-outs (Inference)",
+    "severity": "a wrong district or format is costly and slow to reverse (Inference)"
+  },
+  "competitor_landscape": {
+    "present_competitors": [
+      {
+        "name": "Map search (e.g. Google Maps)",
+        "how_users_use_it": "search “fitness / pilates near …” and scan the pins",
+        "strength": "familiar, reviews and photos",
+        "gap": "point by point, no district reading, verified brands mixed with any pin, no companies"
+      },
+      {
+        "name": "Each brand’s branch locator",
+        "how_users_use_it": "open brand by brand and copy into a spreadsheet",
+        "strength": "official source",
+        "gap": "one brand at a time, different formats, no cross-brand comparison, repeated work"
+      },
+      {
+        "name": "Class-booking apps covering many studios",
+        "how_users_use_it": "see which neighbourhoods have bookable classes",
+        "strength": "many studios",
+        "gap": "only partner studios, no official status, no companies"
+      },
+      {
+        "name": "Company searches",
+        "how_users_use_it": "look up who holds a brand",
+        "strength": "legal-entity facts",
+        "gap": "not tied to branches or districts; requires knowing the company first"
+      },
+      {
+        "name": "Consultant reports and field visits",
+        "how_users_use_it": "feasibility studies, walking the area",
+        "strength": "deep and specific",
+        "gap": "expensive, slow, quickly outdated, hard to repeat"
+      }
+    ],
+    "aspirational_competitors": [
+      "location intelligence platforms with visit data (depth of demand signal)",
+      "global place search (familiarity and speed)"
+    ],
+    "expected_quality_bar": "where / which format / who in one screen within a minute; every figure opens its official source; statuses never mixed; missing never shown as zero"
+  },
+  "winning_strategy": [
+    "per-branch evidence from official pages with separated statuses (listed / announced / closed / review)",
+    "district reading on CityMETER production codes, matched from each row’s own data with the method recorded and the unplaced counted apart",
+    "district personality: studio share of the concentrated districts against the rest of the province, both bases stated",
+    "companies behind brands by recorded role with evidence links, and brands recorded with the same company",
+    "3D focus scene that opens on the finding, ready for a meeting room",
+    "production deep links (/v3/citymeter/{province}/D/{district})"
+  ],
+  "primary_decisions": [
+    "which district to open next and in which format",
+    "which fitness brand to court for a building and whom to contact",
+    "which operators and investors matter in a district"
+  ],
+  "primary_questions": [
+    "สาขาฟิตเนสกระจุกอยู่ตรงไหน และเป็นฟิตเนสแบบไหน",
+    "แบรนด์นี้มีบริษัทใดอยู่เบื้องหลัง",
+    "ใครกำลังประกาศเปิดสาขา"
+  ],
+  "channel_readiness": "demo for conversations with customers, funders and the internal team; not a production dataset",
+  "primary_decision_actions": [
+    "drill into a district",
+    "open a brand card",
+    "open the official source of a branch",
+    "compare districts and brands in the charts",
+    "open the same district in CityMETER production"
+  ],
+  "data_sources": [
+    "CityMETER Fitness Thailand — Research Master 2026-10-26 (internal sheet; export sha256 in data/fitness.json meta.exportSha256)",
+    "official brand pages per row",
+    "CityMETER Shopping Center registry (7 venues by id)",
+    "CityMETER production base info and boundaries (receipts in data/boundary-receipts.json)",
+    "OpenGISData-Thailand names (CC BY 4.0) for reading English addresses"
+  ],
+  "spatial_granularity": "เขต/อำเภอ (252 of 352 listed branches); province (51); none (49); points on 36 rows",
+  "temporal_coverage": "single check of each official page on 2026-10-26",
+  "update_frequency": "per research round; no automatic refresh yet (backlog N03)",
+  "last_updated": "2026-10-26",
+  "key_metrics": [
+    "branches per เขต/อำเภอ (count)",
+    "share of the leading province’s placed branches in the focused districts",
+    "studio share (focus vs rest of the province)",
+    "branches per brand",
+    "other statuses counted apart"
+  ],
+  "visual_layers": [
+    "district choropleth (LDS count, geometric 1–2–5, ratio 2)",
+    "province frames (count) below zoom 8",
+    "format cue symbols for rows with a point",
+    "quiet context dots",
+    "OSM massing (focus tier rounded, city tier quiet)",
+    "buildings in the data colour when opened"
+  ],
+  "recommended_pairing_layers": [
+    "Shopping Center",
+    "Building",
+    "Locale Insight (not yet linked)",
+    "Population"
+  ],
+  "data_transparency": {
+    "unit": {
+      "row": "one row of 02_STORES — a source-qualified branch observation (official operator page, locator, social profile or announcement); not a field-verified storefront",
+      "default": "listed — rows whose source still lists the service on the check date (source_listed); announced, closed and review rows are counted apart and never added to it"
+    },
+    "statusMap": {
+      "source_listed": "listed",
+      "announced_opening_soon": "announced",
+      "announced_coming_soon": "announced",
+      "announced_presale": "announced",
+      "announced_opening_date_today": "announced",
+      "permanently_closed": "closed",
+      "closed_official": "closed",
+      "source_status_unknown": "review",
+      "primary_network_listed_location_unresolved": "review",
+      "official_profile_listed_source_conflict": "review",
+      "primary_listed_detail_refresh_pending": "review"
+    },
+    "adminMethods": {
+      "point": "published source point inside the production district (display outline; points within 150 m of an edge confirmed on full-resolution production subdistrict geometry)",
+      "host": "CityMETER Shopping Center id → registry reference point (07_SHOPPING_CENTERS) → production district",
+      "address": "the row's own address text (scripts/admin_text.py): marker · pair · mueang · trailing",
+      "province": "province only (the sheet's province, else the province or single-province postcode the address states)",
+      "conflict": "the sheet's province disagrees with the row's own address or point — placed nowhere, listed in meta.conflicts",
+      "none": "no province anywhere in the row"
+    },
+    "conflicts": [
+      {
+        "outlet": "POS-FIT-1e82f3cf9dee",
+        "brand": "Jetts",
+        "store": "Jetts - Rest Park Suvarnabhumi (Suvarnabhumi)",
+        "sheetProvince": "ตราด",
+        "note": "address points to สมุทรปราการ"
+      }
+    ],
+    "excludedFields": [
+      "address",
+      "unit_floor",
+      "public_business_phone",
+      "map_url",
+      "raw coordinates strings",
+      "notes",
+      "branch_source_id",
+      "company_research_note",
+      "coverage_note",
+      "sister_brand_names (15_SISTER_BRANDS: Thai presence mostly not established)",
+      "README text",
+      "venue source_url",
+      "internal sheet and registry URLs"
+    ],
+    "provenanceLine": "every panel view ends with dataset · source · date · boundary and what one counted unit is"
+  },
+  "known_limitations": [
+    "a declared set of 126 brands, not every fitness business in Thailand",
+    "100 of 352 listed branches have no district (province only, no province, or a province conflict)",
+    "few points (36 rows); pins are not the distribution — district colours are",
+    "status = what the official page shows on the check date, not daily opening, size, members, price or footfall",
+    "company names as the sources state them, not checked against the company registry; a missing record does not mean independent",
+    "only 8 rows are linked to a CityMETER venue",
+    "no logos collected",
+    "data-use rights of each source not yet reviewed (backlog N02)"
+  ],
+  "methodology_note": "DATA_METHOD.md",
+  "example_use_cases": [
+    "a studio founder shortlists districts where studios are not yet dense",
+    "a leasing team lists gym brands absent from its district and the companies to approach",
+    "an analyst maps operators and investors behind the largest brands"
+  ],
+  "hypotheses_to_validate": [
+    {
+      "hypothesis": "H1 expansion teams answer “which district next and why” from the first screen within a minute",
+      "test": "5 real users on their own task, timed and asked to explain",
+      "criterion": "≥ 4/5 answer with a figure and its source within 60 s"
+    },
+    {
+      "hypothesis": "H2 the studio share changes how specialist studios shortlist districts",
+      "test": "interview 3–5 studio founders on real district screens",
+      "criterion": "≥ 3 say they would use it to shortlist or ask for it elsewhere"
+    },
+    {
+      "hypothesis": "H3 the companies behind brands are valuable enough for leasing teams to reuse",
+      "test": "3 leasing teams prepare a contact list with the brand cards",
+      "criterion": "≥ 2 reuse it within two weeks or ask for more brands"
+    },
+    {
+      "hypothesis": "H4 stating the unplaced branches raises trust rather than confusion",
+      "test": "A/B the line under the first finding with 6 users",
+      "criterion": "≥ 5/6 explain the denominator correctly"
+    },
+    {
+      "hypothesis": "H5 a quarterly refresh is enough for location decisions",
+      "test": "re-check 20 brands after three months",
+      "criterion": "< 10% of branches change status per quarter, else refresh more often"
+    }
+  ],
+  "owner_team": "Landometer · CityMETER (owner: Montri)",
+  "last_reviewed": "2026-10-29"
+}
