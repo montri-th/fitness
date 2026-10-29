@@ -4,7 +4,7 @@
 
 | รุ่น | commit | Pages | ไบต์บนเว็บ (`npm run verify:live`) |
 |---|---|---|---|
-| 0.3.0 | commit ของรุ่นนี้ (โค้ด ข้อมูล โลโก้ เอกสาร) · ผลบนเว็บบันทึกใน commit ถัดไป | `main` / root · 30 ต.ค. 2569 | ดู “0.3.0 · Live” |
+| 0.3.0 | `a3fdc80` (tag r4) · `7597b34` (tag r5: ฟอนต์ไอคอนอ้างด้วย hash) · บันทึกผลใน commit ถัดไป | `main` / root · 30 ต.ค. 2569 | 344 ok · 0 failed (commit `a3fdc80` และ `7597b34`) |
 | 0.2.1 | `8e212d0` (guard เอกสาร handoff ผลเดินตรวจ 0.2.0) · อัปเดตเอกสารนี้ใน commit ถัดไป | `main` / root · 29 ต.ค. 2569 | 158 ok · 0 failed (commit `8e212d0`) |
 | 0.2.0 | `621bc47` (โค้ด เอกสาร handoff) · บันทึกผล `c5a1dbd` | `main` / root · 29 ต.ค. 2569 | 157 ok · 0 failed (commit `621bc47`) |
 | 0.1.0 | `d1abf70` (โค้ด ข้อมูล เอกสาร) · อัปเดตเอกสารนี้ใน commit ถัดไป | `main` / root · 29 ต.ค. 2569 | 156 ok · 0 failed (commit `d1abf70`) |
@@ -34,6 +34,21 @@
 ### 0.3.0 · Rendered (Chromium ในสภาพแวดล้อมสร้างงาน, tile สังเคราะห์ — ไม่ใช่หลักฐานเว็บจริง)
 
 1440×900 และ 390×844 สว่าง/มืด: หน้าแรก · สาขา Jetts Black Gaysorn Village (โลโก้ + แบรนด์ก่อนสาขา ป้ายสถานะ fact chips ปุ่ม Google AI · Maps · Street View ใกล้อาคาร กล้องมุมอาคาร) · ศูนย์การค้า Gaysorn Village · เขตปทุมวัน · `?search=jet` (โฟกัสปทุมวัน 5 สาขา 3 จุดที่ Gaysorn Village · Siam Square One · Stadium One) · กราฟแบรนด์ · ตาราง · ศูนย์ที่ทะเบียนยังไม่มีจุด (Cloud 11 → เขตพระโขนง, Esplanade Ratchada → กรุงเทพมหานคร) — ไม่มี error ของผลิตภัณฑ์ใน console ไม่มี horizontal overflow
+
+### 0.3.0 · Live
+
+https://montri-th.github.io/fitness/ · 30 ต.ค. 2569 · Chrome 156 บน macOS ของเจ้าของ (tiles จริง, 1710×851, ธีม Auto = มืด แล้วสลับสว่าง) และเบราว์เซอร์ของ Claude desktop app (จำลอง 375×812)
+
+| รายการ | ผล |
+|---|---|
+| เผยแพร่ r4 | push `a3fdc80` เวลา 01:13 น. · Pages run 40928830271 success 01:14 น. · หน้าเว็บเสิร์ฟ tag `20261030-r4` · `npm run verify:live` **344 ok, 0 failed** |
+| เดินตรวจ r4 | `?search=jet` → โฟกัสเขตปทุมวัน 5 สาขา จุดในจอ 3 จุดที่ Gaysorn Village · Siam Square One · Stadium One (รุ่น 0.2.1 ไม่มีจุดของ Jetts ในเขตนี้) · กล่องค้นหาคืนค่า “jet” จาก URL ไม่มี error · สาขา Jetts Black Gaysorn Village → มุมมองอาคาร zoom 19.65 pitch 75 อาคาร Gaysorn Village เป็นสีข้อมูล x-ray ทำงาน หมุดมีโลโก้ · ศูนย์การค้า Gaysorn Village เปิดอาคารเดียวกัน |
+| พบ (แก้ใน r5) | ไอคอนของปุ่ม ถาม Google AI · Google Maps · Street View เป็นกล่องว่าง: หน้าเว็บใช้ไฟล์ฟอนต์ pictogram ของรุ่น 0.2.1 ที่ URL เดิม (ไม่มี version) ขณะที่โหลด URL เดียวกันใหม่ได้รูปครบ — วัดบน canvas: 4 รูปใหม่ได้ ink เท่ากันหมด 476 px (กล่อง) · สำเนาใหม่ 237 · 268 · 675 · 545 |
+| เผยแพร่ r5 | push `7597b34` เวลา 01:19 น. · Pages run 40929708776 success 01:20 น. · tag `20261030-r5` · ฟอนต์ `material-pictogram-300.woff2?v=73ec4866` · `verify:live` **344 ok, 0 failed** |
+| เดินตรวจ r5 | ไอคอนทั้ง 4 แสดงถูก (ink 232 · 244 · 645 · 531 ต่างกันตามรูป) ทั้งธีมมืดและสว่าง · หน้าแรก: 37% · วัฒนา 25 · ปทุมวัน 20 · คลองเตย 17 · 62 จาก 167 · Cloud 11 (ทะเบียนยังไม่มีจุด) เปิดที่เขตพระโขนง ไม่มีปุ่ม Street View · ลิงก์: AI Mode `/search?udm=50` คำถามขึ้นต้น “Jetts สาขา Black Gaysorn Village …” · Maps `/maps/search/` · Street View `map_action=pano` ที่จุดของศูนย์ · ทุกลิงก์ `target=_blank` `rel=noopener noreferrer` · **console ไม่มี error** ตลอดการเดิน (หน้าแรก → สาขา → ศูนย์การค้า → ศูนย์ที่ไม่มีจุด) |
+| มือถือ 375×812 | tag r5 · แผงสาขา: โลโก้ + Jetts ก่อนชื่อสาขา ป้ายสถานะ fact chips · ไม่มี horizontal overflow · ขณะที่แผงเบราว์เซอร์ถูกซ่อน (`visibilityState = hidden`) รูปโลโก้แบบ lazy โหลดแล้ว 18 จาก 47 ที่เหลือรอจนแผงแสดง — ไม่ใช่ error ของเว็บ |
+
+ข้อสังเกต: หน้าที่ HTML ถูก cache ไว้ตอน r4 ยังใช้ไฟล์ของ r4 จนครบ `max-age=600` ของ GitHub Pages (พบหนึ่งครั้งระหว่างเดินตรวจ) หลังจากนั้นได้ r5 เอง
 
 ## รุ่น 0.2.0 — มุมมองอาคาร · รายการเดียวต่ออาคาร · สี 41 ระดับ
 
