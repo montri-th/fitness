@@ -27,14 +27,21 @@
  * PROVINCE_FILL_MAX_ZOOM the province frames carry the reading (counts) — except with a จังหวัด filter: that
  * province shows its own เขต/อำเภอ at every zoom (province view) and is fitted whole.
  *
- * Buildings: the points of the scope are joined to the focus-tier OSM footprints the map draws
- * (js/building-join.js, “จุดตกในอาคาร”). A building is a click target: one point opens the branch, several open
- * the building panel; the opened building (or the building of the open branch or venue) is drawn in the data
- * colour.
+ * Buildings: the points of the scope and the CityMETER venues' registry points are joined to the focus-tier OSM
+ * footprints the map draws (js/building-join.js, “จุดตกในอาคาร”; pieces of one building cut by a tile edge are one
+ * building). One list per building (owner 2026-10-29: “ร้านเครือ กับ ร้านในอาคาร ให้แสดงรวมกันไม่ต้องแยก”): the
+ * rows linked to a venue whose point falls in it and the rows whose own points fall in it (buildingRows). A building
+ * is a click target: its venue, else its one branch, else the building panel.
  *
- * Map clicks, in order: focus pin → focus building → below PROVINCE_FILL_MAX_ZOOM a เขต/อำเภอ of the selected
- * จังหวัด, else a province → เขต/อำเภอ (`area-hit`, every zoom from AREA_MIN_ZOOM). Quiet context dots are
- * never targets.
+ * The building being looked at — the open building, the open venue's building, the open branch's building
+ * (focusTarget) — is drawn in the data colour and over every other building (x-ray, js/venue-xray.js), the focus
+ * buildings in front of it turn see-through, and the camera looks at it in two-point perspective, zoomed to fit the
+ * free part of the map, from every way in (frameFocus; owner 2026-10-29: “อย่าให้ 3d building mass ตึกอื่นบัง
+ * อาคารที่กำลังดูอยู่ … 2-point perspective เสมอ zoom to fit viewport เสมอ”).
+ *
+ * Map clicks, in order: focus pin → the building being looked at (x-ray: frame again) → focus building → below
+ * PROVINCE_FILL_MAX_ZOOM a เขต/อำเภอ of the selected จังหวัด, else a province → เขต/อำเภอ (`area-hit`, every zoom
+ * from AREA_MIN_ZOOM). Quiet context dots are never targets.
  * Panel modes: overview (+ brand card with a brand filter) | area | venue | building | store (with a back stack).
  * URL state: filters, area, venue, areas, view, store, view3d.
  */
@@ -49,11 +56,13 @@ import {installProvinceLayers, buildProvinceModel, PROVINCE_FILL_MAX_ZOOM, PROVI
 import {createFrameStore, provinceLocator} from './frames.js';
 import {buildOverview, buildAreaProfile, buildStoreDetail, buildBuildingProfile, buildBrandProfile, buildVenueProfile, listOrder} from './profile-model.js';
 import {renderOverview, renderArea, renderBuilding, renderStore, renderVenue, renderBrandCard, renderFilterChips, esc, num, pct, words, ADMIN_TH} from './panel.js';
-import {joinRows, containsPoint} from './building-join.js';
-import {buildMapStyle, basemapPalette, TILEJSON_URL, MASSING_BEFORE} from './map-style.js';
+import {joinBuildings} from './building-join.js';
+import {buildMapStyle, basemapPalette, TILEJSON_URL, MASSING_BEFORE, VENUE_XRAY_BEFORE} from './map-style.js';
 import {installMassing, outerRings} from './massing.js';
-import {presetFor, applyPreset, fitPitched, framePoint} from './camera.js';
+import {presetFor, applyPreset, fitPitched, fitBuilding, twoPointBearing, screenBounds, BUILDING_MAX_ZOOM} from './camera.js';
+import {installVenueXray} from './venue-xray.js';
 import {buildBreadcrumb, renderBreadcrumb, breadcrumbText} from './breadcrumb.js';
+import {rampLegendHTML} from './scales.js';
 import {cueMarkup} from './cues.js';
 
 const $ = id => document.getElementById(id);
@@ -80,6 +89,8 @@ const state = {
   provinceLayers: null, provinceLabels: null, provinceModel: null, rowById: new Map(),
   scopeKey: '', join: null, buildingSel: null, labelView: new Map(), renderedSig: '', locateArea: null, locateProvince: null,
   blueBuildings: false, lastPreset: '',
+  // Building camera: the x-ray solid, what was framed last ({id, key, refits}) and whether the user moved the map since.
+  xray: null, framed: null, userCamera: false,
 };
 
 /* ---------- helpers ---------- */
@@ -95,7 +106,6 @@ const bottomSpace = () => ($('insights')?.getBoundingClientRect().height ?? 0) +
 const labelBottomSpace = () => { const panel = document.querySelector('.map-panel'); return bottomSpace() + (panel ? parseFloat(getComputedStyle(panel).getPropertyValue('--attrib-height')) || 0 : 0); };
 const activeFilterCount = f => FIELDS.filter(k => f[k]).length;
 const overviewPanel = () => ({mode: 'overview', id: ''});
-const sheetOffset = () => (mobilePortrait() ? [0, -Math.round(window.innerHeight * 0.2)] : [0, 0]);
 const announce = text => { $('announcement').textContent = text; };
 const theme = () => document.documentElement.dataset.theme;
 const focusMode = () => (state.focusAreaIds.length ? 'explicit' : state.focusIds.length ? 'auto' : 'none');
@@ -104,8 +114,12 @@ const animate = () => !reduced();
 const cssVar = (name, fallback = '') => getComputedStyle(document.documentElement).getPropertyValue(name).trim() || fallback;
 /** The building being looked at (building mode): {key, kind, footprint, rows, height}. */
 const currentBuilding = () => (state.panel.mode === 'building' ? state.buildingSel : null);
-/** A venue, a building, or a branch counted at its venue's point is looked at in two-point perspective (eye). */
-const twoPoint = () => ['venue', 'building'].includes(state.panel.mode) || (state.panel.mode === 'store' && Boolean(rowById(state.panel.id)?.venue));
+/**
+ * A venue, a building and a branch with a point are looked at in two-point perspective (eye), framed to the free
+ * part of the map (owner 2026-10-29 19:47: “อาคารที่เลือก หรือ on focus ให้แสดงด้วยมุมมอง 2-point perspective เสมอ
+ * zoom to fit viewport เสมอ”).
+ */
+const twoPoint = () => ['venue', 'building'].includes(state.panel.mode) || (state.panel.mode === 'store' && hasPoint(rowById(state.panel.id)));
 const cameraPreset = () => presetFor({view3d: state.view3d, mode: state.panel.mode === 'overview' ? 'overview' : 'detail', twoPoint: twoPoint()});
 
 function saveURL() {
@@ -137,8 +151,8 @@ function applyTheme() {
 }
 
 function disposeSpatial() {
-  for (const k of ['massing', 'pins']) { try { state[k]?.dispose(); } catch (e) { console.warn('dispose', k, e); } state[k] = null; }
-  state.areaLayers = null; state.provinceLayers = null; state.join = null; refreshJoin.key = '';
+  for (const k of ['xray', 'massing', 'pins']) { try { state[k]?.dispose(); } catch (e) { console.warn('dispose', k, e); } state[k] = null; }
+  state.areaLayers = null; state.provinceLayers = null; state.join = null; refreshJoin.key = ''; syncFocusBuilding.key = '';
 }
 
 /* ---------- selection ---------- */
@@ -164,9 +178,11 @@ function update({fit = false} = {}) {
   const fallback = () => (area ? {mode: 'area', id: area.id} : venue ? {mode: 'venue', id: venue.id} : overviewPanel());
   if (state.panel.mode === 'store' && !state.scopeRows.some(r => r.id === state.panel.id)) { state.panel = fallback(); state.history = []; }
   if (state.panel.mode === 'building') {
-    // The building keeps its own footprint: its rows follow the filters; none left → back to the district.
+    // The building keeps its key: its one list follows the filters (the join is redone for the new scope; without
+    // a map the rows it had are narrowed by the scope); none left → back to the district.
     const b = state.buildingSel;
-    const rows = b ? state.scopeRows.filter(r => hasPoint(r) && containsPoint(b.footprint, [r.longitude, r.latitude])) : [];
+    refreshJoin();
+    const rows = !b ? [] : state.join ? buildingRows(b.key) : b.rows.filter(r => state.scopeRows.includes(r));
     if (rows.length) state.buildingSel = {...b, rows};
     else { state.panel = fallback(); state.history = []; state.buildingSel = null; }
   }
@@ -200,17 +216,23 @@ function update({fit = false} = {}) {
 /** Rows with full detail on the map, in the counter and in the table: the open building's rows, else the focused rows. */
 function detailRows() {
   const b = currentBuilding();
-  return b ? b.rows : state.rows;
+  if (b) return b.rows;
+  // A venue's one list: the rows linked to it and the other rows in its building.
+  const v = state.panel.mode === 'venue' ? venueById(state.panel.id) : null;
+  return v ? venueRows(v) : state.rows;
 }
 
 /** Counter + table follow the rows that carry detail. */
 function syncList() {
   const rows = detailRows(), b = currentBuilding(), u = unit();
   const what = u.mode === 'listed' ? 'สาขา' : 'รายการ';
+  const v = state.panel.mode === 'venue' ? venueById(state.panel.id) : null;
   $('result-count').textContent = num(rows.length);
-  $('results-title').textContent = b ? `${what}ที่จุดตกในอาคารนี้` : `${what}ตามตัวกรอง`;
-  if (syncList.last !== rows) state.page = 0;
-  syncList.last = rows;
+  $('results-title').textContent = b ? `${what}ในอาคารนี้` : v ? `${what}ใน ${v.name}` : `${what}ตามตัวกรอง`;
+  // A new array with the same rows (the venue list is rebuilt from the join) keeps the page.
+  const sig = rows.map(r => r.id).join(',');
+  if (syncList.sig !== sig) state.page = 0;
+  syncList.sig = sig;
   renderTable();
 }
 
@@ -329,7 +351,10 @@ function renderPanel(summary = summarize(state.rows)) {
   const common = {allRows: state.data.rows, scopeRows: state.scopeRows, index: state.index, groups, data: state.data};
   let html = '';
   if (mode === 'area') html = renderArea(buildAreaProfile(state.scopeRows, id, state.index, groups, state.data.venues), countClassOf, ctx);
-  else if (mode === 'venue') html = renderVenue(buildVenueProfile(id, common), ctx);
+  else if (mode === 'venue') {
+    const key = state.join?.byVenue.get(id) || '';
+    html = renderVenue(buildVenueProfile(id, {...common, inside: key ? buildingRows(key) : [], building: key ? {key, height: state.join.buildings.get(key)?.height ?? null} : null}), ctx);
+  }
   else if (mode === 'building') html = renderBuilding(buildBuildingProfile(currentBuilding(), state.index, groups), ctx);
   else if (mode === 'store') html = renderStore(buildStoreDetail(rowById(id), {...common, building: storeBuilding(id)}), ctx);
   state.renderedSig = panelSpatialSig();
@@ -375,7 +400,9 @@ function pushHistory() {
 function goBack() {
   const previous = state.history.pop();
   if (!previous) { state.selectedArea = ''; state.selectedVenue = ''; state.panel = overviewPanel(); update({fit: true}); return; }
-  const fit = previous.area !== state.selectedArea || previous.venue !== state.selectedVenue || previous.province !== $('province').value;
+  // Leaving or reaching a building view always moves the camera (the building view sits at building zoom).
+  const fromBuilding = twoPoint();
+  const fit = fromBuilding || ['venue', 'building', 'store'].includes(previous.mode) || previous.area !== state.selectedArea || previous.venue !== state.selectedVenue || previous.province !== $('province').value;
   if (previous.province !== $('province').value) $('province').value = previous.province || '';
   state.selectedArea = previous.area || ''; state.selectedVenue = previous.venue || '';
   if (previous.mode === 'building') state.buildingSel = previous.building || null;
@@ -411,8 +438,10 @@ function selectVenue(id) {
   state.focusAreaIds = [];
   state.panel = {mode: 'venue', id};
   update();
-  openMobilePanel();
-  if (state.loaded) { framePoint(state.map, [v.longitude, v.latitude], {preset: cameraPreset(), zoom: 16.6, offset: sheetOffset(), animate: animate()}); state.lastPreset = cameraPreset(); }
+  openMobilePanel({frame: false});
+  // Every way in (list, search, crumb, building, x-ray, URL) frames the building again.
+  state.framed = null;
+  if (state.loaded) { frameFocus(); state.lastPreset = cameraPreset(); }
   announce(`ศูนย์การค้า ${v.name}`);
 }
 
@@ -424,6 +453,11 @@ function storePopup(r) {
   return wrap;
 }
 
+/**
+ * Open a branch. A branch with a point is looked at like a building (owner 2026-10-29): the building its point
+ * falls in — or, while that is unknown, a 90 m box round the point — in two-point perspective, zoomed to fit, from
+ * every way in (pin, building, list, table, search, URL). A branch without a point frames its district.
+ */
 function selectStore(id, {fly = true, showPopup = false, fromPin = false} = {}) {
   const r = rowById(id);
   if (!r) return;
@@ -442,9 +476,11 @@ function selectStore(id, {fly = true, showPopup = false, fromPin = false} = {}) 
     if (state.loaded) { updatePins(); updateSpatialLayers(); state.pins?.select(id); }
   }
   state.popup?.remove(); state.popup = null;
+  if (!fromPin || mobilePortrait()) openMobilePanel({frame: false});
   if (state.loaded) {
+    state.framed = null;
     if (hasPoint(r)) {
-      if (fly || cameraPreset() !== state.lastPreset) framePoint(state.map, [r.longitude, r.latitude], {preset: cameraPreset(), zoom: 16.5, offset: sheetOffset(), animate: animate()});
+      frameFocus();
       if (showPopup && !mobilePortrait()) {
         state.popup = new maplibregl.Popup({maxWidth: '280px', offset: 14, closeButton: true}).setLngLat([r.longitude, r.latitude]).setDOMContent(storePopup(r)).addTo(state.map);
       }
@@ -455,17 +491,16 @@ function selectStore(id, {fly = true, showPopup = false, fromPin = false} = {}) 
     }
     state.lastPreset = cameraPreset();
   }
-  if (!fromPin || mobilePortrait()) openMobilePanel();
   announce(`เลือก ${r.name || r.brand?.name || ''}`);
 }
 
 /**
- * A building the map draws, opened from a click (or the branch panel): the rows whose points fall inside it.
- * The camera stays (the building is where the user is looking).
+ * A building the map draws, opened from a click (or from a branch panel): the rows of that building in one list
+ * (buildingRows). The building of a CityMETER venue opens that venue instead (js/app.js#buildingTarget).
  */
 function selectBuilding(key) {
   const b = state.join?.buildings.get(key);
-  const rows = state.join?.byBuilding.get(key) || [];
+  const rows = buildingRows(key);
   if (!b || !rows.length) return;
   if (state.panel.mode !== 'building' || state.panel.id !== key) pushHistory();
   state.buildingSel = {key, kind: b.kind, footprint: b, rows, height: b.height};
@@ -477,50 +512,201 @@ function selectBuilding(key) {
   syncList();
   saveURL();
   if (state.loaded) { updatePins(); updateSpatialLayers(); }
-  openMobilePanel();
-  announce(`อาคารที่จุดของสาขาตก ${num(rows.length)} ${unit().one}`);
+  openMobilePanel({frame: false});
+  state.framed = null;
+  if (state.loaded) { frameFocus(); state.lastPreset = cameraPreset(); }
+  announce(`อาคาร ${num(rows.length)} ${unit().one}`);
 }
 
 /* ---------- spatial join (points × drawn buildings) ---------- */
 
-/** Join the scope's points to the focus-tier OSM footprints on the map. Recomputed only when either side changes. */
+/**
+ * Join the scope's points and the venues' registry points to the focus-tier OSM footprints on the map (pieces of
+ * one building cut by a tile edge are one building). Recomputed only when either side changes.
+ */
 function refreshJoin() {
   if (!state.loaded) return false;
   const osm = state.massing?.buildings() || [];
   const key = `${state.massing?.version ?? 0}|${state.scopeKey}`;
   if (key === refreshJoin.key && state.join) return false;
   refreshJoin.key = key;
-  const footprints = osm.map(b => ({key: `osm:${b.id}`, kind: 'osm', ref: b.id, outer: b.outer, holes: b.holes, bbox: b.bbox, height: b.height}));
   let w = Infinity, s = Infinity, e = -Infinity, n = -Infinity;
-  for (const b of footprints) for (const [x, y] of b.outer) { if (x < w) w = x; if (x > e) e = x; if (y < s) s = y; if (y > n) n = y; }
-  const rows = footprints.length ? state.scopeRows.filter(r => hasPoint(r) && r.longitude >= w && r.longitude <= e && r.latitude >= s && r.latitude <= n) : [];
-  state.join = joinRows(footprints, rows);
+  for (const b of osm) { const [bw, bs, be, bn] = b.bbox; if (bw < w) w = bw; if (be > e) e = be; if (bs < s) s = bs; if (bn > n) n = bn; }
+  const within = x => x.longitude >= w && x.longitude <= e && x.latitude >= s && x.latitude <= n;
+  const rows = osm.length ? state.scopeRows.filter(r => hasPoint(r) && within(r)) : [];
+  const venues = osm.length ? state.data.venues.filter(within) : [];
+  state.join = joinBuildings(osm, rows, venues);
   return true;
 }
 
-/** Branch panel: the drawn building its point falls in (and how many other rows share it). */
+/** Rows in a list order without repeats: `first` then the rows of `more` not already in it. */
+function mergeRows(first, more) {
+  const seen = new Set(first.map(r => r.id));
+  return [...first, ...more.filter(r => !seen.has(r.id) && seen.add(r.id))];
+}
+
+/**
+ * One list per building (owner 2026-10-29: “ร้านเครือ กับ ร้านในอาคาร ให้แสดงรวมกันไม่ต้องแยก”): the rows the sheet
+ * links to a CityMETER venue whose registry point falls in the building, and the rows whose own points fall in it.
+ * Display only — never an area count.
+ */
+function buildingRows(key) {
+  const inside = state.join?.byBuilding.get(key) || [];
+  const venues = state.join?.venuesByBuilding.get(key) || [];
+  const linked = venues.length ? state.scopeRows.filter(r => r.venue && venues.some(v => v.id === r.venue.id)) : [];
+  return mergeRows(linked, inside);
+}
+/** The rows of a venue: linked to it by venue id, then the other rows in the building its registry point falls in. */
+function venueRows(v) {
+  const linked = state.scopeRows.filter(r => r.venue?.id === v.id);
+  const key = state.join?.byVenue.get(v.id);
+  return mergeRows(linked, key ? buildingRows(key) : []);
+}
+
+/** Branch panel: the drawn building its point falls in, how many other rows that building lists, and its venue. */
 function storeBuilding(id) {
   const key = state.join?.byRow.get(id);
   if (!key) return null;
-  return {key, others: Math.max(0, (state.join.byBuilding.get(key) || []).length - 1)};
+  const venue = (state.join.venuesByBuilding.get(key) || [])[0] || null;
+  return {key, others: Math.max(0, buildingRows(key).filter(r => r.id !== id).length), venue: venue ? {id: venue.id, name: venue.name} : null};
 }
 
 /** What the open panel shows from the join — re-render only when this changes. */
 function panelSpatialSig() {
-  if (state.panel.mode !== 'store') return '';
-  const b = storeBuilding(state.panel.id);
-  return b ? `${b.key}|${b.others}` : '';
+  const {mode, id} = state.panel;
+  if (mode === 'store') { const b = storeBuilding(id); return b ? `${b.key}|${b.others}|${b.venue?.id || ''}` : ''; }
+  if (mode === 'venue') { const v = venueById(id); return v ? `${state.join?.byVenue.get(v.id) || ''}|${venueRows(v).map(r => r.id).join(',')}` : ''; }
+  return '';
 }
 
-/** OSM buildings drawn in the data colour: the open building, the building of the open branch, or of the open venue's branches. */
+/**
+ * The building being looked at: the open building; the building the open venue's registry point falls in; the
+ * building the open branch's point falls in. {id, key, refs, anchor: [lon, lat]} — key/refs are null/[] while
+ * the building is not known (tiles still loading, or the point falls in no drawn building); null without a point.
+ */
+function focusTarget() {
+  const {mode, id} = state.panel, j = state.join;
+  const of = key => ({key: key || null, refs: key ? j?.buildings.get(key)?.refs || [] : []});
+  if (mode === 'building') {
+    const b = state.buildingSel;
+    if (!b) return null;
+    const [w, s, e, n] = b.footprint.bbox;
+    return {id: `building:${b.key}`, ...of(b.key), anchor: [(w + e) / 2, (s + n) / 2]};
+  }
+  if (mode === 'venue') {
+    const v = venueById(id);
+    return v ? {id: `venue:${v.id}`, ...of(j?.byVenue.get(v.id)), anchor: [v.longitude, v.latitude]} : null;
+  }
+  if (mode === 'store') {
+    const r = rowById(id);
+    return hasPoint(r) ? {id: `store:${r.id}`, ...of(j?.byRow.get(r.id)), anchor: [r.longitude, r.latitude]} : null;
+  }
+  return null;
+}
+
+/** OSM buildings drawn in the data colour: the building being looked at (every piece of it). */
 function highlightIds() {
-  const j = state.join;
-  if (!j) return [];
-  const b = currentBuilding();
-  if (b) return b.footprint?.ref != null ? [b.footprint.ref] : [];
-  const keys = state.panel.mode === 'store' ? [j.byRow.get(state.panel.id)]
-    : state.panel.mode === 'venue' ? state.baseRows.map(r => j.byRow.get(r.id)) : [];
-  return [...new Set(keys.filter(Boolean))].map(k => j.buildings.get(k)?.ref).filter(ref => ref != null);
+  return focusTarget()?.refs || [];
+}
+
+/**
+ * Drawn shape of the building being looked at: x-ray features, outer rings with heights, and fit points — the
+ * pieces as the focus tier draws them at building zoom (≥ 18), not as drawn at the zoom the camera starts from.
+ */
+function focusShape(target = focusTarget()) {
+  const features = target?.refs.length ? state.massing?.featuresOf(target.refs) || [] : [];
+  const rings = features.flatMap(f => outerRings(f).map(ring => ({ring, height: Number(f.properties.height) || 3})));
+  let points = features.length ? state.massing?.fitPointsOf(features.map(f => f.id), 18) || [] : [];
+  if (!points.length) points = rings.flatMap(({ring, height}) => ring.flatMap(([lng, lat]) => [[lng, lat, 0], [lng, lat, height]]));
+  if (!points.length && target) {
+    // Not known yet: a 90 m box round the point (12 m tall), framed the same way.
+    const [lon, lat] = target.anchor, dLat = 45 / 110574, dLng = 45 / (111320 * Math.cos((lat * Math.PI) / 180));
+    points = [[-1, -1], [1, -1], [1, 1], [-1, 1]].flatMap(([a, b]) => [[lon + a * dLng, lat + b * dLat, 0], [lon + a * dLng, lat + b * dLat, 12]]);
+  }
+  return {features, rings, points, key: features.length ? features.map(f => f.id).sort((a, b) => a - b).join(',') : 'point'};
+}
+
+/** Theme colours of the x-ray: LDS map.activeLayer faces, map.selectedStroke edges (context, not a data scale). */
+const xrayColors = () => ({fill: cssVar('--map-active-layer', '#347DA8'), stroke: cssVar('--map-selected-stroke', '#176B82')});
+
+/**
+ * Highlight, eye-view scene and x-ray of the building being looked at (after every join or selection change).
+ * Owner 2026-10-29: “อย่าให้ 3d building mass ตึกอื่นบังอาคารที่กำลังดูอยู่” — the building is drawn over every
+ * other building (js/venue-xray.js) and the focus buildings standing in front of it turn see-through
+ * (js/massing.js#setScene, SCENE.eye).
+ */
+function syncFocusBuilding() {
+  if (!state.loaded) return;
+  const shape = focusShape();
+  const eye = state.view3d && twoPoint() && shape.features.length > 0;
+  state.massing?.setScene(eye ? 'eye' : 'default', eye ? shape.rings : []);
+  const key = `${state.view3d}|${shape.key}|${state.massing?.version ?? 0}|${theme()}`;
+  if (key !== syncFocusBuilding.key) {
+    syncFocusBuilding.key = key;
+    state.xray?.update(state.view3d ? shape.features.map(f => ({type: 'Feature', geometry: f.geometry,
+      properties: {display_height_m: Number(f.properties.height) || 3, display_base_m: Number(f.properties.base) || 0}})) : [], {colors: xrayColors()});
+  }
+  state.xray?.setEnabled(state.view3d);
+}
+
+/**
+ * The free part of the map in container pixels: below the toolbar, above whatever covers the bottom (Aha card,
+ * legend, chart tray, table, open phone sheet), left of the zoom control.
+ */
+function visibleBox() {
+  const el = $('map'), r = el.getBoundingClientRect();
+  const W = el.clientWidth, H = el.clientHeight;
+  const shown = x => x && !x.hidden && x.offsetHeight > 0 && getComputedStyle(x).display !== 'none';
+  let top = document.querySelector('.map-toolbar').getBoundingClientRect().bottom - r.top + 10;
+  let bottom = H - 10;
+  for (const x of [$('insights'), $('results'), $('map-legend'), $('map-aha')]) if (shown(x)) bottom = Math.min(bottom, x.getBoundingClientRect().top - r.top - 10);
+  if (sheetOpen()) bottom = Math.min(bottom, window.innerHeight - $('panel').offsetHeight - r.top - 10);
+  let right = W - 12;
+  const nav = el.querySelector('.maplibregl-ctrl-top-right');
+  if (nav?.offsetWidth) right = Math.min(right, nav.getBoundingClientRect().left - r.left - 8);
+  const left = 12;
+  if (bottom - top < 140) top = Math.max(4, bottom - 140); // very short screens borrow the toolbar strip
+  return {left, top, right: Math.max(left + 120, right), bottom: Math.max(top + 120, bottom)};
+}
+
+/**
+ * Building camera (owner 2026-10-29 19:47, the CityMETER · Shopping centers venue camera): the eye camera turns
+ * corner-on to the building — the diagonal where the drawn focus buildings hide least of it, then the one nearest
+ * the current bearing — and every footprint and roof vertex fills the free part of the map. While the building is
+ * not known a 90 m box round the point is framed the same way; the camera turns to the building when it arrives
+ * (at most twice, never after the user has moved the map). 3D off: the same box, flat. Returns false when the
+ * open panel has nothing to frame.
+ */
+function frameFocus({instant = false} = {}) {
+  const map = state.map;
+  if (!map || !state.loaded || !twoPoint()) return false;
+  const target = focusTarget();
+  const shape = focusShape(target);
+  if (!target || !shape.points.length) return false;
+  const box = visibleBox();
+  state.userCamera = false;
+  state.framed = {id: target.id, key: shape.key, refits: state.framed?.id === target.id ? state.framed.refits : 0};
+  if (!state.view3d) {
+    const [q0] = shape.points;
+    const b = shape.points.reduce((acc, q) => acc.extend([q[0], q[1]]), new maplibregl.LngLatBounds([q0[0], q0[1]], [q0[0], q0[1]]));
+    const W = map.getContainer().clientWidth, H = map.getContainer().clientHeight;
+    fitPitched(map, b, {preset: 'plan', padding: {top: box.top, left: box.left, right: W - box.right, bottom: H - box.bottom}, maxZoom: shape.rings.length ? BUILDING_MAX_ZOOM : 18, minZoom: 14, animate: animate() && !instant});
+    return true;
+  }
+  const known = shape.rings.length > 0;
+  const obstacles = known ? state.massing?.obstaclesNear(target.anchor, 400, target.refs) || [] : [];
+  const bearing = known ? twoPointBearing(shape.rings.map(t => t.ring), map.getBearing(), obstacles) : map.getBearing();
+  fitBuilding(map, shape.points, {box, bearing, maxZoom: known ? BUILDING_MAX_ZOOM : 18, animate: animate() && !instant});
+  return true;
+}
+
+/** The building arrived (or changed) after the target was framed: turn to it, unless the user moved the map. */
+function refitOnNewBuilding() {
+  const target = focusTarget();
+  if (!target || !state.framed || state.framed.id !== target.id || state.userCamera || state.framed.refits >= 2) return;
+  if (focusShape(target).key === state.framed.key) return;
+  state.framed.refits++;
+  frameFocus();
 }
 
 function applyJoin() {
@@ -530,7 +716,13 @@ function applyJoin() {
   document.querySelector('.map-panel')?.classList.toggle('has-open-building', state.blueBuildings);
   const label = $('legend-building-label');
   if (label) label.textContent = currentBuilding() ? 'อาคารที่เปิดอยู่' : state.panel.mode === 'venue' ? 'อาคารที่จุดของศูนย์การค้าตก' : 'อาคารที่จุดของสาขาตก';
-  if (state.panel.mode === 'store' && panelSpatialSig() !== state.renderedSig) renderPanel();
+  if (panelSpatialSig() !== state.renderedSig) {
+    renderPanel();
+    // A venue's list grows with the rows of its building: the pins, the counter and the table follow it.
+    if (state.panel.mode === 'venue') { syncList(); updatePins(); }
+  }
+  syncFocusBuilding();
+  refitOnNewBuilding();
 }
 
 /** Focus the top districts of the current scope (auto mode; URL stays clean). */
@@ -623,14 +815,15 @@ const belowAreaZoom = () => Boolean(state.provinceLayers) && (state.map?.getZoom
 const provinceZoom = () => belowAreaZoom() && !$('province').value;
 function renderLegend() {
   const u = unit(), atProvince = provinceZoom(), steps = $('legend-steps');
-  const step = c => `<span class="legend-step"><i style="background:${c.fill}" aria-hidden="true"></i>${esc(c.label)}</span>`;
   const m = atProvince ? state.provinceModel : state.areaModel;
   $('legend-title').textContent = atProvince ? `จังหวัด · ${u.one}` : `เขต/อำเภอ · ${u.one}`;
-  steps.innerHTML = (m?.classes.classes.length ? m.classes.classes.map(step).join('') : `<span class="hint">ไม่มี${esc(u.one)}ในตัวกรองนี้</span>`) +
-    (m?.zeroCount ? `<span class="legend-step" title="ไม่พบ${esc(u.one)}ของแบรนด์ในชุดข้อมูลตามตัวกรองนี้ — 0 ของชุดข้อมูลนี้ ไม่ใช่การสำรวจทุกฟิตเนส"><i class="legend-zero" style="background:${m.classes.zero.fill}" aria-hidden="true"></i>0</span>` : '');
+  // All 41 LDS samples with value ticks (owner standing rule), plus the measured-zero swatch when zero occurs.
+  steps.innerHTML = m?.ramp?.levels.length
+    ? rampLegendHTML(m.ramp, {zero: m.zeroCount > 0, zeroTitle: `ไม่พบ${u.one}ของแบรนด์ในชุดข้อมูลตามตัวกรองนี้ — 0 ของชุดข้อมูลนี้ ไม่ใช่การสำรวจทุกฟิตเนส`})
+    : `<span class="hint">ไม่มี${esc(u.one)}ในตัวกรองนี้</span>`;
   $('legend-areas').title = atProvince
-    ? `${u.one}ต่อจังหวัด (ผลรวม) · ${m?.classes.classCount || 0} ระดับเรขาคณิต 1–2–5 · สีเดียวกันทั้งสองธีม · ซูมเข้าเพื่อดูรายเขต/อำเภอ`
-    : `${u.one}ต่อเขต/อำเภอ (ผลรวม ไม่ใช่ความหนาแน่น) · ${m?.classes.classCount || 0} ระดับเรขาคณิต 1–2–5 ช่วงสุดท้ายปิดที่ค่าสูงสุด · สีเดียวกันทั้งสองธีม`;
+    ? `${u.one}ต่อจังหวัด (ผลรวม) · 41 ระดับสีตามลำดับค่า · สีเดียวกันทั้งสองธีม · ซูมเข้าเพื่อดูรายเขต/อำเภอ`
+    : `${u.one}ต่อเขต/อำเภอ (ผลรวม ไม่ใช่ความหนาแน่น) · 41 ระดับสีตามลำดับค่า ค่าสูงสุดอยู่ที่ระดับสุดท้าย · สีเดียวกันทั้งสองธีม`;
   $('legend-pin-label').textContent = `1 สัญลักษณ์ = 1 ${u.one}ที่มีพิกัด`;
   const panel = document.querySelector('.map-panel');
   panel.classList.toggle('is-3d', state.view3d);
@@ -758,10 +951,11 @@ function fitCountry({instant = false} = {}) {
 
 function fitMap({instant = false} = {}) {
   if (!state.loaded) return;
+  // A venue, a building or a branch with a point: the building camera (two-point, zoomed to fit) — before the
+  // district it was opened from.
+  if (frameFocus({instant})) return;
   const area = state.selectedArea ? areaById(state.selectedArea) : null;
   if (area) { fitRecord(area, {instant}); return; }
-  const venue = state.selectedVenue ? venueById(state.selectedVenue) : null;
-  if (venue) { framePoint(state.map, [venue.longitude, venue.latitude], {preset: cameraPreset(), zoom: 16.6, offset: sheetOffset(), animate: animate() && !instant}); return; }
   // A spread Aha (no district stands out) frames the leading province's districts that hold rows.
   const spread = !state.focusIds.length && state.autoFocus && state.insight?.spread ? state.insight.homeAreaIds : [];
   const focus = (state.focusIds.length ? state.focusIds : spread).map(areaById).filter(Boolean);
@@ -782,7 +976,7 @@ function fitMap({instant = false} = {}) {
 /**
  * Labels: the selection and the focus first (from AREA_MIN_ZOOM), then — once the map is close enough to read
  * them — the other districts of the scope with the most branches as quiet chips (bounded: fewer on a phone).
- * Each chip carries the count and a swatch of its class colour (the legend link).
+ * Each chip carries the count and a swatch of its ramp colour (the legend link).
  */
 function areaLabelItems() {
   const m = state.areaModel;
@@ -818,7 +1012,10 @@ function refreshLabelView() {
   state.locateArea ||= areaLocator(state.index);
   const el = map.getContainer(), w = el.clientWidth, h = el.clientHeight, zoom = map.getZoom();
   const top = 56, bottom = Math.min(h * 0.45, labelBottomSpace() + 8), left = 16, right = w - 16;
-  const free = q => q.x >= left && q.x <= right && q.y >= top && q.y <= h - bottom;
+  // A label never sits on the building being looked at (its chip is ~140 × 30 px round its anchor).
+  const avoid = buildingScreenBox();
+  const onBuilding = q => avoid && q.x > avoid.minX - 70 && q.x < avoid.maxX + 70 && q.y > avoid.minY - 18 && q.y < avoid.maxY + 18;
+  const free = q => q.x >= left && q.x <= right && q.y >= top && q.y <= h - bottom && !onBuilding(q);
   const best = new Map();
   if (zoom >= AREA_MIN_ZOOM) {
     const vb = map.getBounds(), W = vb.getWest(), E = vb.getEast(), S = vb.getSouth(), N = vb.getNorth();
@@ -831,6 +1028,7 @@ function refreshLabelView() {
     const cols = 9, rows = 6;
     for (let i = 0; i < cols; i++) for (let j = 0; j < rows; j++) {
       const sx = left + ((i + 0.5) / cols) * (right - left), sy = top + ((j + 0.5) / rows) * (h - bottom - top);
+      if (onBuilding({x: sx, y: sy})) continue;
       const ll = map.unproject([sx, sy]).toArray();
       const id = state.locateArea(ll);
       const a = id && best.get(id)?.d !== 0 ? areaById(id) : null;
@@ -846,6 +1044,12 @@ function refreshLabelView() {
   refreshLabelView.key = key;
   state.labelView = new Map([...best].map(([id, b]) => [id, b.center]));
   state.labels?.update(state.showAreas ? areaLabelItems() : [], {visible: state.showAreas});
+}
+/** Screen box of the building being looked at (null when none is known or no building view is open). */
+function buildingScreenBox() {
+  if (!state.map || !twoPoint()) return null;
+  const shape = focusShape();
+  return shape.features.length ? screenBounds(state.map, shape.points) : null;
 }
 function scheduleLabelView() {
   clearTimeout(scheduleLabelView.timer);
@@ -875,8 +1079,16 @@ function squareAround(lon, lat, metres = 250) {
   return [[lon - dx, lat - dy], [lon + dx, lat - dy], [lon + dx, lat + dy], [lon - dx, lat + dy], [lon - dx, lat - dy]];
 }
 
-/** Massing focus regions: around the open venue, around the open branch's point, else the selected district, else the focus. */
+/**
+ * Massing focus regions: around the open building, the open venue, the open branch's point, else the selected
+ * district, else the focus. A building view keeps its building (and a ring of neighbours) in the focus tier.
+ */
 function massingRegions() {
+  if (state.panel.mode === 'building' && state.buildingSel?.footprint?.bbox) {
+    const [w, s, e, n] = state.buildingSel.footprint.bbox, lat = (s + n) / 2;
+    const half = Math.max((e - w) * 111320 * Math.cos((lat * Math.PI) / 180), (n - s) * 110574) / 2;
+    return [squareAround((w + e) / 2, lat, Math.max(300, half + 150))];
+  }
   if (state.panel.mode === 'venue') {
     const v = venueById(state.panel.id);
     if (v) return [squareAround(v.longitude, v.latitude, 350)];
@@ -904,7 +1116,8 @@ function updateSpatialLayers() {
   state.areaLayers?.update({model: state.areaModel, selectedId: state.selectedArea, focusIds, outlineFocus: !venue, visible: state.showAreas, provinceCode: code});
   state.labels?.update(state.showAreas ? areaLabelItems() : [], {visible: state.showAreas});
   renderLegend();
-  const anchorPoints = venue ? [[venue.longitude, venue.latitude]]
+  const target = twoPoint() ? focusTarget() : null;
+  const anchorPoints = target ? [target.anchor] : venue ? [[venue.longitude, venue.latitude]]
     : (state.selectedArea ? [areaById(state.selectedArea)] : state.focusIds.map(areaById)).filter(Boolean).map(r => r.label).filter(Array.isArray);
   const anchors = anchorPoints.length ? anchorPoints : [state.map.getCenter().toArray()];
   state.massing?.update({regions: massingRegions(), hosts: [], anchors, enabled: true, city: state.view3d, zoom: state.map.getZoom(), latitude: state.map.getCenter().lat})?.catch(e => console.warn('Massing', e));
@@ -926,27 +1139,38 @@ function provinceAt(point) {
   return f ? String(f.id ?? f.properties?.id) : '';
 }
 
-/** What a building under the pointer would open (null: nothing → the click falls through). */
+/**
+ * What a building under the pointer would open (null: nothing → the click falls through): the CityMETER venue
+ * whose registry point falls in it, else its one branch, else the building with its list.
+ */
 function buildingTarget(point) {
   const b = state.massing?.hitTest(point);
   if (!b || !state.join) return null;
-  const key = `osm:${b.id}`, rows = state.join.byBuilding.get(key) || [];
+  const key = state.join.keyOfPiece.get(b.id);
+  if (!key) return null;
+  const rows = buildingRows(key);
   if (!rows.length) return null;
+  const venue = (state.join.venuesByBuilding.get(key) || [])[0];
+  if (venue) return {kind: 'venue', id: venue.id};
   return rows.length === 1 ? {kind: 'store', id: rows[0].id} : {kind: 'building', key};
 }
 
 /**
- * One click handler, in priority order: focus pin → focus building → province (country zoom) → district. A
- * click on another เขต/อำเภอ moves there at any zoom from AREA_MIN_ZOOM; a click inside the selected one changes
- * nothing (pan and tilt freely).
+ * One click handler, in priority order: focus pin → the building being looked at (x-ray: frame it again) → a
+ * focus building (its venue, its one branch or its list; every way in frames the building) → province (country
+ * zoom) → district. A click on another เขต/อำเภอ moves there at any zoom from AREA_MIN_ZOOM; a click inside the
+ * selected one changes nothing (pan and tilt freely).
  */
 function onMapClick(e) {
   const point = e.point;
   const r = state.pins?.hitTest(point);
   if (r) { selectStore(r.id, {fly: false, showPopup: true, fromPin: true}); return; }
+  // The building being looked at is drawn over every other building (x-ray): a tap on it frames it again.
+  if (state.xray?.hitTest([point.x, point.y]) && frameFocus()) return;
   const hit = buildingTarget(point);
-  if (hit?.kind === 'store') { if (state.panel.mode !== 'store' || state.panel.id !== hit.id) selectStore(hit.id, {fly: false, showPopup: true, fromPin: true}); return; }
-  if (hit?.kind === 'building') { if (state.panel.mode !== 'building' || state.panel.id !== hit.key) selectBuilding(hit.key); return; }
+  if (hit?.kind === 'venue') { selectVenue(hit.id); return; }
+  if (hit?.kind === 'store') { selectStore(hit.id, {fly: false, showPopup: true, fromPin: true}); return; }
+  if (hit?.kind === 'building') { selectBuilding(hit.key); return; }
   if (belowAreaZoom()) {
     // Province view: a เขต/อำเภอ of the selected จังหวัด; anywhere else a province frame (another จังหวัด).
     const area = provinceViewArea(point);
@@ -968,7 +1192,7 @@ function onMapMove(e) {
     onMapMove.frame = 0;
     const map = state.map, p = onMapMove.point;
     if (!map || !state.loaded || !p) return;
-    let over = Boolean(state.pins?.hitTest(p)) || Boolean(buildingTarget(p));
+    let over = Boolean(state.pins?.hitTest(p)) || Boolean(state.xray?.hitTest([p.x, p.y])) || Boolean(buildingTarget(p));
     let area = '';
     if (!over && belowAreaZoom()) {
       const inProvince = provinceViewArea(p);
@@ -997,6 +1221,9 @@ function installSpatialLayers() {
     tileUrl: t => (state.tileTemplate ? state.tileTemplate.replace('{z}', t.z).replace('{x}', t.x).replace('{y}', t.y) : ''),
     onResult: result => { $('map-status').dataset.massing = `${result.features || 0}`; applyJoin(); },
   });
+  // The building being looked at, drawn over every other building and over road names (below place labels and pins).
+  try { state.xray = installVenueXray(map, {beforeId: VENUE_XRAY_BEFORE, colors: xrayColors()}); }
+  catch (e) { state.xray = null; console.warn('Building x-ray unavailable', e); }
   state.pins = installBranchPins(map, $('map'), {
     reservedBottom: bottomSpace,
     onSelect: r => selectStore(r.id, {fly: false, showPopup: true, fromPin: true}),
@@ -1008,9 +1235,8 @@ function installSpatialLayers() {
   if (!state.initialCameraDone) {
     state.initialCameraDone = true;
     const r = state.panel.mode === 'store' ? rowById(state.panel.id) : null;
-    const v = state.panel.mode === 'venue' ? venueById(state.panel.id) : null;
-    if (r && hasPoint(r)) framePoint(map, [r.longitude, r.latitude], {preset: cameraPreset(), zoom: 16.5, animate: false});
-    else if (v) framePoint(map, [v.longitude, v.latitude], {preset: cameraPreset(), zoom: 16.6, animate: false});
+    // A deep link to a venue or a branch with a point opens on its building (a 90 m box until the tiles arrive).
+    if (twoPoint()) frameFocus({instant: true});
     else if (r && (r.area || r.province)) fitRecord(r.area ? areaById(r.area) : provinceRecord(r.province), {maxZoom: 15, instant: true});
     else fitMap({instant: true});
     state.lastPreset = cameraPreset();
@@ -1055,6 +1281,8 @@ function initMap() {
     state.map.on('style.load', installSpatialLayers);
     state.map.on('click', onMapClick);
     state.map.on('mousemove', onMapMove);
+    // A camera move started by the user (drag, pinch, wheel, keys): a building found later never moves the camera again.
+    state.map.on('movestart', e => { if (e.originalEvent) state.userCamera = true; });
     state.map.on('error', e => console.warn('Map resource', e.error?.message || e));
     fetch(TILEJSON_URL).then(r => r.json()).then(j => { state.tileTemplate = j.tiles?.[0] || ''; if (state.loaded) updateSpatialLayers(); }).catch(e => console.warn('TileJSON', e));
   } catch (e) {
@@ -1081,16 +1309,26 @@ function toggle3d() {
   $('toggle-3d').setAttribute('aria-pressed', String(state.view3d));
   renderLegend();
   updateSpatialLayers();
-  if (state.map) { applyPreset(state.map, cameraPreset(), {animate: animate()}); state.lastPreset = cameraPreset(); }
+  if (state.map) {
+    // A building being looked at is framed again (two-point in 3D, the same box flat in 2D).
+    if (!frameFocus()) applyPreset(state.map, cameraPreset(), {animate: animate()});
+    state.lastPreset = cameraPreset();
+  }
   saveURL();
 }
 
 /* ---------- mobile sheet ---------- */
-function openMobilePanel() {
+/**
+ * Open the phone sheet. A building being looked at is framed again in the strip above it (`frame: false` when the
+ * caller frames right after, so the camera moves once).
+ */
+function openMobilePanel({frame = true} = {}) {
   if (!mobilePortrait()) return;
+  const wasOpen = $('panel').classList.contains('is-open');
   $('panel').classList.add('is-open');
   $('mobile-panel').setAttribute('aria-expanded', 'true');
   $('map-aha').hidden = true;
+  if (frame && !wasOpen && state.loaded && twoPoint()) frameFocus();
 }
 function closeMobilePanel() {
   const wasOpen = $('panel').classList.contains('is-open');
@@ -1100,8 +1338,8 @@ function closeMobilePanel() {
     $('mobile-panel').focus({preventScroll: true});
     if (state.panel.mode === 'overview') renderPanel();
     else if (wasOpen && state.loaded && state.panel.mode === 'area') { const a = areaById(state.panel.id); if (a) fitRecord(a); }
-    else if (wasOpen && state.loaded && state.panel.mode === 'venue') { const v = venueById(state.panel.id); if (v) framePoint(state.map, [v.longitude, v.latitude], {preset: cameraPreset(), zoom: 16.6, animate: animate()}); }
-    else if (wasOpen && state.loaded && state.panel.mode === 'store') { const r = rowById(state.panel.id); if (r && hasPoint(r)) framePoint(state.map, [r.longitude, r.latitude], {preset: cameraPreset(), zoom: 16.5, animate: animate()}); }
+    // The building fills the larger map again.
+    else if (wasOpen && state.loaded && twoPoint()) frameFocus();
     updateSpatialLayers();
   }
 }
@@ -1273,6 +1511,6 @@ async function init() {
 }
 
 // Developer hook for live tuning in a browser console (not an API; may change without notice).
-window.__citymeter = {state, get map() { return state.map; }, update, fitMap, updateSpatialLayers, applyPreset: (name, opts) => state.map && applyPreset(state.map, name, opts), fitPitched: (b, opts) => state.map && fitPitched(state.map, b, opts), cameraPadding, buildMapStyle};
+window.__citymeter = {state, get map() { return state.map; }, update, fitMap, updateSpatialLayers, applyPreset: (name, opts) => state.map && applyPreset(state.map, name, opts), fitPitched: (b, opts) => state.map && fitPitched(state.map, b, opts), cameraPadding, visibleBox, focusTarget: () => focusTarget(), focusShape: () => focusShape(), frameFocus, selectStore, selectVenue, selectBuilding, buildingRows, buildMapStyle};
 
 init();

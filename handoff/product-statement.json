@@ -3,7 +3,7 @@
   "schemaVersion": "1.5.0",
   "documentType": "product-statement",
   "productId": "citymeter-fitness",
-  "productVersion": "0.1.0",
+  "productVersion": "0.2.0",
   "updatedOn": "2026-10-29",
   "humanDocument": "../PRODUCT_STATEMENT.md",
   "standard": "Landometer Master Brand Brief v0.5.3 §7.2 (Who / What / Which / How) with the §3.7 evidence standard",
@@ -19,7 +19,7 @@
   "dataset_name_th": "ฟิตเนสและสตูดิโอในประเทศไทย",
   "category": "Location · branch network of a declared brand set",
   "outcome_layer": "See → Understand → Decide (act and learn are future extensions)",
-  "status": "public demo 0.1.0 on GitHub Pages; research master, not a market census",
+  "status": "public demo 0.2.0 on GitHub Pages; research master, not a market census",
   "positioning": {
     "one_line_highlight": "แผนที่เมือง 3 มิติของสาขาฟิตเนสและสตูดิโอในไทย ที่บอกว่ากระจุกตรงไหน เป็นแบบไหน และใครอยู่เบื้องหลัง พร้อมหลักฐานรายสาขา",
     "unique_advantage": "format × district × company in one view, every row linked to the brand’s own official page with its check date and status; districts are CityMETER production codes matched from each row’s own data with the method recorded",
@@ -101,7 +101,7 @@
     "district reading on CityMETER production codes, matched from each row’s own data with the method recorded and the unplaced counted apart",
     "district personality: studio share of the concentrated districts against the rest of the province, both bases stated",
     "companies behind brands by recorded role with evidence links, and brands recorded with the same company",
-    "3D focus scene that opens on the finding, ready for a meeting room",
+    "3D focus scene that opens on the finding, and a building view that turns corner-on to the building, fits it to the free part of the screen and never lets another building hide it — ready for a meeting room",
     "production deep links (/v3/citymeter/{province}/D/{district})"
   ],
   "primary_decisions": [
@@ -141,12 +141,12 @@
     "other statuses counted apart"
   ],
   "visual_layers": [
-    "district choropleth (LDS count, geometric 1–2–5, ratio 2)",
-    "province frames (count) below zoom 8",
+    "district choropleth (LDS count, all 41 samples by rank)",
+    "province frames (count, 41-sample ramp) below zoom 8",
     "format cue symbols for rows with a point",
     "quiet context dots",
-    "OSM massing (focus tier rounded, city tier quiet)",
-    "buildings in the data colour when opened"
+    "OSM massing (focus tier rounded, city tier quiet; see-through in front of the building being looked at)",
+    "the building being looked at in the data colour, drawn over every other building and road name (x-ray)"
   ],
   "recommended_pairing_layers": [
     "Shopping Center",
@@ -213,6 +213,8 @@
     "status = what the official page shows on the check date, not daily opening, size, members, price or footfall",
     "company names as the sources state them, not checked against the company registry; a missing record does not mean independent",
     "only 8 rows are linked to a CityMETER venue",
+    "one list per building merges venue-linked rows and rows whose own points fall in the building; in the 2026-10-26 data the nearest own point to any of the 7 venues is 722 m away and no two own points are within 150 m, so every list today is a venue’s linked rows or a single branch",
+    "building footprints and heights are OpenStreetMap context via OpenFreeMap; the building view frames what the tiles draw",
     "no logos collected",
     "data-use rights of each source not yet reviewed (backlog N02)"
   ],

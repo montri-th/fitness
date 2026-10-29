@@ -1,6 +1,6 @@
 {
   "artifact": "CityMETER Fitness — 3D-first, district-first map of fitness and studio branches of the brands in the research master, their formats and the companies behind the brands",
-  "productVersion": "0.1.0",
+  "productVersion": "0.2.0",
   "updatedOn": "2026-10-29",
   "ldsVersion": "0.9.7",
   "release": "v0.9.7-owner.1",
@@ -19,7 +19,7 @@
   },
   "colors": {
     "applied": "assets/theme.css — foundation pairs, semantic states, map roles, dataState (noData, zero), categorical series 1–10 (landometer-series-10-v8 soft fill + ink), count classes, basemap-only tokens",
-    "analytical": "js/scales.js — count (scaleVersion 4ff5c1fb4be71ecd13c48685b38371b528bcd4ce369ce964a75354c2eb4d0980); exact 41-sample LUT; identical HEX on both themes; geometric 1–2–5 classes with ratio 2 declared by this consumer (DATAVIZ-02)",
+    "analytical": "js/scales.js — count (scaleVersion 4ff5c1fb4be71ecd13c48685b38371b528bcd4ce369ce964a75354c2eb4d0980); exact 41-sample LUT; identical HEX on both themes; all 41 samples by rank among the measured nonzero values (buildRamp; owner standing rule “Color scale ขอให้ใช้ 41 scales ตาม LDS เสมอ”), legend with every sample and value ticks; numbers on samples 27–29 on a plate",
     "categorical": "js/cues.js — format id → series (pilates 1 circle, gym 2 square, ems 3 triangle, boutique 4 diamond, combat 5 cross, yoga 7 hexagon, special 8 ring, training 9 dash, climb 10 plus); no star",
     "status": "state tokens of assets/theme.css for the status pills (listed success, announced info, closed danger dashed, review pending)",
     "reportedDifference": "LDS analytical scale records list dark noData #3B4849 / zeroOutline #BAC6C0, while machine.tokens.dataState lists dark #404844 / #93A398; the map follows the EVID-05 treatment (dataState), as in Restaurants and Pharmacy, and the difference stays reported to the owner",
@@ -29,7 +29,7 @@
   "firstAha": "share of the leading province’s branches placed at district level that sit in up to three districts with the most branches (never cutting a tie), the studio share there against the rest of the province, and the district(s) with the most branches outside it; computed per selection; the map opens in the 3D city preset with those districts focused automatically and the rest quiet",
   "countingUnit": "default: listed branches (สาขา); announced / closed / review / all as รายการ, counted apart",
   "focusAndQuiet": {
-    "implementation": "app.js focus modes (auto/explicit/none) and row scopes; map-layers.js filled/quiet/province feature-state; pins.js cue symbols vs grey context dots; massing.js quiet city tier vs rounded focus tier; camera.js presets incl. eye for venues; provinces.js frames below zoom 8 without a จังหวัด filter"
+    "implementation": "app.js focus modes (auto/explicit/none) and row scopes; map-layers.js filled/quiet/province feature-state; pins.js cue symbols vs grey context dots; massing.js quiet city tier vs rounded focus tier, see-through front buildings in the building view (setScene eye); venue-xray.js draws the building being looked at over everything else; camera.js presets and the building view (fitBuilding, twoPointBearing); provinces.js frames below zoom 8 without a จังหวัด filter"
   },
   "geometryAndMetricContract": "one row per symbol, only rows with a point; membership = production district matched at build time (row.admin); counts only; outlines per province on demand",
   "accessibility": [
@@ -45,7 +45,7 @@
   ],
   "validation": {
     "status": "release verification recorded in handoff/VERIFICATION.md",
-    "renderedHarness": "Playwright + MapLibre 5.6.2 from the npm package; OpenFreeMap blocked in the build container (stub tiles, no real basemap or massing there); 1440×900 and 390×844, light and dark",
+    "renderedHarness": "Playwright + MapLibre 5.6.2 from the npm package; OpenFreeMap blocked in the build container (fixture tiles, and synthetic building tiles with known towers round the points for the building view; no real basemap there); 1440×900 and 390×844, light and dark",
     "scope": "Applied LDS values, fonts and actual rendered interfaces. No blanket LDS, CVD, native-device or market-completeness claim."
   },
   "layoutContract": {
@@ -57,10 +57,11 @@
   },
   "mapContract": {
     "basemap": "generated at runtime by js/map-style.js on https://tiles.openfreemap.org/planet with --basemap-* tokens",
-    "choropleth": "count, geometric 1–2–5 ratio 2 classes over (0, observed max]; beneath the basemap’s first line layer; zoom 8–14.5, the selected จังหวัด from zoom 4; EVID-05 measured / measured_zero (lowest class + 2 px zero outline)",
-    "provinces": "count per province frame below zoom 8 without a จังหวัด filter, outlines to zoom 12, ink-chip labels to zoom 9, panel list with ไม่ระบุจังหวัด apart",
+    "choropleth": "count, all 41 samples by rank over the measured nonzero values; beneath the basemap’s first line layer; zoom 8–14.5, the selected จังหวัด from zoom 4; EVID-05 measured / measured_zero (sample 0 + 2 px zero outline)",
+    "provinces": "count (41-sample ramp by rank) per province frame below zoom 8 without a จังหวัด filter, outlines to zoom 12, ink-chip labels to zoom 9, panel list with ไม่ระบุจังหวัด apart",
     "symbols": "focus rows with a point as cue icons; context rows as grey circles; HTML pins from zoom 15.5; no logos",
-    "buildings": "points × focus-tier OSM footprints (display-time join); the open building, the building of the open branch or of the venue’s branches in map.activeLayer",
+    "buildings": "branch points and venue registry points × focus-tier OSM footprints (display-time join; tile-edge pieces, parts and podium + tower grouped as one building); the building being looked at in map.activeLayer, drawn over every other building and road name by the x-ray, focus buildings in front see-through; one list of branches per building",
+    "buildingView": "eye preset corner-on to the building on the least-occluded diagonal, zoom to fit the free part of the map on every way in (js/camera.js#fitBuilding, owner 2026-10-29)",
     "breadcrumb": "ประเทศไทย › จังหวัด › เขต/อำเภอ › ศูนย์การค้า with production codes and /D/ deep links"
   },
   "copy": "short natural Thai: สาขา / รายการ / แบรนด์ / รูปแบบ / สตูดิโอ / เขต·อำเภอ / ศูนย์การค้า / บริษัท; units on every number; one provenance line per panel view"

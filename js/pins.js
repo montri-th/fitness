@@ -17,6 +17,7 @@
  */
 import {hasPoint, STATUS_TH} from './model.js';
 import {cueImage, cueMarkup} from './cues.js';
+import {GEOJSON_MAXZOOM} from './map-layers.js';
 
 export const DETAIL_MIN_ZOOM = 15.5;
 export const MAX_DETAIL_PINS = 320;
@@ -121,9 +122,9 @@ export function installBranchPins(map, container, {onSelect, onLayout, reservedB
   let focusRows = [], contextRows = [], focusById = new Map(), contextById = new Map(), selectedId = '', hoveredId = '', activeId = '', entries = [], frame = 0, detailKeys = [];
   const rowOf = id => focusById.get(id) || contextById.get(id);
 
-  map.addSource(SOURCES.context, {type: 'geojson', data: {type: 'FeatureCollection', features: []}});
-  map.addSource(SOURCES.focus, {type: 'geojson', data: {type: 'FeatureCollection', features: []}});
-  map.addSource(SOURCES.selected, {type: 'geojson', data: {type: 'FeatureCollection', features: []}});
+  map.addSource(SOURCES.context, {type: 'geojson', data: {type: 'FeatureCollection', features: []}, maxzoom: GEOJSON_MAXZOOM});
+  map.addSource(SOURCES.focus, {type: 'geojson', data: {type: 'FeatureCollection', features: []}, maxzoom: GEOJSON_MAXZOOM});
+  map.addSource(SOURCES.selected, {type: 'geojson', data: {type: 'FeatureCollection', features: []}, maxzoom: GEOJSON_MAXZOOM});
   installCueIcons(map);
   map.addLayer({id: PIN_LAYERS.context, type: 'circle', source: SOURCES.context,
     paint: {'circle-radius': ['interpolate', ['linear'], ['zoom'], 8, 0.6, 11, 1.1, 14, 2, 17, 3.2],

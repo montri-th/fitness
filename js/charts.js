@@ -2,13 +2,14 @@
  * Comparison charts rendered as plain HTML — no chart vendor.
  *
  * Three views share the committed selection (scopeRows) and the map's membership:
- *  - count (URL view key `count`): branches per เขต/อำเภอ, bars in the map's count-class colour
- *  - mix: district × format, a numeric table with equal cells (count classes)
+ *  - count (URL view key `count`): branches per เขต/อำเภอ, bars in the map's colour (the same 41-sample rank ramp
+ *    over the same districts, js/scales.js#buildRamp)
+ *  - mix: district × format, a numeric table with equal cells (its own 41-sample ramp over the cells)
  *  - brands: branches per brand, bar in the brand's format series colour with its shape cue
  * District marks emit {type:'area', id}; brand marks emit {type:'brand', id}.
  */
 import {buildChartModel, areaMatrix, brandRanking} from './chart-model.js';
-import {buildCountClasses, classify} from './scales.js';
+import {buildCountRamp, classify, rampLegendHTML} from './scales.js';
 import {cueMarkup, seriesOf} from './cues.js';
 import {areaWord} from './areas.js';
 import {provinceByCode} from './model.js';
@@ -24,10 +25,11 @@ function empty(element, message) {
 }
 
 function counts(element, model, select, selectedId, unit, national) {
-  const classes = buildCountClasses(model.counts, 5, {unit: unit.one});
+  // Every district of the reading, not only the 20 drawn: the same ramp as the map's district layer.
+  const ramp = buildCountRamp(model.counts, {unit: unit.one});
   const max = Math.max(1, ...model.areas.map(a => a.count));
   const rows = model.areas.map((a, i) => {
-    const cls = classify(a.count, classes);
+    const cls = classify(a.count, ramp);
     const pressed = a.id === selectedId;
     return `<li><button type="button" class="bar-row${pressed ? ' is-selected' : ''}" data-area="${esc(a.id)}" aria-pressed="${pressed}"
       aria-label="อันดับ ${i + 1} ${esc(place(a))} ${esc(where(a, national))}: ${num(a.count)} ${esc(unit.one)} ${num(a.brands)} แบรนด์ กดเพื่อดูพื้นที่นี้">
@@ -44,25 +46,24 @@ function counts(element, model, select, selectedId, unit, national) {
 
 function matrix(element, model, select, selectedId, unit) {
   const m = areaMatrix(model, {areaLimit: 12});
-  const classes = buildCountClasses(m.cells.map(c => c.count), 5, {unit: unit.one});
+  const ramp = buildCountRamp(m.cells.map(c => c.count), {unit: unit.one});
   const head = m.groups.map(g => `<th scope="col" title="${esc(g.th)}"><span class="matrix-col">${cueMarkup(g.series)}<span>${esc(g.short || g.th)}</span></span></th>`).join('');
   const body = m.areas.map(a => {
     const pressed = a.id === selectedId;
     const cells = m.groups.map(g => {
       const cell = m.cells.find(c => c.areaId === a.id && c.group === g.index);
-      const cls = classify(cell.count, classes);
-      // measured_zero: lowest class fill + the theme's dataState.zero outline (EVID-05 treatment), never a blank cell.
+      const cls = classify(cell.count, ramp);
+      // measured_zero: sample 0 + the theme's dataState.zero outline (EVID-05 treatment), never a blank cell.
       const style = cls.state === 'measured_zero' ? `background:${cls.fill};color:${cls.ink};box-shadow:inset 0 0 0 2px var(--data-zero-outline)` : `background:${cls.fill};color:${cls.ink}`;
       return `<td><button type="button" class="matrix-cell is-${cls.state}" data-area="${esc(a.id)}" style="${style}"
-        aria-label="${esc(place(a))} × ${esc(g.th)}: ${num(cell.count)} ${esc(unit.one)} กดเพื่อดูพื้นที่นี้" title="${esc(place(a))} × ${esc(g.th)} — ${num(cell.count)} จาก ${num(cell.total)} ${esc(unit.one)}"><span class="data-number">${num(cell.count)}</span></button></td>`;
+        aria-label="${esc(place(a))} × ${esc(g.th)}: ${num(cell.count)} ${esc(unit.one)} กดเพื่อดูพื้นที่นี้" title="${esc(place(a))} × ${esc(g.th)} — ${num(cell.count)} จาก ${num(cell.total)} ${esc(unit.one)}"><span class="data-number${cls.plate ? ' on-plate' : ''}">${num(cell.count)}</span></button></td>`;
     }).join('');
     return `<tr${pressed ? ' class="is-selected"' : ''}><th scope="row"><button type="button" class="matrix-row" data-area="${esc(a.id)}" aria-pressed="${pressed}">${esc(a.name)}<small class="data-number">${num(a.count)}</small></button></th>${cells}</tr>`;
   }).join('');
-  const legend = classes.classes.map(c => `<span class="legend-step"><i style="background:${c.fill}" aria-hidden="true"></i>${esc(c.label)}</span>`).join('');
   const columns = `<colgroup><col class="matrix-head-col">${m.groups.map(() => '<col class="matrix-cell-col">').join('')}</colgroup>`;
   element.innerHTML = `<p class="chart-caption">${num(m.areas.length)} เขต/อำเภอที่มี${esc(unit.one)}มากที่สุด × ${num(m.groups.length)} รูปแบบ · ตัวเลข = ${esc(unit.one)} · ทุกช่องขนาดเท่ากัน</p>
     <div class="matrix-scroll"><table class="matrix" style="--matrix-columns:${m.groups.length}">${columns}<thead><tr><th scope="col" class="matrix-corner">พื้นที่ · ${esc(unit.one)}</th>${head}</tr></thead><tbody>${body}</tbody></table></div>
-    <p class="chart-legend"><span class="legend-title">ระดับสี (${esc(unit.one)}ในช่อง):</span>${legend}<span class="legend-step"><i class="legend-zero" aria-hidden="true"></i>0 = ไม่พบในตัวกรองนี้</span></p>`;
+    <p class="chart-legend"><span class="legend-title">${esc(unit.one)}ในช่อง · ${ramp.steps} ระดับสีตามลำดับค่า</span>${rampLegendHTML(ramp)}<span class="legend-step"><i class="legend-zero" aria-hidden="true"></i>0 = ไม่พบในตัวกรองนี้</span></p>`;
   element.querySelectorAll('[data-area]').forEach(b => b.addEventListener('click', () => select({type: 'area', id: b.dataset.area})));
 }
 

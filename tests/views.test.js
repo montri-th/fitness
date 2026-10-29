@@ -196,3 +196,32 @@ test('brand Ahas: one district above a tie is named in the headline; equal distr
   assert.ok(!ff.includes('นอกกรุงเทพมหานครมากที่สุด'), 'a top outside count of 1 says nothing');
   assert.ok(!/\d+% ของสาขา/.test(ff.slice(0, 200)), 'no concentration share for a spread brand');
 });
+
+test('one list per building (owner 2026-10-29): venue-linked rows and rows whose points fall in its building, each once', () => {
+  const {data, index} = load();
+  const rows = filterRows(data.rows, {});
+  const ctx = ctxFor(data, index);
+  const v = data.venues.find(x => x.name === 'Summer Hill');
+  const linked = rows.filter(r => r.venue?.id === v.id);
+  const other = rows.find(r => hasPoint(r) && !r.venue);
+  // The building's rows (js/app.js#buildingRows) already hold the linked row: it is listed once.
+  const p = buildVenueProfile(v.id, {...common(data, index, rows), inside: [...linked, other], building: {key: 'osm:1', height: 30}});
+  assert.equal(p.count, linked.length + 1);
+  assert.deepEqual([p.linked, p.inBuilding], [linked.length, 1]);
+  assert.deepEqual(p.rows.map(r => r.id).sort(), [...linked, other].map(r => r.id).sort());
+  const t = text(renderVenue(p, ctx));
+  assert.ok(t.includes('สาขาที่ผูกกับศูนย์การค้านี้และสาขาที่จุดตกในอาคารเดียวกัน'), t.slice(0, 400));
+  assert.ok(t.includes(other.name), 'the branch whose point falls in the building is in the same list');
+  assert.equal((renderVenue(p, ctx).match(/class="outlet-list"/g) || []).length, 1, 'one list, not two');
+  assert.ok(t.includes('และอาคาร OpenStreetMap ที่ตำแหน่งนั้นตก'), 'the boundary clause names the building join');
+  // Without building rows the venue reads as before.
+  const plain = text(renderVenue(buildVenueProfile(v.id, common(data, index, rows)), ctx));
+  assert.ok(plain.includes('สาขาที่ชุดข้อมูลผูกกับศูนย์การค้านี้') && !plain.includes('อาคาร OpenStreetMap'));
+  // A branch whose point falls in a venue's building links to the venue (one list for the building).
+  const s = text(renderStore(buildStoreDetail(other, {...common(data, index, rows), building: {key: 'osm:1', others: 1, venue: {id: v.id, name: v.name}}}), ctx));
+  assert.ok(s.includes(`จุดตกในอาคารเดียวกับ ${v.name} · อีก 1 สาขาในอาคารนี้`), s);
+  const own = text(renderStore(buildStoreDetail(linked[0], {...common(data, index, rows), building: {key: 'osm:1', others: 1, venue: {id: v.id, name: v.name}}}), ctx));
+  assert.ok(own.includes('อีก 1 สาขาในอาคารนี้') && !own.includes('จุดตกในอาคารเดียวกับ'), 'a venue-linked branch is not told it shares a building with its own venue');
+  const bare = text(renderStore(buildStoreDetail(other, {...common(data, index, rows), building: {key: 'osm:2', others: 2, venue: null}}), ctx));
+  assert.ok(bare.includes('จุดตกในอาคารเดียวกับอีก 2 สาขา'));
+});

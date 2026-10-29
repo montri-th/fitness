@@ -3,7 +3,7 @@
   "schemaVersion": "1.5.0",
   "documentType": "implementation-plan",
   "productId": "citymeter-fitness",
-  "productVersion": "0.1.0",
+  "productVersion": "0.2.0",
   "updatedOn": "2026-10-29",
   "brief": "product-brief.json",
   "statement": "product-statement.json",
@@ -46,7 +46,8 @@
       "js/profile-model.js",
       "js/provinces.js",
       "js/scales.js",
-      "js/vendors.js"
+      "js/vendors.js",
+      "js/venue-xray.js"
     ]
   },
   "selection": {
@@ -273,6 +274,83 @@
       "files": [
         "handoff/VERIFICATION.md"
       ],
+      "status": "done (0.1.0)"
+    },
+    {
+      "id": "P11",
+      "title": "Building view (owner 2026-10-29 19:47): eye camera corner-on, zoom to fit the free box on every way in (up to zoom 21 for small buildings), x-ray, see-through front buildings, labels off the building, GeoJSON maxzoom 24",
+      "dependsOn": [
+        "P07"
+      ],
+      "acceptanceCriteria": [
+        "AC26",
+        "AC27"
+      ],
+      "files": [
+        "js/camera.js",
+        "js/venue-xray.js",
+        "js/massing.js",
+        "js/map-style.js",
+        "js/map-layers.js",
+        "js/app.js"
+      ],
+      "status": "done"
+    },
+    {
+      "id": "P12",
+      "title": "One list per building: venues × buildings, venue-linked rows + rows whose points fall in the building, no double count",
+      "dependsOn": [
+        "P06",
+        "P11"
+      ],
+      "acceptanceCriteria": [
+        "AC28",
+        "AC30"
+      ],
+      "files": [
+        "js/building-join.js",
+        "js/profile-model.js",
+        "js/panel.js",
+        "js/app.js"
+      ],
+      "status": "done"
+    },
+    {
+      "id": "P13",
+      "title": "All 41 LDS count samples by rank (owner standing rule) on the map, province frames, legend, labels, rank bars and charts",
+      "dependsOn": [
+        "P05"
+      ],
+      "acceptanceCriteria": [
+        "AC29"
+      ],
+      "files": [
+        "js/scales.js",
+        "js/map-layers.js",
+        "js/provinces.js",
+        "js/charts.js",
+        "js/app.js",
+        "styles.css"
+      ],
+      "status": "done"
+    },
+    {
+      "id": "P14",
+      "title": "Publish 0.2.0, verify live bytes and walk the building view on the live site (desktop and 390 px, both themes)",
+      "dependsOn": [
+        "P11",
+        "P12",
+        "P13"
+      ],
+      "acceptanceCriteria": [
+        "AC24",
+        "AC25",
+        "AC26",
+        "AC27"
+      ],
+      "files": [
+        "handoff/VERIFICATION.md"
+      ],
       "status": "see VERIFICATION.md"
     }
   ],
@@ -322,7 +400,7 @@
     {
       "id": "AC08",
       "scenario": "EVID-05",
-      "expected": "Districts without rows are measured_zero (lowest class + zero outline); no_data unused; unplaced rows never shown as 0",
+      "expected": "Districts without rows are measured_zero (sample 0 + zero outline); no_data unused; unplaced rows never shown as 0",
       "verificationType": "unit + browser"
     },
     {
@@ -364,7 +442,7 @@
     {
       "id": "AC15",
       "scenario": "Venue view",
-      "expected": "Breadcrumb ประเทศไทย › จังหวัด › เขต › venue; eye preset; only the venue’s rows in detail",
+      "expected": "Breadcrumb ประเทศไทย › จังหวัด › เขต › venue; building view (AC26, AC27); only the venue’s rows in detail, as one list (AC28)",
       "verificationType": "browser"
     },
     {
@@ -376,7 +454,7 @@
     {
       "id": "AC17",
       "scenario": "Charts",
-      "expected": "Count bars sorted with map colours; matrix cells equal and summing to the district; brand bars in format series with cues",
+      "expected": "Count bars sorted in the map’s ramp colours; matrix cells equal, summing to the district, coloured by their own 41-sample ramp; brand bars in format series with cues",
       "verificationType": "unit + browser"
     },
     {
@@ -426,12 +504,42 @@
       "scenario": "Live walk",
       "expected": "Desktop and 390 px, light and dark, with the real basemap and massing; findings recorded in VERIFICATION.md",
       "verificationType": "browser"
+    },
+    {
+      "id": "AC26",
+      "scenario": "Building camera",
+      "expected": "A venue, a building and a branch with a point open in the eye preset (pitch 75, fov 24), bearing = wall + 45° + k·90° on the least-occluded diagonal, every footprint and roof vertex inside the free box with one side filling it; every way in frames again; a user camera move stops refits; 3D off frames the same points flat",
+      "verificationType": "unit + browser"
+    },
+    {
+      "id": "AC27",
+      "scenario": "Not hidden",
+      "expected": "The x-ray draws the building over every other building and over road names; focus buildings in front are see-through; district labels never sit on it; no MapLibre error when a tilted building view zooms in",
+      "verificationType": "browser"
+    },
+    {
+      "id": "AC28",
+      "scenario": "One list per building",
+      "expected": "The venue panel, the building panel, the table and the pins list the venue-linked rows and the rows whose own points fall in the building, once each; area counts unchanged",
+      "verificationType": "unit + browser"
+    },
+    {
+      "id": "AC29",
+      "scenario": "41-sample colours",
+      "expected": "Map, province frames, legend, label swatches, rank bars, count chart and matrix use LDS count samples 0–40 by rank, ties share, identical HEX on both themes; the legend draws all 41 samples with value ticks",
+      "verificationType": "unit + browser"
+    },
+    {
+      "id": "AC30",
+      "scenario": "Building pieces",
+      "expected": "Tile-edge pieces of one outline, building:parts inside a hide_3d outline and parts holding one point are one building; the same OSM id alone never merges",
+      "verificationType": "unit"
     }
   ],
   "developerWorkflow": [
     "Read AGENTS.md, then handoff/README.md, PRODUCT_STATEMENT.md and the paired human/machine briefs",
     "Run npm test before changes; keep the row scopes, status unit, focus modes, tie rule, metric, frames and coverage contracts and the panel action contract",
-    "Change one bounded task at a time; preserve invariant IDs INV01–INV20",
+    "Change one bounded task at a time; preserve invariant IDs INV01–INV24",
     "Validate calculations with the real data in tests/ (tests/helpers.js loads it once)",
     "Review rendered Thai at 390 px and desktop in both themes; when tiles are blocked use a local harness for layout, then confirm the real-tile look live",
     "Bump the cache tag and versions together; publish; run npm run verify:live and walk the live site before reporting"
@@ -495,6 +603,30 @@
       "id": "N10",
       "title": "Validate hypotheses H1–H5 with external users",
       "ownerRole": "owner / product",
+      "status": "backlog"
+    },
+    {
+      "id": "N11",
+      "title": "390 px first view sits below the focus massing minzoom (lower it on phones or fit the first district) — decide with Luxury Brands, then check on real devices",
+      "ownerRole": "owner + developer",
+      "status": "backlog"
+    },
+    {
+      "id": "N12",
+      "title": "Country view: the count chart caption “สีเดียวกับแผนที่” means the district layer while the map shows province frames",
+      "ownerRole": "developer",
+      "status": "backlog"
+    },
+    {
+      "id": "N13",
+      "title": "MapLibre zoom and compass buttons stay white in the dark theme (bind to LDS foundation tokens)",
+      "ownerRole": "developer",
+      "status": "backlog"
+    },
+    {
+      "id": "N14",
+      "title": "Phone building view with the sheet closed: a map card with the name and the main figure, as in Shopping centers — owner to decide",
+      "ownerRole": "owner + developer",
       "status": "backlog"
     }
   ]

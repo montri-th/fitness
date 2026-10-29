@@ -30,6 +30,7 @@
  */
 import {parseVectorTile, tileToLonLat, lonLatToTileUnits, tilesForBBox, metresPerTileUnit} from './mvt.js';
 import {clipRingToBox, offsetRing, roundRing, isClockwise, ringsIntersect, cleanRing, signedArea} from './geometry.js';
+import {GEOJSON_MAXZOOM} from './map-layers.js';
 
 export const CITY_LAYER = 'city-massing';
 export const FOCUS_SOURCE = 'focus-massing';
@@ -83,6 +84,8 @@ export const HEIGHT_LIFT_M = 0.35;
  * (buildings sharing a height are merged under one OSM id, verified live
  * 2026-10-23), so neither the OSM id nor a per-feature polygon index is a key.
  */
+/** First ordinal of the hide_3d outlines of a tile (kept apart so the drawn buildings keep their ids). */
+export const OUTLINE_ORDINAL = 8388608;
 export function focusFeatureId(tile, ordinal) {
   return (tile.x * 16384 + tile.y) * 16777216 + (ordinal % 16777216);
 }
@@ -95,6 +98,31 @@ export function roundingRadiusM(zoom, latitude = 13.75) {
 
 /** Outward offset (m) that keeps a fillet of radius r enclosing the original (see geometry.roundRing). */
 export const encloseOffsetM = r => Math.max(1, r / 2.5);
+
+/**
+ * Ground and roof points ([lon, lat, altitude m]) of focus footprints as the tier draws them at `zoom` — the same
+ * offset and fillets as shapeTile, in local metres. The building camera fits these for the zoom it lands on: the
+ * shape drawn at the starting zoom is up to 3.6 m larger on every side and left small buildings short of the free
+ * box once the tier re-shaped at the new zoom (js/app.js#focusShape). Outlines hidden in 3D (`outline: true`) are
+ * not drawn: skipped.
+ */
+export function footprintFitPoints(footprints, {zoom = 18, latitude = 13.75, segments = 3} = {}) {
+  const r = roundingRadiusM(Math.max(zoom, 14.5), latitude), d = encloseOffsetM(r);
+  const out = [];
+  for (const b of footprints) {
+    if (b.outline || !(b.outer?.length > 3)) continue;
+    const [lon0, lat0] = b.outer[0];
+    const kx = 111320 * Math.cos((lat0 * Math.PI) / 180), ky = 110574;
+    const local = b.outer.map(([x, y]) => [(x - lon0) * kx, (y - lat0) * ky]);
+    const grown = roundRing(offsetRing(local, d, signedArea(local) > 0 ? 1 : -1), r, segments, {encloseOffset: d});
+    const top = (Number(b.height) || 3) + HEIGHT_LIFT_M;
+    for (const [x, y] of grown.slice(0, -1)) {
+      const lon = lon0 + x / kx, lat = lat0 + y / ky;
+      out.push([lon, lat, 0], [lon, lat, top]);
+    }
+  }
+  return out;
+}
 
 function bboxOfRings(rings) {
   let west = Infinity, south = Infinity, east = -Infinity, north = -Infinity;
@@ -113,7 +141,10 @@ export function outerRings(feature) {
 
 /**
  * Pure: turn one decoded tile into focus features for the given regions.
- * regions/hosts are arrays of lon/lat rings. Returns {features, hiddenIds, kept, dropped}.
+ * regions/hosts are arrays of lon/lat rings. Returns {features, footprints, hiddenIds, kept, dropped}.
+ * Outlines that OpenMapTiles hides in 3D because the building is mapped in building:parts (`hide_3d`) are never
+ * drawn, but their footprints are kept with `outline: true` (ids from OUTLINE_ORDINAL up): they tell the building
+ * join which parts make one building (js/building-join.js#groupPieces).
  */
 export function shapeTile(tile, layer, {regions = [], hosts = [], radiusM, offsetM, segments = 3} = {}) {
   const extent = layer.extent || 4096;
@@ -124,10 +155,22 @@ export function shapeTile(tile, layer, {regions = [], hosts = [], radiusM, offse
   const toLonLat = ring => ring.map(([px, py]) => tileToLonLat(px, py, tile, extent));
   const regionRings = regions.map(toTile), hostRings = hosts.map(toTile);
   const features = [], footprints = [], hiddenIds = new Set();
-  let kept = 0, dropped = 0, ordinal = 0;
+  let kept = 0, dropped = 0, ordinal = 0, outlineOrdinal = OUTLINE_ORDINAL;
   for (let fi = 0; fi < layer.features.length; fi++) {
     const f = layer.features[fi];
-    if (f.type !== 3 || f.properties.hide_3d === true) continue;
+    if (f.type !== 3) continue;
+    if (f.properties.hide_3d === true) {
+      // Not drawn (its parts are): kept as an outline for the join only.
+      for (const raw of f.rings()) {
+        const ring = cleanRing(raw);
+        if (!ring || !isClockwise(ring)) continue;
+        const id = focusFeatureId(tile, outlineOrdinal++);
+        const outer = clipRingToBox(ring, box);
+        if (!outer || !regionRings.some(region => ringsIntersect(outer, region))) continue;
+        footprints.push({id, osmId: f.id ?? null, outer: toLonLat(outer), holes: [], height: Number(f.properties.render_height) || 0, base: 0, tile: {x: tile.x, y: tile.y, z: tile.z}, outline: true});
+      }
+      continue;
+    }
     const height = Number(f.properties.render_height);
     const base = Number(f.properties.render_min_height) || 0;
     if (!Number.isFinite(height) || height <= 0) continue;
@@ -155,7 +198,8 @@ export function shapeTile(tile, layer, {regions = [], hosts = [], radiusM, offse
       const coordinates = [shapedOuter, ...shapedHoles].map(toLonLat);
       features.push({type: 'Feature', id, geometry: {type: 'Polygon', coordinates}, properties: {osm_id: f.id ?? null, height: height + HEIGHT_LIFT_M, base, render_height: height}});
       // The original footprint (clipped to the tile, not rounded or offset): what restaurant points are joined to.
-      footprints.push({id, osmId: f.id ?? null, outer: toLonLat(outer), holes: holes.map(toLonLat), height, base});
+      // `tile` lets building-join.js#groupPieces join the pieces of one building cut by a tile edge.
+      footprints.push({id, osmId: f.id ?? null, outer: toLonLat(outer), holes: holes.map(toLonLat), height, base, tile: {x: tile.x, y: tile.y, z: tile.z}});
       kept++;
     });
   }
@@ -211,7 +255,7 @@ export function installMassing(map, {sourceId = 'openmaptiles', beforeId, colors
       },
     }, before);
   }
-  map.addSource(FOCUS_SOURCE, {type: 'geojson', data: {type: 'FeatureCollection', features: []}});
+  map.addSource(FOCUS_SOURCE, {type: 'geojson', data: {type: 'FeatureCollection', features: []}, maxzoom: GEOJSON_MAXZOOM});
   let occluderIds = [], highlightIds = [], scene = 'default', targets = [];
   const notIn = ids => ['!', ['in', ['id'], ['literal', ids]]];
   const focusFilter = () => ['all', notIn(occluderIds), notIn(highlightIds)];
@@ -366,6 +410,30 @@ export function installMassing(map, {sourceId = 'openmaptiles', beforeId, colors
     if (map.getLayer(VENUE_LAYER)) map.setFilter(VENUE_LAYER, ['in', ['id'], ['literal', highlightIds]]);
     return highlightIds.length;
   }
+  /** Drawn focus-tier features (rounded outline, height and base) of these building ids: the x-ray solid. */
+  function featuresOf(ids = []) {
+    const want = new Set(ids);
+    return want.size ? currentFeatures.filter(f => want.has(f.id)) : [];
+  }
+  /** Fit points of these pieces as the tier draws them at `zoom` (footprintFitPoints): the building camera's target. */
+  function fitPointsOf(ids = [], zoom = 18) {
+    const want = new Set(ids);
+    return want.size ? footprintFitPoints(footprintList.filter(b => want.has(b.id)), {zoom, latitude: lastInput.latitude}) : [];
+  }
+  /**
+   * Drawn focus-tier features standing within `radiusM` of [lon, lat] (a ground vertex inside the radius), as
+   * {id, ring, height}: the obstacles the two-point bearing tries to look past (js/camera.js#twoPointBearing).
+   */
+  function obstaclesNear([lon, lat], radiusM = 400, exclude = []) {
+    const skip = new Set(exclude), kx = 111320 * Math.cos((lat * Math.PI) / 180), ky = 110574, r2 = radiusM * radiusM;
+    const out = [];
+    for (const f of currentFeatures) {
+      if (skip.has(f.id)) continue;
+      const ring = f.geometry.coordinates[0];
+      if (ring.some(([x, y]) => ((x - lon) * kx) ** 2 + ((y - lat) * ky) ** 2 <= r2)) out.push({id: f.id, ring, height: Number(f.properties.height) || 3});
+    }
+    return out;
+  }
   /** The focus building under a screen point (venue tier first), as its footprint record, or null. */
   function hitTest(point) {
     if (!enabled || disposed || !footprintList.length) return null;
@@ -508,7 +576,7 @@ export function installMassing(map, {sourceId = 'openmaptiles', beforeId, colors
     if (map.getSource(FOCUS_SOURCE)) map.removeSource(FOCUS_SOURCE);
     footprintList = []; footprintById = new Map();
   }
-  return {update, retheme, setScene, setAnchors, updateFade, dispose, buildings, setHighlight, hitTest,
+  return {update, retheme, setScene, setAnchors, updateFade, dispose, buildings, setHighlight, hitTest, featuresOf, fitPointsOf, obstaclesNear,
     layerIds: {city: CITY_LAYER, focus: FOCUS_LAYER, occluder: OCCLUDER_LAYER, venue: VENUE_LAYER},
     get occluders() { return occluderIds.slice(); }, get highlighted() { return highlightIds.slice(); }, get faded() { return stated.size; }, get version() { return version; }};
 }

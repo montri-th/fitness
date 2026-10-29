@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {parseVectorTile, tileToLonLat} from '../js/mvt.js';
 import {pointInRing, signedArea} from '../js/geometry.js';
-import {shapeTile, tilesForRegions, roundingRadiusM, encloseOffsetM, outerRings, installMassing, focusFeatureId, HEIGHT_LIFT_M, MAX_TILES, CITY_MIN_ZOOM, FOCUS_MIN_ZOOM, CITY_LAYER, FOCUS_LAYER, FOCUS_SOURCE, OCCLUDER_LAYER, VENUE_LAYER, SCENE, FADE_NEAR_M, FADE_FAR_M} from '../js/massing.js';
+import {shapeTile, tilesForRegions, roundingRadiusM, encloseOffsetM, outerRings, installMassing, focusFeatureId, footprintFitPoints, HEIGHT_LIFT_M, MAX_TILES, CITY_MIN_ZOOM, FOCUS_MIN_ZOOM, CITY_LAYER, FOCUS_LAYER, FOCUS_SOURCE, OCCLUDER_LAYER, VENUE_LAYER, SCENE, FADE_NEAR_M, FADE_FAR_M} from '../js/massing.js';
 import {readJSON} from './helpers.js';
 
 const tile = {z: 14, x: 12767, y: 7560};
@@ -274,4 +274,49 @@ test('venue highlight tier: chosen focus buildings move to the data-colour layer
   assert.deepEqual(map.filters[VENUE_LAYER], ['in', ['id'], ['literal', []]]);
   massing.dispose();
   assert.equal(map.getLayer(VENUE_LAYER), undefined);
+});
+
+test('the building being looked at: featuresOf gives its drawn shape (x-ray), obstaclesNear the drawn buildings around it, footprints carry their tile', async () => {
+  const map = fakeMap();
+  const bytes = readFileSync(new URL('./fixtures/mvt-sample.pbf', import.meta.url));
+  const massing = installMassing(map, {
+    beforeId: null, colors: {quiet: '#ECEDE8', focus: '#D9D7CD'}, tileUrl: t => `stub/${t.z}/${t.x}/${t.y}.pbf`,
+    fetchImpl: async () => ({ok: true, arrayBuffer: async () => bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength)}),
+  });
+  await massing.update({regions: [region], hosts: [], zoom: 15.5, enabled: true, city: true, latitude: 13.75});
+  const [b] = massing.buildings();
+  assert.ok(b && b.tile && Number.isInteger(b.tile.x) && b.tile.z === 14, 'pieces know their tile (building-join.js#groupPieces)');
+  const [f] = massing.featuresOf([b.id]);
+  assert.equal(f.id, b.id);
+  assert.ok(f.properties.height > b.height, 'the drawn shape is the rounded, lifted focus feature');
+  assert.deepEqual(massing.featuresOf([]), []);
+  const ring = f.geometry.coordinates[0];
+  const near = massing.obstaclesNear(ring[0], 50);
+  assert.deepEqual(near.map(o => o.id), [b.id]);
+  assert.ok(near[0].height > 0 && near[0].ring.length >= 4);
+  assert.deepEqual(massing.obstaclesNear(ring[0], 50, [b.id]), [], 'the building itself is never its own obstacle');
+  assert.deepEqual(massing.obstaclesNear([ring[0][0] + 0.05, ring[0][1]], 50), [], 'far buildings are not obstacles');
+  const fit = massing.fitPointsOf([b.id], 18);
+  assert.ok(fit.length >= 8 && fit.every(q => q.length === 3), 'fit points: ground and roof of every vertex');
+  assert.deepEqual(massing.fitPointsOf([]), []);
+  massing.dispose();
+});
+
+test('fit points are the outline as the tier draws it where the camera lands: offset of that zoom, ground and roof; hidden outlines skipped', () => {
+  // A 20 × 20 m square at 13.75° N (counter-clockwise, lon/lat), 18 m tall.
+  const lat0 = 13.75, kx = 111320 * Math.cos((lat0 * Math.PI) / 180), ky = 110574;
+  const sq = [[0, 0], [20, 0], [20, 20], [0, 20], [0, 0]].map(([x, y]) => [100.5 + x / kx, lat0 + y / ky]);
+  const width = pts => (Math.max(...pts.map(q => q[0])) - Math.min(...pts.map(q => q[0]))) * kx;
+  const at18 = footprintFitPoints([{id: 1, outer: sq, height: 18}], {zoom: 18});
+  const at14 = footprintFitPoints([{id: 1, outer: sq, height: 18}], {zoom: 14});
+  assert.equal(at18.length % 2, 0, 'ground and roof of every vertex');
+  assert.ok(at18.length > 8, 'corners are filleted as the tier draws them');
+  assert.ok(Math.abs(width(at18) - (20 + 2 * encloseOffsetM(roundingRadiusM(18)))) < 0.05, `building zoom: ${width(at18).toFixed(2)} m`);
+  assert.ok(Math.abs(width(at14) - (20 + 2 * encloseOffsetM(roundingRadiusM(14.5)))) < 0.05, `far zoom: ${width(at14).toFixed(2)} m`);
+  assert.ok(width(at14) - width(at18) > 7, 'the shape drawn far out is several metres wider than at building zoom');
+  assert.deepEqual([...new Set(at18.map(q => q[2]))].sort((a, b) => a - b), [0, 18 + HEIGHT_LIFT_M]);
+  // Clockwise input grows outward too.
+  const cw = footprintFitPoints([{id: 2, outer: [...sq].reverse(), height: 18}], {zoom: 18});
+  assert.ok(Math.abs(width(cw) - width(at18)) < 0.05);
+  assert.deepEqual(footprintFitPoints([{id: 3, outer: sq, height: 40, outline: true}]), [], 'an outline hidden in 3D is not drawn');
 });

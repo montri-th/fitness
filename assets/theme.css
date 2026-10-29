@@ -80,7 +80,8 @@
   --series-10-ink: #34622A;
   --chart-on-fill: #182327;
 
-  /* Sequential family `count` (totals, unit = ร้าน) — five classes, same on both themes */
+  /* Sequential family `count` (totals, unit = สาขา) — five LDS class samples, same on both themes: fallbacks and
+     the zero swatch only; the map, legend and charts read all 41 samples from js/scales.js#buildRamp */
   --scale-count-1: #F4F0E7;
   --scale-count-2: #BAD5D4;
   --scale-count-3: #7DBAC0;

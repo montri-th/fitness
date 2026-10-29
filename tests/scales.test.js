@@ -4,7 +4,7 @@ import {readFileSync} from 'node:fs';
 import {join} from 'node:path';
 import {ROOT} from './helpers.js';
 import * as scales from '../js/scales.js';
-import {COUNT_SCALE, LADDER, classColors, buildCountClasses, geometricBreaks, classify, inkFor, contrastRatio} from '../js/scales.js';
+import {COUNT_SCALE, RAMP_STEPS, classColors, buildCountRamp, rampTicks, rampLegendHTML, needsPlate, classify, inkFor, contrastRatio} from '../js/scales.js';
 
 test('the count family is an exact 41-sample LUT with anchors at 0/20/40, same HEX on both themes; no other family is shipped', () => {
   assert.equal(COUNT_SCALE.lut.length, 41);
@@ -32,40 +32,54 @@ test('theme.css carries the count classes once (no dark override of analytical v
   assert.match(light, /--data-zero-outline: #7D877F;/);
 });
 
-test('geometric 1–2–5 breaks: each break is the largest ladder value ≤ the next one ÷ 2, whole numbers from 2', () => {
-  assert.deepEqual(LADDER.slice(0, 4), [0.001, 0.002, 0.005, 0.01]);
-  assert.deepEqual(geometricBreaks(21, 5, {integer: true}), [2, 5, 10], 'the national district maximum (เขตวัฒนา, 21 branches)');
-  assert.deepEqual(geometricBreaks(186, 5, {integer: true}), [5, 10, 20, 50], 'the largest province total (Bangkok, 186 listed rows)');
-  assert.deepEqual(geometricBreaks(3, 5, {integer: true}), [], 'a narrow integer range yields fewer classes');
-  assert.deepEqual(geometricBreaks(0), []);
-});
-
-test('count classes: closed integer intervals from 1 to the observed maximum; zero is measured_zero; no data never takes a ramp colour', () => {
-  const m = buildCountClasses([0, 1, 4, 21]);
-  assert.equal(m.method, 'geometric-1-2-5');
-  assert.deepEqual(m.classes.map(c => c.label), ['1', '2–4', '5–9', '10–21']);
-  assert.equal(m.classes.at(-1).closed, true);
-  assert.equal(m.classes.at(-1).upper, 21);
-  // Four classes spread over the five LDS class colours (first and last kept).
-  assert.deepEqual(m.classes.map(c => c.fill), [0, 1, 3, 4].map(i => classColors(5)[i]));
-  assert.equal(classify(21, m).classIndex, 4, 'the maximum is inside the closed last class');
-  assert.equal(classify(5, m).classIndex, 3, 'a breakpoint opens the next class');
-  assert.equal(classify(1, m).classIndex, 0);
+test('41-sample rank ramp (owner standing rule): each value takes the LUT sample of its mid-rank, lowest on 0, highest on 40', () => {
+  assert.equal(RAMP_STEPS, 41);
+  const m = buildCountRamp([0, 1, 4, 21]);
+  assert.equal(m.method, 'rank');
+  assert.equal(m.scaleId, 'count');
+  assert.equal(m.steps, 41);
+  assert.deepEqual(m.levels.map(l => [l.value, l.index]), [[1, 0], [4, 20], [21, 40]], 'zero is not a level');
+  assert.deepEqual(m.levels.map(l => l.fill), [COUNT_SCALE.lut[0], COUNT_SCALE.lut[20], COUNT_SCALE.lut[40]], 'nothing is interpolated: every fill is a LUT sample');
+  assert.equal(classify(21, m).index, 40, 'the maximum closes the ramp');
+  assert.equal(classify(4, m).fill, COUNT_SCALE.lut[20]);
+  assert.equal(classify(1, m).index, 0);
+  // Equal values share one sample; one value alone sits on sample 40.
+  const tied = buildCountRamp([2, 2, 2, 7]);
+  assert.deepEqual(tied.levels.map(l => [l.value, l.areas, l.index]), [[2, 3, 0], [7, 1, 40]]);
+  assert.deepEqual(buildCountRamp([3]).levels.map(l => l.index), [40]);
+  assert.equal(buildCountRamp([0, 0]).levels.length, 0);
+  // EVID-05: measured zero = sample 0 + the zero outline; no data never takes a ramp colour.
   assert.equal(classify(0, m).state, 'measured_zero');
   assert.equal(classify(0, m).fill, COUNT_SCALE.lut[0]);
-  assert.equal(classify(0, m).outline, '#7D877F', 'measured zero = lowest fill + the zero outline (EVID-05)');
+  assert.equal(classify(0, m).outline, '#7D877F');
   assert.equal(classify(null, m).state, 'no_data');
   assert.equal(classify(null, m).fill, null);
-  assert.equal(buildCountClasses([0, 0]).classCount, 0);
-  const narrow = buildCountClasses([1, 3]);
-  assert.deepEqual(narrow.classes.map(c => c.label), ['1–3']);
-  assert.deepEqual(narrow.classes.map(c => c.fill), [classColors(5)[4]]);
 });
 
-test('label ink is the foundation pair with the higher contrast; numbers printed on fills (matrix cells) reach 4.5:1', () => {
-  for (const hex of classColors(5)) {
+test('ramp ticks and legend: all 41 samples in order, ticks at their own samples, zero swatch only when zero occurs', () => {
+  const m = buildCountRamp([1, 1, 2, 3, 5, 16, 19, 21, 0]);
+  const ticks = rampTicks(m.levels, String);
+  assert.equal(ticks[0].index, 0);
+  assert.equal(ticks.at(-1).value, 21, 'the highest value always has a tick');
+  for (let i = 1; i < ticks.length; i++) assert.ok(ticks[i].index - ticks[i - 1].index >= 8, 'ticks never crowd');
+  const html = rampLegendHTML(m, {zero: true, zeroTitle: '0 ของชุดข้อมูลนี้'});
+  const cells = [...html.matchAll(/<i style="background:(#[0-9A-F]{6})" data-step="(\d+)"><\/i>/g)];
+  assert.equal(cells.length, 41);
+  assert.deepEqual(cells.map(c => c[1]), [...COUNT_SCALE.lut]);
+  assert.match(html, /aria-label="41 ระดับสีตามลำดับค่า ต่ำสุด 1 สูงสุด 21 สาขา"/);
+  assert.match(html, /ramp-zero/);
+  assert.ok(!/ramp-zero/.test(rampLegendHTML(m)), 'no zero swatch unless asked');
+  assert.equal(rampLegendHTML(buildCountRamp([])), '');
+});
+
+test('label ink is the foundation pair with the higher contrast; a number on a sample neither ink reads on sits on a plate', () => {
+  for (const hex of COUNT_SCALE.lut) {
     const ink = inkFor(hex), other = ink === '#182327' ? '#FFFFFF' : '#182327';
     assert.ok(contrastRatio(hex, ink) >= contrastRatio(hex, other));
-    assert.ok(contrastRatio(hex, ink) >= 4.5, hex);
+    assert.ok(contrastRatio(hex, ink) >= 4.5 || needsPlate(hex), hex);
   }
+  assert.deepEqual(COUNT_SCALE.lut.map((h, i) => (needsPlate(h) ? i : -1)).filter(i => i >= 0), [27, 28, 29]);
+  const m = buildCountRamp(Array.from({length: 41}, (_, i) => i + 1));
+  assert.equal(classify(29, m).plate, true, 'sample 28 carries a plate');
+  assert.equal(classify(41, m).plate, false);
 });

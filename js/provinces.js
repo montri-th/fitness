@@ -14,8 +14,8 @@
  * panel counts them apart (“ไม่ทราบจังหวัด”).
  */
 import {provinceByCode} from './model.js';
-import {buildCountClasses, classify} from './scales.js';
-import {featureBounds, firstLineLayerId} from './map-layers.js';
+import {buildCountRamp, classify} from './scales.js';
+import {featureBounds, firstLineLayerId, GEOJSON_MAXZOOM} from './map-layers.js';
 
 export const PROVINCE_FILL_MAX_ZOOM = 8;
 export const PROVINCE_OUTLINE_MAX_ZOOM = 12;
@@ -37,14 +37,14 @@ export function buildProvinceModel(rows, geojson, {unit = 'สาขา'} = {}) 
     const meta = provinceByCode(code) || {code, th: f.properties?.name || code, en: f.properties?.nameEn || code};
     return {id: code, code, name: meta.th, nameEn: meta.en, count: counts.get(code) || 0, label: f.properties?.label || null, feature: f};
   });
-  const classes = buildCountClasses(provinces.map(p => p.count), 5, {unit});
-  for (const p of provinces) { const c = classify(p.count, classes); p.state = c.state; p.fill = c.fill; p.ink = c.ink; p.outline = c.outline || null; }
-  return {provinces, classes, zeroCount: provinces.filter(p => p.state === 'measured_zero').length};
+  const ramp = buildCountRamp(provinces.map(p => p.count), {unit});
+  for (const p of provinces) { const c = classify(p.count, ramp); p.state = c.state; p.fill = c.fill; p.ink = c.ink; p.outline = c.outline || null; }
+  return {provinces, ramp, zeroCount: provinces.filter(p => p.state === 'measured_zero').length};
 }
 
 export function installProvinceLayers(map, geojson) {
   const beforeId = firstLineLayerId(map);
-  map.addSource(SOURCE, {type: 'geojson', data: geojson, promoteId: 'id'});
+  map.addSource(SOURCE, {type: 'geojson', data: geojson, maxzoom: GEOJSON_MAXZOOM, promoteId: 'id'});
   const fs = (key, on, off = 0) => ['case', ['boolean', ['feature-state', key], false], on, off];
   map.addLayer({id: PROVINCE_LAYERS.fill, type: 'fill', source: SOURCE, maxzoom: PROVINCE_FILL_MAX_ZOOM,
     paint: {'fill-color': ['coalesce', ['feature-state', 'fill'], '#000000'], 'fill-opacity': fs('filled', 1), 'fill-antialias': true}}, beforeId);
@@ -56,7 +56,7 @@ export function installProvinceLayers(map, geojson) {
   map.addLayer({id: PROVINCE_LAYERS.selected, type: 'line', source: SOURCE, maxzoom: 13,
     paint: {'line-color': cssVar('--map-selected-stroke', '#176B82'), 'line-width': ['interpolate', ['linear'], ['zoom'], 5, 1.6, 9, 2.4],
       'line-opacity': ['interpolate', ['linear'], ['zoom'], 11, fs('selected', 1), 13, fs('selected', 0.3)]}});
-  let current = {provinces: [], classes: null, zeroCount: 0};
+  let current = {provinces: [], ramp: null, zeroCount: 0};
   const ids = (geojson?.features || []).map(f => String(f.id ?? f.properties?.id));
 
   /** rows: the filtered scope WITHOUT the province filter (every frame keeps its own count); selectedCode: the จังหวัด filter. */

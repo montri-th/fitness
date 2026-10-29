@@ -3,8 +3,8 @@
  *
  * The district outlines arrive per province (js/frames.js); the source holds the merged frames loaded so far
  * and is re-set when a province arrives (setFrames). Every update only writes feature-state for the loaded
- * frames, so recolouring never re-tiles. Fill = LDS `count` class of branches per district within
- * scopeRows, inserted beneath the basemap's first line layer so roads and labels stay readable above an
+ * frames, so recolouring never re-tiles. Fill = the LDS `count` sample (41-sample rank ramp) of branches per
+ * district within scopeRows, inserted beneath the basemap's first line layer so roads and labels stay readable above an
  * exact, opaque data colour; it switches off at zoom ≥ FILL_MAX_ZOOM (hard switch) where pins and buildings
  * carry the reading.
  *
@@ -15,14 +15,23 @@
  * from PROVINCE_VIEW_MIN_ZOOM, so the whole province fits with its choropleth; every other frame still starts
  * at AREA_MIN_ZOOM (below it the province frames of js/provinces.js carry the reading).
  *
- * EVID-05 per frame: measured (class fill) · measured_zero (none of the brands in this research lists a
+ * EVID-05 per frame: measured (ramp sample) · measured_zero (none of the brands in this research lists a
  * branch there under the filters → lowest fill + zero outline, “0 ที่พบ”) · no_data is not used (every
  * district is in the research scope; kept for the treatment contract) · out_of_scope does not occur.
  */
 import {summarizeAreas} from './areas.js';
-import {buildCountClasses, classify} from './scales.js';
+import {buildCountRamp, classify} from './scales.js';
 
 export const FILL_MAX_ZOOM = 14.5;
+/**
+ * maxzoom of every GeoJSON source the page adds. MapLibre 5.6.2 throws in SourceCache._updateRetainedTiles
+ * (“reading 'key'”) when a pitched camera sits between maxzoom − 1 and maxzoom of a GeoJSON source and a near
+ * tile of the level-of-detail cover reaches maxzoom before it has data (CityMETER · Shopping centers, seen
+ * 2026-10-25 with the two-point camera at zoom 17.7 and the default maxzoom 18). Under the eye preset the near
+ * tiles of the cover sit up to about half a level above the camera (calculateTileZoom), so every building camera
+ * zoom (≤ js/camera.js#BUILDING_MAX_ZOOM, 21) stays two levels below 24 — the most geojson-vt allows.
+ */
+export const GEOJSON_MAXZOOM = 24;
 export const AREA_MIN_ZOOM = 8;
 /** Lowest zoom at which the frames of the selected จังหวัด are drawn (the country fit never goes below 4). */
 export const PROVINCE_VIEW_MIN_ZOOM = 4;
@@ -66,21 +75,22 @@ export function hatchImage(ground = '#D5DAD6', stroke = '#7D877F', size = 8) {
  */
 export function buildAreaModel(rows, index, {province = '', noDataIds = null, unit = 'สาขา'} = {}) {
   const summaries = summarizeAreas(rows, index, {includeEmpty: true, province});
-  const classes = buildCountClasses(summaries.map(s => s.count), 5, {unit});
+  // One 41-sample rank ramp over the เขต/อำเภอ being read (js/scales.js#buildRamp); the legend, the labels and the charts read it.
+  const ramp = buildCountRamp(summaries.map(s => s.count), {unit});
   const areas = summaries.map(s => {
-    const c = noDataIds?.has(s.id) ? classify(null, classes, 'no_data') : classify(s.count, classes);
+    const c = noDataIds?.has(s.id) ? classify(null, ramp, 'no_data') : classify(s.count, ramp);
     return {id: s.id, name: s.name, nameEn: s.nameEn, province: s.province,
       count: s.count, brands: s.brands, km2: s.km2, state: c.state, fill: c.fill, ink: c.ink, outline: c.outline || null,
       label: s.label, bbox: s.bbox};
   });
-  return {areas, byId: new Map(areas.map(a => [a.id, a])), classes, zeroCount: areas.filter(a => a.state === 'measured_zero').length, noDataCount: areas.filter(a => a.state === 'no_data').length};
+  return {areas, byId: new Map(areas.map(a => [a.id, a])), ramp, zeroCount: areas.filter(a => a.state === 'measured_zero').length, noDataCount: areas.filter(a => a.state === 'no_data').length};
 }
 
 export function installAreaLayers(map, {areas}) {
   const beforeId = firstLineLayerId(map);
   const ground = cssVar('--data-no-data', '#D5DAD6'), emphasis = cssVar('--border-emphasis', '#7D877F');
   if (!map.hasImage(HATCH)) map.addImage(HATCH, hatchImage(ground, emphasis));
-  map.addSource(SOURCE, {type: 'geojson', data: areas, promoteId: 'id',
+  map.addSource(SOURCE, {type: 'geojson', data: areas, maxzoom: GEOJSON_MAXZOOM, promoteId: 'id',
     attribution: 'ขอบเขตปกครอง: <a href="https://landometer.com/v3/citymeter" target="_blank" rel="noopener">CityMETER</a>'});
   const fs = (key, on, off = 0) => ['case', ['boolean', ['feature-state', key], false], on, off];
   // Below AREA_MIN_ZOOM only the frames of the selected จังหวัด (feature-state `province`) are drawn.

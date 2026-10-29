@@ -101,3 +101,16 @@ test('the handoff JSON satisfies its schema (statement, brief, plan)', () => {
   delete brief.firstAha;
   assert.ok(validate(schema, brief).some(e => e.includes('firstAha')));
 });
+
+test('every GeoJSON source the page adds sets GEOJSON_MAXZOOM, two levels above the building camera (MapLibre 5.6.2 throws below it under a pitched camera)', async () => {
+  const {GEOJSON_MAXZOOM} = await import('../js/map-layers.js');
+  const {BUILDING_MAX_ZOOM} = await import('../js/camera.js');
+  assert.ok(GEOJSON_MAXZOOM <= 24, 'geojson-vt allows at most 24');
+  assert.ok(GEOJSON_MAXZOOM - BUILDING_MAX_ZOOM >= 2, `${GEOJSON_MAXZOOM} vs building camera ${BUILDING_MAX_ZOOM}`);
+  let n = 0;
+  for (const m of modules()) {
+    const src = readFileSync(join(ROOT, m), 'utf8');
+    for (const [call] of src.matchAll(/addSource\([^;]*?type: 'geojson'[^;]*?\);/g)) { n++; assert.match(call, /maxzoom: GEOJSON_MAXZOOM/, `${m}: ${call.slice(0, 90)}`); }
+  }
+  assert.ok(n >= 6, `found ${n} GeoJSON sources`);
+});

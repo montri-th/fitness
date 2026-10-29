@@ -131,13 +131,22 @@ export function buildBrandProfile(brandId, {allRows, scopeRows, index, data}) {
 }
 
 /** A CityMETER venue (Shopping Center registry) and the rows the sheet links to it by venue id. */
-export function buildVenueProfile(venueId, {allRows, scopeRows, index, groups, data}) {
+/**
+ * A CityMETER venue (shopping center) and its branches as ONE list (owner 2026-10-29: “ร้านเครือ กับ ร้านในอาคาร
+ * ให้แสดงรวมกันไม่ต้องแยก”): the rows the sheet links to the venue by venue id, and `inside` — the rows of the OSM
+ * building its registry point falls in (js/app.js#buildingRows, display-time join). Each row appears once;
+ * `linked` counts the venue-id rows, `inBuilding` the others. `building`: {key, height} of that building, or null.
+ */
+export function buildVenueProfile(venueId, {allRows, scopeRows, index, groups, data, inside = [], building = null}) {
   const venue = data.venues.find(v => v.id === venueId);
   if (!venue) return null;
-  const rows = scopeRows.filter(r => r.venue?.id === venueId).sort(listOrder);
+  const linked = scopeRows.filter(r => r.venue?.id === venueId);
+  const ids = new Set(linked.map(r => r.id));
+  const rows = [...linked, ...inside.filter(r => !ids.has(r.id) && ids.add(r.id))].sort(listOrder);
   const all = allRows.filter(r => r.venue?.id === venueId);
   return {venue, area: index.byId.get(venue.district) || null, words: levelWords(index.byId.get(venue.district)?.province || ''),
-    rows, count: rows.length, all: all.length, ...mixOf(rows, groups)};
+    rows, count: rows.length, linked: linked.length, inBuilding: rows.length - linked.length, all: all.length, building,
+    brandCount: distinctBrands(rows), ...mixOf(rows, groups)};
 }
 
 /**

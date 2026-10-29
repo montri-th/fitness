@@ -2,20 +2,21 @@
  * Analytical scales — LDS 0.9.7 (v0.9.7-owner.1, color-srgb-10), copied exactly from
  * machine.analyticalScales of Landometer-Design-System-v0.9.7.md (SHA-256 d3085cbc…96); parity is checked
  * by scripts/check-lds-parity.mjs against the source file (handoff/VERIFICATION.md). DATAVIZ-02/03: the
- * approved light 41-sample LUT is consumed unchanged on both themes; class colours are the LDS class
- * projections round(i × 40 / (n − 1)); nothing is interpolated here.
+ * approved light 41-sample LUT is consumed unchanged on both themes; nothing is interpolated here.
  *
  * Family used by this product (selected from metric + denominator): `count` — branch observations per
  * เขต/อำเภอ, per province frame and per matrix cell. A total with no denominator: the research covers a
  * declared set of brands, so no per-area or per-person ratio is drawn.
  *
- * Classification (declared by this consumer, DATAVIZ-02): counts are small whole numbers with a long tail
- * (most districts hold 1–4 branches, a handful 15–21; Bangkok holds about half of all branches). Equal
- * intervals would paint almost every frame in the first class, so the classes are geometric with rounded
- * 1–2–5 breaks, each about twice the next lower one: the top class starts at the largest ladder value
- * ≤ max/2 and every lower break is the largest ladder value ≤ the next break/2 (never below 2). Intervals are
- * whole-number [lower, upper − 1] except the closed last one, which ends at the observed maximum (no
- * clamping, no open end). Zero is measured_zero, never a ramp class.
+ * All 41 samples (owner standing rule “Color scale ขอให้ใช้ 41 scales ตาม LDS เสมอ”, the CityMETER · Shopping
+ * centers method of 2026-10-25, `buildRamp`): the colour of a value is the LUT sample of its rank among the
+ * measured nonzero values of the areas being read (the selected province's เขต/อำเภอ, or every one when the
+ * country is read; the province frames; the matrix cells). Each distinct value takes the sample of its mid-rank
+ * percentile, rescaled so the lowest value sits on sample 0 and the highest on sample 40 (one value alone sits on
+ * sample 40). Equal values share one sample; nothing falls between samples; the highest value closes the ramp
+ * (no clamp, no open class); the renderer, the legend, the labels and the charts read the same `levels`. The LDS
+ * class tables (`classColors`, n ∈ {3,5,7,9} at index round(i × 40 / (n − 1))) remain for static tokens. Zero
+ * is a measured fact (EVID-05 measured_zero: sample 0 + the zero outline), never a level; missing is no_data.
  */
 const freeze = Object.freeze;
 
@@ -54,79 +55,108 @@ export function classColors(n = 5, scale = COUNT_SCALE) {
   return Array.from({length: n}, (_, i) => scale.lut[Math.round((i * 40) / (n - 1))]);
 }
 
-/** 1–2–5 ladder from 0.001 to 50,000. */
-export const LADDER = freeze([0.001, 0.002, 0.005, 0.01, 0.02, 0.05, 0.1, 0.2, 0.5, 1, 2, 5, 10, 20, 50, 100, 200, 500, 1000, 2000, 5000, 10000, 20000, 50000]);
-const below = v => { let best = null; for (const x of LADDER) if (x <= v + 1e-12) best = x; return best; };
-
 /**
- * Geometric breaks for (0, max]: [b1, b2, b3, b4] with b4 = ladder ≤ max/ratio and b(k) = ladder ≤ b(k+1)/ratio.
- * `integer` keeps every break ≥ 1 and whole (count family). Duplicate or missing breaks are dropped, so a
- * narrow range yields fewer classes (each class then takes an evenly spread LDS class colour).
+ * Numbers set directly on a data fill need 4.5:1. Three `count` samples (27–29) reach it with neither foundation
+ * ink, so text on them sits on a neutral plate (LDS: keep the data colour, add a backplate) — `plate` in classify().
  */
-export function geometricBreaks(max, n = 5, {integer = false, ratio = 2} = {}) {
-  if (!(max > 0)) return [];
-  const breaks = [];
-  let next = max;
-  for (let i = 0; i < n - 1; i++) {
-    const b = below(next / ratio);
-    if (b == null || (integer && b < 2) || (breaks.length && b >= breaks[0])) break;
-    breaks.unshift(integer ? Math.round(b) : b);
-    next = b;
+export const needsPlate = fill => contrastRatio(fill, inkFor(fill)) < 4.5;
+
+export const RAMP_STEPS = 41;
+const INTEGER = new Intl.NumberFormat('th-TH', {maximumFractionDigits: 0});
+
+/** The 41-sample rank ramp of one reading (see the header). `unit` names what is counted, for legends. */
+export function buildRamp(values, {scale = COUNT_SCALE, unit = 'สาขา'} = {}) {
+  const measured = (Array.isArray(values) ? values : []).filter(x => Number.isFinite(x) && x > 0).sort((a, b) => a - b);
+  const distinct = [];
+  for (const v of measured) {
+    const last = distinct.at(-1);
+    if (last && last.value === v) last.n++;
+    else distinct.push({value: v, n: 1});
   }
-  return [...new Set(breaks)].filter(b => b < max);
+  const total = measured.length;
+  let below = 0;
+  const mid = distinct.map(d => { const p = (below + d.n / 2) / total; below += d.n; return p; });
+  const span = mid.length > 1 ? mid.at(-1) - mid[0] : 0;
+  const levels = distinct.map((d, j) => {
+    const index = span > 0 ? Math.round(((mid[j] - mid[0]) / span) * (RAMP_STEPS - 1)) : RAMP_STEPS - 1;
+    const fill = scale.lut[index];
+    return {value: d.value, areas: d.n, index, fill, ink: inkFor(fill)};
+  });
+  const format = x => INTEGER.format(x);
+  return {
+    scaleId: scale.scaleId, scaleVersion: scale.scaleVersion, unit, method: 'rank', steps: RAMP_STEPS, lut: scale.lut,
+    min: measured.length ? measured[0] : 0, max: measured.length ? measured.at(-1) : 0,
+    levels, levelCount: new Set(levels.map(l => l.index)).size, ticks: rampTicks(levels, format), format,
+    zero: {fill: scale.lut[0], ink: inkFor(scale.lut[0]), outline: scale.zeroOutline, label: '0'},
+  };
 }
 
-const fmtFor = v => new Intl.NumberFormat('th-TH', {minimumFractionDigits: 0, maximumFractionDigits: v >= 1 ? 0 : v >= 0.1 ? 1 : v >= 0.01 ? 2 : 3});
-const fmt = v => fmtFor(v).format(v);
-/**
- * The closed top bound prints exactly as a density value prints (js/panel.js#dens: one decimal from 1, two
- * below 1, three below 0.1), so the densest area's own label never exceeds its class (live walk 2026-10-23:
- * the legend said “10–41” beside the label “สุริยวงศ์ 41.2”).
- */
-const fmtTop = v => { const d = v >= 1 ? 1 : v >= 0.1 ? 2 : 3; return new Intl.NumberFormat('th-TH', {minimumFractionDigits: d, maximumFractionDigits: d}).format(v); };
+/** The count ramp (count family) of one reading. */
+export const buildCountRamp = (values, {unit = 'สาขา'} = {}) => buildRamp(values, {scale: COUNT_SCALE, unit});
 
-function build(values, scale, {n = 5, integer = false, unit = ''} = {}) {
-  const measured = (Array.isArray(values) ? values : []).filter(v => Number.isFinite(v) && v > 0);
-  const max = measured.length ? Math.max(...measured) : 0;
-  const colors = classColors(n, scale);
-  const zero = {fill: colors[0], outline: scale.zeroOutline, label: '0'};
-  if (!(max > 0)) return {scaleId: scale.scaleId, unit, method: 'geometric-1-2-5', classCount: 0, max: 0, classes: [], zero};
-  const breaks = geometricBreaks(max, n, {integer});
-  const edges = [0, ...breaks, max];
-  const k = edges.length - 1;
-  // Spread the k classes over the n LDS class colours (k = n → every colour in order).
-  const picks = Array.from({length: k}, (_, i) => (k === 1 ? n - 1 : Math.round((i * (n - 1)) / (k - 1))));
-  const classes = [];
-  for (let i = 0; i < k; i++) {
-    const lower = edges[i], upper = edges[i + 1], last = i === k - 1;
-    let label;
-    if (integer) {
-      const lo = i === 0 ? 1 : lower, hi = last ? Math.round(upper) : upper - 1;
-      label = lo === hi ? fmt(lo) : `${fmt(lo)}–${fmt(hi)}`;
-    }
-    else {
-      const top = last ? fmtTop(upper) : fmt(upper);
-      label = i === 0 ? `>0–${top}` : `${fmt(lower)}–${top}`;
-    }
-    classes.push({index: picks[i], lower, upper, closed: last, fill: colors[picks[i]], ink: inkFor(colors[picks[i]]), label});
+/**
+ * Legend ticks: the lowest and highest values plus the values nearest samples 10, 20 and 30, each placed at its
+ * own sample; a tick closer than 8 samples to the one before it is dropped (the highest value always stays).
+ */
+export function rampTicks(levels, fmt = String) {
+  if (!levels.length) return [];
+  const picks = [];
+  for (const target of [0, 10, 20, 30, 40]) {
+    let best = levels[0];
+    for (const l of levels) if (Math.abs(l.index - target) < Math.abs(best.index - target)) best = l;
+    if (!picks.includes(best)) picks.push(best);
   }
-  return {scaleId: scale.scaleId, unit, method: 'geometric-1-2-5', classCount: classes.length, max, breaks, classes, zero};
+  const top = levels.at(-1);
+  if (!picks.includes(top)) picks.push(top);
+  const kept = [];
+  for (const l of picks.sort((a, b) => a.index - b.index)) {
+    if (kept.length && l.index - kept.at(-1).index < 8) {
+      if (l === top) kept.pop(); else continue;
+    }
+    kept.push(l);
+  }
+  return kept.map(l => ({index: l.index, value: l.value, label: fmt(l.value)}));
 }
 
-/** Count classes (count family): whole-number intervals; integer breaks. */
-export const buildCountClasses = (values, n = 5, {unit = 'สาขา'} = {}) => build(values, COUNT_SCALE, {n, integer: true, unit});
+/** The level that holds `value`: the highest level whose value is ≤ value (levels ascend). */
+function levelOf(value, levels) {
+  let lo = 0, hi = levels.length - 1, found = levels[0];
+  while (lo <= hi) {
+    const m = (lo + hi) >> 1;
+    if (levels[m].value <= value) { found = levels[m]; lo = m + 1; } else hi = m - 1;
+  }
+  return found;
+}
 
 /**
  * Resolve one value to its EVID-05 state and treatment.
- *  measured: finite nonzero → class fill · measured_zero: 0 → lowest fill + zero outline
+ *  measured: finite > 0 → the LUT sample of its level · measured_zero: 0 → sample 0 + zero outline
  *  no_data: null fill (caller draws the hatch) · out_of_scope: nothing drawn
  */
 export function classify(value, model, state = 'measured') {
-  const scale = COUNT_SCALE;
   if (state === 'out_of_scope') return {state, fill: null, ink: null, label: 'นอกขอบเขตข้อมูล'};
   if (state === 'no_data' || value == null || !Number.isFinite(value)) return {state: 'no_data', fill: null, ink: null, label: 'ไม่มีข้อมูล'};
-  if (value <= 0) return {state: 'measured_zero', fill: model.zero.fill, ink: inkFor(model.zero.fill), outline: model.zero.outline, label: '0'};
-  const cls = model.classes.find(c => (c.closed ? value >= c.lower && value <= c.upper : value >= c.lower && value < c.upper)) || model.classes.at(-1);
-  if (!cls) return {state: 'measured', fill: scale.lut[40], ink: inkFor(scale.lut[40]), label: String(value), classIndex: 4};
-  return {state: 'measured', fill: cls.fill, ink: cls.ink, label: String(value), classIndex: cls.index};
+  const fmt = model?.format || String;
+  if (value <= 0) return {state: 'measured_zero', fill: model.zero.fill, ink: model.zero.ink, outline: model.zero.outline, label: '0'};
+  if (!model.levels?.length) return {state: 'measured', fill: COUNT_SCALE.lut[40], ink: inkFor(COUNT_SCALE.lut[40]), label: fmt(value), index: 40, plate: needsPlate(COUNT_SCALE.lut[40])};
+  const level = levelOf(value, model.levels);
+  return {state: 'measured', fill: level.fill, ink: level.ink, label: fmt(value), index: level.index, plate: needsPlate(level.fill)};
+}
+
+const escHTML = v => String(v ?? '').replace(/[&<>"']/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[c]));
+
+/**
+ * Legend markup for a ramp: all 41 samples in order (the scale itself), ticks at the samples their values take,
+ * and the zero swatch when zero occurs (`zeroTitle` says what zero means here). The accessible name states the
+ * method, the range and the unit in text.
+ */
+export function rampLegendHTML(model, {zero = false, zeroTitle = ''} = {}) {
+  if (!model?.levels?.length) return '';
+  const fmt = model.format || String;
+  const cells = model.lut.map((c, i) => `<i style="background:${c}" data-step="${i}"></i>`).join('');
+  const edge = i => (i <= 2 ? ' is-start' : i >= model.steps - 3 ? ' is-end' : '');
+  const ticks = model.ticks.map(t => `<span class="ramp-tick${edge(t.index)}" style="left:${(((t.index + 0.5) / model.steps) * 100).toFixed(2)}%">${escHTML(t.label)}</span>`).join('');
+  const name = `${model.steps} ระดับสีตามลำดับค่า ต่ำสุด ${fmt(model.min)} สูงสุด ${fmt(model.max)} ${model.unit}`;
+  const zeroSwatch = zero ? `<span class="legend-step ramp-zero"${zeroTitle ? ` title="${escHTML(zeroTitle)}"` : ''}><i class="legend-zero" style="background:${model.zero.fill}" aria-hidden="true"></i>0</span>` : '';
+  return `<span class="legend-ramp" role="img" aria-label="${escHTML(name)}"><span class="ramp-bar" aria-hidden="true">${cells}</span><span class="ramp-ticks" aria-hidden="true">${ticks}</span></span>${zeroSwatch}`;
 }

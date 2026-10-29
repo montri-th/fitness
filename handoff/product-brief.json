@@ -3,7 +3,7 @@
   "schemaVersion": "1.5.0",
   "documentType": "product-brief",
   "productId": "citymeter-fitness",
-  "productVersion": "0.1.0",
+  "productVersion": "0.2.0",
   "updatedOn": "2026-10-29",
   "datasetCheckedOn": "2026-10-26",
   "language": "th (UI) · en (contracts)",
@@ -25,7 +25,7 @@
     "charts and table",
     "CityMETER production deep link"
   ],
-  "changesSince": "first release (structure carried over from CityMETER · Luxury Brands 0.5 / Restaurants 0.5 / Pharmacy 0.1.1)",
+  "changesSince": "0.1.0 → 0.2.0 (owner 2026-10-29 19:47): building view of CityMETER · Shopping centers — eye camera corner-on on the least-occluded diagonal, zoom to fit the free part of the map on every way in, x-ray over other buildings and road names, see-through front buildings, district labels off the building, zoom up to 21 so small buildings fill too, GeoJSON maxzoom 24; one list per building (venue-linked rows + rows whose points fall in it, no double count); all 41 LDS count samples by rank (owner standing rule). 0.1.0 carried the structure of CityMETER · Luxury Brands 0.5 / Restaurants 0.5 / Pharmacy 0.1.1",
   "rowScopes": {
     "scopeRows": "rows after search, status, format, province and brand filters, before any district/venue selection or focus — the Aha base, the choropleth, the charts and every rank",
     "baseRows": "scopeRows narrowed by the selected เขต/อำเภอ or CityMETER venue",
@@ -110,13 +110,13 @@
     "eligibility": "none — counts are totals; ties are never cut (firstAha.ranking)",
     "combined": "Σ rows of the focused districts ÷ the home province’s placed rows (a share, numerator and denominator shown)",
     "notDrawn": "no per-area or per-person density: the research covers a declared set of brands",
-    "classes": "geometric 1–2–5, ratio 2, closed integer intervals, last closed at the observed maximum (js/scales.js#geometricBreaks)"
+    "ramp": "all 41 samples of the LDS count LUT by rank among the measured nonzero values being read: lowest sample 0, highest 40, ties share one sample, nothing interpolated (js/scales.js#buildRamp; owner standing rule “Color scale ขอให้ใช้ 41 scales ตาม LDS เสมอ”); the map, legend (41 samples + value ticks, rampLegendHTML), label swatches, rank bars and the count chart read one ramp; the matrix has its own ramp over its cells; numbers on samples 27–29 sit on a plate; never a 3/5-class pick"
   },
   "coverageContract": {
     "covered": "every เขต/อำเภอ of the 77 provinces is in the research scope (official branch lists of the brands)",
     "states": {
-      "measured": "count class",
-      "measured_zero": "lowest class + zero outline — none of the brands lists a branch there",
+      "measured": "ramp sample by rank",
+      "measured_zero": "sample 0 + zero outline — none of the brands lists a branch there",
       "no_data": "kept for the contract, unused",
       "out_of_scope": "not drawn"
     },
@@ -250,17 +250,21 @@
       "explicit": "?areas=a,b,c",
       "none": "?areas=all"
     },
-    "choropleth": "LDS count classes under the basemap’s first line layer; zoom 8–14.5; the selected จังหวัด from zoom 4 (province view); measured_zero = lowest class + 2 px zero outline"
+    "choropleth": "LDS count, 41-sample ramp by rank, under the basemap’s first line layer; zoom 8–14.5; the selected จังหวัด from zoom 4 (province view); measured_zero = sample 0 + 2 px zero outline"
   },
   "buildingJoinContract": {
-    "buildings": "focus-tier OpenStreetMap footprints the map draws (js/massing.js)",
-    "points": "rows with a point (the source’s own point or the CityMETER venue reference point)",
+    "module": "js/building-join.js#joinBuildings(pieces, rows, venues) → {buildings, byBuilding, byRow, byVenue, venuesByBuilding, keyOfPiece}",
+    "buildings": "focus-tier OpenStreetMap footprints the map draws (js/massing.js); one building = the pieces of one outline cut by z14 tile edges (same OSM id + shared cut points within 2 m, never the id alone), the building:parts inside a hide_3d outline, and every drawn part holding one point (podium + tower) — js/building-join.js#groupPieces; key osm:<smallest id>",
+    "points": "rows with their own point and the CityMETER venues’ registry points (rows linked to a venue are drawn at its point)",
     "rule": "point inside the footprint (smallest when nested) — “จุดตกในอาคาร”, never “ตั้งอยู่ใน”",
-    "click": "one row → branch; several → building panel; none → falls through to the district",
-    "neverChanges": "any count, membership or venue link"
+    "oneList": "owner 2026-10-29 “ร้านเครือ กับ ร้านในอาคาร ให้แสดงรวมกันไม่ต้องแยก”: buildingRows(key) = the rows the sheet links to a venue whose registry point falls in the building + the rows whose own points fall in it, each once (mergeRows); venueRows(v) = the venue’s linked rows + the rest of its building; the venue panel, the building panel, the table and the pins show the same rows",
+    "sheetScope": "the Fitness sheet has one branch population (02_STORES); its other tabs are views of it and are never added",
+    "click": "a building holding a venue’s point opens the venue; one row → branch; several → building panel; none → falls through to the district",
+    "neverChanges": "any count, area membership or venue link"
   },
   "interactionContract": {
-    "mapClicks": "focus pin → focus building → province view district / province frame (below zoom 8) → district (area-hit)",
+    "mapClicks": "focus pin → the building being looked at (x-ray hit test: frames it again) → focus building → province view district / province frame (below zoom 8) → district (area-hit)",
+    "reframe": "every way into a building view frames it again: pin, building, x-ray tap, list, table, search, URL, back, ดูทั้งหมด, phone sheet open/close, 3D toggle",
     "quietDots": "never focusable or clickable",
     "keyboard": "roving tabindex over HTML pins from zoom 15.5; roving tablist for chart views; visible focus everywhere"
   },
@@ -278,12 +282,34 @@
   },
   "cameraContract": {
     "presets": {
-      "plan": "pitch 0",
+      "plan": "pitch 0 (3D off)",
       "city": "pitch 56 · bearing 28 · fov 36.87 (overview)",
-      "model": "pitch 60 · fov 14 (district, branch)",
-      "eye": "pitch 75 · fov 24 (venue, building, branch at its venue’s point)"
+      "model": "pitch 60 · fov 14 (district, branch without a point)",
+      "eye": "pitch 75 · fov 24 (the building view: venue, building, branch with a point)"
     },
-    "fitting": "fitPitched: flat fit, then zoom out until every outline vertex is inside the padded viewport, then in while it still fits; pitch ≤ 90 − fov/2 − 3"
+    "fitting": "fitPitched (overview, district): flat fit, then zoom out until every outline vertex is inside the padded viewport, then in while it still fits; pitch ≤ 90 − fov/2 − 3",
+    "buildingView": {
+      "owner": "2026-10-29 19:47 “อาคารที่เลือก หรือ on focus ให้แสดงด้วยมุมมอง 2-point perspective เสมอ zoom to fit viewport เสมอด้วย”",
+      "module": "js/camera.js#fitBuilding, twoPointBearing, wallAzimuth, occlusionScore, screenBounds (from CityMETER · Shopping centers); js/app.js#frameFocus",
+      "target": "js/app.js#focusTarget — the open building; the building the open venue’s registry point falls in; the building the open branch’s point falls in",
+      "bearing": "dominant wall azimuth + 45°, on the diagonal where the drawn focus buildings (massing.obstaclesNear, 400 m) hide least of it, then the one nearest the current bearing",
+      "fit": "eye preset, padding zero; fit points = the pieces as the focus tier draws them at building zoom (massing.fitPointsOf → js/massing.js#footprintFitPoints: the offset and fillets of zoom 18, ground and roof), never the shape drawn at the starting zoom (up to 3.6 m wider on every side); every one inside the free box (js/app.js#visibleBox: below the toolbar, above the Aha card, legend, chart tray, table or open phone sheet, left of the zoom control), one side filling 94% of it; maxZoom 21 when the building is known (js/camera.js#BUILDING_MAX_ZOOM — Fitness branches stand in shophouses and small buildings; the Shopping centers limit 19.5 left a 40 m building at half the box) / 18 while unknown, minZoom 14",
+      "unknown": "a 90 m box round the point (12 m tall) framed the same way; the camera turns to the building when it arrives, at most twice, never after a user camera move",
+      "plan": "3D off: the same footprint fitted flat (fitPitched plan, maxZoom 21 known / 18 unknown)"
+    }
+  },
+  "venueXrayContract": {
+    "owner": "2026-10-29 19:47 “เช็คอย่าให้ 3d building mass ตึกอื่นบังอาคารที่กำลังดูอยู่”",
+    "module": "js/venue-xray.js#installVenueXray(map, {beforeId, toMercator, colors}) → {update(features, {colors}), setEnabled, hitTest(point), dispose, count, enabled, failed} (from CityMETER · Shopping centers / Luxury Brands)",
+    "layer": "venue-xray (custom, renderingMode 3d) before place-quarter (js/map-style.js#VENUE_XRAY_BEFORE): drawn over every building and over road names",
+    "input": "the features of the building being looked at (massing.featuresOf(target.refs)) with display_height_m / display_base_m",
+    "depth": "scissored depth clear inside the building’s screen box, then its own depth test",
+    "seeThrough": "massing.setScene('eye', rings): the focus buildings standing in front of it turn see-through (SCENE.eye)",
+    "labels": "district label chips never sit on the building (refreshLabelView avoid box)",
+    "visibility": "3D only, zoom ≥ 13 (XRAY_MIN_ZOOM); empty outside the building view",
+    "colours": "map.activeLayer faces, map.selectedStroke edges — map roles, not data colours",
+    "failSafe": "a GL error disables it (failed = true); the massing highlight keeps drawing",
+    "geojsonMaxzoom": "every GeoJSON source uses maxzoom 24 (js/map-layers.js#GEOJSON_MAXZOOM, the most geojson-vt allows), two levels above BUILDING_MAX_ZOOM: MapLibre 5.6.2 throws in SourceCache._updateRetainedTiles when the near tiles of a pitched cover reach a GeoJSON source maxzoom before they have data (seen in CityMETER · Shopping centers 2026-10-25); under the eye preset the near tiles sit up to about half a level above the camera (tests/release.test.js)"
   },
   "breadcrumbContract": {
     "levels": [
@@ -377,7 +403,7 @@
       "colorSetId": "color-srgb-10",
       "sha256": "d3085cbc0a50195f1cbf0c77b1d77c0d19b84364daf2948eb367348d65432d96"
     },
-    "analytical": "count (scaleVersion 4ff5c1fb4be71ecd13c48685b38371b528bcd4ce369ce964a75354c2eb4d0980), identical HEX on both themes",
+    "analytical": "count (scaleVersion 4ff5c1fb4be71ecd13c48685b38371b528bcd4ce369ce964a75354c2eb4d0980), all 41 samples by rank, identical HEX on both themes",
     "parity": "scripts/check-lds-parity.mjs — 115 checks against the source file"
   },
   "invariants": [
@@ -427,7 +453,7 @@
     },
     {
       "id": "INV12",
-      "rule": "Analytical colours are the LDS count LUT, identical on both themes; EVID-05 treatments use the dataState tokens"
+      "rule": "Analytical colours are the LDS count LUT — all 41 samples by rank — identical on both themes; EVID-05 treatments use the dataState tokens"
     },
     {
       "id": "INV13",
@@ -460,6 +486,22 @@
     {
       "id": "INV20",
       "rule": "Every 3D preset keeps pitch ≤ 90 − fov/2 − 3"
+    },
+    {
+      "id": "INV21",
+      "rule": "The building being looked at (venue, building, branch with a point) is shown in the eye preset corner-on and fitted to the free part of the map on every way in; never refit after a user camera move"
+    },
+    {
+      "id": "INV22",
+      "rule": "No other building hides the building being looked at: x-ray over buildings and road names, see-through front buildings, district labels off it"
+    },
+    {
+      "id": "INV23",
+      "rule": "One list per building: venue-linked rows + rows whose own points fall in it, each once; it never changes an area count, membership or venue link"
+    },
+    {
+      "id": "INV24",
+      "rule": "Colour scales always use all 41 LDS samples by rank (owner standing rule); never a 3/5-class pick"
     }
   ],
   "chartContracts": [
@@ -467,7 +509,7 @@
       "viewKey": "count",
       "title": "จำนวนสาขา",
       "question": "เขต/อำเภอไหนมีสาขามากที่สุด",
-      "encoding": "sorted horizontal bars, map class colour, value beside the bar",
+      "encoding": "sorted horizontal bars in the map’s 41-sample ramp colour, value beside the bar",
       "metric": "rows per district + distinct brands",
       "scope": "scopeRows, top 20 of all ranked districts; unplaced rows stated in the caption"
     },
@@ -475,7 +517,7 @@
       "viewKey": "mix",
       "title": "รูปแบบ",
       "question": "เขตที่มีสาขามากเป็นฟิตเนสแบบไหน",
-      "encoding": "district × format matrix, equal cells, count classes, cue in headers",
+      "encoding": "district × format matrix, equal cells, its own 41-sample ramp over the cells with a 41-sample legend, cue in headers",
       "metric": "rows per cell",
       "scope": "top 12 districts of the count view"
     },
@@ -492,6 +534,6 @@
     "site": "GitHub Pages from main /root",
     "handoff": "dist/CityMETER-Fitness-Developer-Handoff.zip (START_HERE.md, RELEASE_RECEIPT.json, evidence/, source/)",
     "liveCheck": "npm run verify:live",
-    "cacheTag": "?v=20261029-r1 on every entry file and, through the import map in index.html, on every ES module; the frame files take the same tag from import.meta.url; bump it with package.json version (tests/release.test.js)"
+    "cacheTag": "?v=20261029-r2 on every entry file and, through the import map in index.html, on every ES module; the frame files take the same tag from import.meta.url; bump it with package.json version (tests/release.test.js)"
   }
 }

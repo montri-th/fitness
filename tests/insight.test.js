@@ -78,10 +78,12 @@ test('district model: EVID-05 — every district is in the research scope, so an
   assert.equal(all.areas.length, 928);
   assert.equal(all.noDataCount, 0);
   assert.equal(all.zeroCount, 928 - 71, '71 districts hold at least one listed branch');
-  assert.ok(all.areas.filter(a => a.state === 'measured_zero').every(a => a.count === 0 && a.fill === all.classes.zero.fill));
-  assert.equal(all.classes.scaleId, 'count');
-  assert.equal(all.classes.method, 'geometric-1-2-5');
-  assert.deepEqual(all.classes.classes.map(c => c.label), ['1', '2–4', '5–9', '10–21']);
+  assert.ok(all.areas.filter(a => a.state === 'measured_zero').every(a => a.count === 0 && a.fill === all.ramp.zero.fill));
+  assert.equal(all.ramp.scaleId, 'count');
+  assert.equal(all.ramp.method, 'rank');
+  assert.deepEqual([all.ramp.min, all.ramp.max, all.ramp.steps], [1, 21, 41]);
+  assert.equal(all.byId.get('1039').fill, '#213E70', 'เขตวัฒนา (21, the national maximum) closes the ramp on sample 40');
+  assert.ok(all.areas.filter(a => a.count === 1).every(a => a.fill === '#F4F0E7'), 'the lowest measured value sits on sample 0');
   const bkk = buildAreaModel(rows, index, {province: 'BKK'});
   assert.equal(bkk.areas.length, 50, 'Bangkok has 50 เขต frames');
   assert.equal(bkk.zeroCount, 14);
@@ -98,7 +100,8 @@ test('province frames count rows per province (a total) in the current unit; row
   for (const r of rows) if (r.province) by.set(r.province, (by.get(r.province) || 0) + 1);
   for (const p of m.provinces) assert.equal(p.count, by.get(p.code) || 0, p.code);
   assert.equal(m.provinces.reduce((s, p) => s + p.count, 0), 303, '352 listed − 49 without a province');
-  assert.equal(m.classes.scaleId, 'count');
+  assert.equal(m.ramp.scaleId, 'count');
+  assert.equal(m.provinces.find(p => p.code === 'BKK').fill, '#213E70', 'Bangkok (186) closes the province ramp');
   assert.equal(m.zeroCount, 77 - 23);
   const none = buildProvinceModel([], provincesGeo);
   assert.ok(none.provinces.every(p => p.state === 'measured_zero'));

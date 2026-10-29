@@ -2,7 +2,7 @@
  * Basemap style — "paper" — generated for MapLibre from OpenFreeMap vector tiles.
  *
  * Why generate instead of pointing at OpenFreeMap's Positron/Dark styles:
- *  - the city must stay quiet under exact LDS data colours (count classes,
+ *  - the city must stay quiet under exact LDS data colours (count ramp,
  *    category pins, map roles): light ground, white roads, muted water/green,
  *    no POI clutter, few labels;
  *  - both themes come from the same layer list, so light and dark differ only
@@ -20,6 +20,12 @@ export const GLYPHS_URL = 'https://tiles.openfreemap.org/fonts/{fontstack}/{rang
 export const SOURCE_ID = 'openmaptiles';
 export const FIRST_LINE_LAYER = 'waterway';
 export const FIRST_LABEL_LAYER = 'water-name';
+/**
+ * The x-ray of the building being looked at (js/venue-xray.js) draws above road names and below place
+ * labels and pins, so road text never lies across the selected walls and roof (CityMETER · Shopping
+ * centers 0.1.4). Ordinary massing stays beneath every label (MASSING_BEFORE).
+ */
+export const VENUE_XRAY_BEFORE = 'place-quarter';
 
 const FONT = ['Noto Sans Regular'];
 const FONT_ITALIC = ['Noto Sans Italic'];
@@ -97,11 +103,13 @@ function labelLayers(p) {
     {id: 'water-name', type: 'symbol', source: SOURCE_ID, 'source-layer': 'water_name', minzoom: 11,
       layout: {'text-field': name, 'text-font': FONT_ITALIC, 'text-size': 11, 'symbol-placement': 'line', 'text-letter-spacing': 0.05},
       paint: {'text-color': p.labelQuiet, ...halo}},
+    // One name per source road segment (`line-center`), never a repeated run along it: the steep two-point
+    // view of a building otherwise stacks the same street name across the scene (Shopping centers, owner 2026-10-25).
     {id: 'road-name-major', type: 'symbol', source: SOURCE_ID, 'source-layer': 'transportation_name', minzoom: 13.5, filter: cls('primary', 'secondary', 'tertiary', 'trunk', 'motorway'),
-      layout: {'text-field': name, 'text-font': FONT, 'text-size': ['interpolate', ['linear'], ['zoom'], 13.5, 10.5, 17, 13], 'symbol-placement': 'line', 'text-rotation-alignment': 'map', 'symbol-spacing': 420, 'text-max-angle': 30},
+      layout: {'text-field': name, 'text-font': FONT, 'text-size': ['interpolate', ['linear'], ['zoom'], 13.5, 10.5, 17, 13], 'symbol-placement': 'line-center', 'text-rotation-alignment': 'map', 'text-max-angle': 30},
       paint: {'text-color': p.label, ...halo}},
     {id: 'road-name-minor', type: 'symbol', source: SOURCE_ID, 'source-layer': 'transportation_name', minzoom: 15.5, filter: cls('minor', 'service', 'path'),
-      layout: {'text-field': name, 'text-font': FONT, 'text-size': 10.5, 'symbol-placement': 'line', 'text-rotation-alignment': 'map', 'symbol-spacing': 360},
+      layout: {'text-field': name, 'text-font': FONT, 'text-size': 10.5, 'symbol-placement': 'line-center', 'text-rotation-alignment': 'map'},
       paint: {'text-color': p.labelQuiet, ...halo}},
     {id: 'place-quarter', type: 'symbol', source: SOURCE_ID, 'source-layer': 'place', minzoom: 12, maxzoom: 15.5, filter: cls('suburb', 'quarter', 'neighbourhood'),
       layout: {'text-field': name, 'text-font': FONT, 'text-size': ['interpolate', ['linear'], ['zoom'], 12, 10, 15, 12], 'text-transform': 'uppercase', 'text-letter-spacing': 0.12, 'text-max-width': 8, 'text-padding': 12},

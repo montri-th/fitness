@@ -8,8 +8,8 @@ Winning strategy ของชุดข้อมูลนี้ เขียน�
 |---|---|
 | Parent product | CityMETER (City Intelligence Base Layer ของ Landometer) · แกน Location (ทะเบียนกลาง `research.TH.fitness` / Location / TH) |
 | Feature / dataset | Fitness — สาขาฟิตเนสและสตูดิโอของแบรนด์ในชุดข้อมูล ทั่วประเทศไทย ระดับเขต/อำเภอ พร้อมบริษัทเบื้องหลังแบรนด์ |
-| รุ่นเอกสาร | 0.1.0 · 29 ตุลาคม 2569 |
-| สถานะ | Public demo รุ่น 0.1.0 บน GitHub Pages (`https://montri-th.github.io/fitness/`); ชุดข้อมูลเป็น research master ไม่ใช่สำมะโนตลาด |
+| รุ่นเอกสาร | 0.2.0 · 29 ตุลาคม 2569 |
+| สถานะ | Public demo รุ่น 0.2.0 บน GitHub Pages (`https://montri-th.github.io/fitness/`); ชุดข้อมูลเป็น research master ไม่ใช่สำมะโนตลาด |
 | ผู้รับผิดชอบ | Landometer · CityMETER (owner: Montri) |
 | ผู้ใช้หลัก | ทีมขยายสาขาของเครือฟิตเนสและสตูดิโอ · ทีม leasing/asset ของศูนย์การค้า อาคารสำนักงาน และโครงการ mixed-use · นักวิเคราะห์ นักลงทุน และที่ปรึกษาด้านทำเลและธุรกิจ wellness |
 | ชุดข้อมูลที่เกี่ยวข้อง | Shopping Center (ทะเบียนศูนย์การค้า CityMETER — 7 แห่งผูกด้วย venue id) · Building (มวลอาคาร OpenStreetMap ผ่าน OpenFreeMap เป็นบริบท) · Locale Insight (ยังไม่เชื่อม) · โครงสร้างเดียวกับ Luxury Brands, Restaurants และ Pharmacy |
@@ -110,7 +110,7 @@ Winning strategy ของชุดข้อมูลนี้ เขียน�
 | แหล่ง | ชีตวิจัย (export SHA-256 `2b1e1c38…a63d8`) · หน้าทางการของแบรนด์ต่อแถว · ทะเบียน Shopping Center ของ CityMETER · production base info (ใบรับ 78 ใบ) · เส้นขอบเขตจาก production SUBDISTRICT geometry ผ่าน `montri-th/pharmacy@98d9035` |
 | ความละเอียด | เขต/อำเภอ (ผลิตภัณฑ์) · จังหวัด (กรอบประเทศ) · จุด (ถ้าแหล่งเผยแพร่) |
 | วิธีจับคู่พื้นที่ | point 28 · host 8 · address 229 (marker 91 · pair 89 · trailing 42 · mueang 7) · province 56 · none 56 · conflict 1 (ทุกสถานะ) |
-| ตัวชี้วัด | จำนวน (LDS `count`) จัดระดับเรขาคณิต 1–2–5 อัตรา 2 · สัดส่วนสตูดิโอ (ตัวตั้ง/ตัวหารแสดงเสมอ) |
+| ตัวชี้วัด | จำนวน (LDS `count`) สีครบ 41 ระดับตามลำดับค่า · สัดส่วนสตูดิโอ (ตัวตั้ง/ตัวหารแสดงเสมอ) |
 | ข้อจำกัด | ไม่ใช่สำมะโน · 100 จาก 352 สาขาไม่มีเขต/อำเภอ · พิกัดน้อย · บริษัทยังไม่ตรวจกับทะเบียน · ศูนย์การค้าผูกแค่ 8 แถว · ไม่มีโลโก้ |
 | ความมั่นใจ | สถานะและบริษัทเป็นสิ่งที่แหล่งทางการแสดง ณ วันตรวจ (Observed fact ในขอบเขตของแหล่ง) · การตีความตลาดทั้งหมดเป็น Inference |
 

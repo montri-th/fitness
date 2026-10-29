@@ -148,7 +148,7 @@ function brandChips(list, unit) {
   return `<ul class="chip-list">${list.map(c => `<li><button type="button" class="brand-chip" data-action="filter-brand" data-value="${esc(c.brand.id)}" title="${esc(c.brand.name)} — ${num(c.count)} ${esc(unit.one)} (ดูเฉพาะแบรนด์นี้)">${cueMarkup(seriesOf(c.brand.group), {className: 'chip-cue'})}<span>${esc(c.brand.name)}</span><small class="data-number">${num(c.count)}</small></button></li>`).join('')}</ul>`;
 }
 
-/** Districts ranked by count, bars in the map's count-class colour (classOf). */
+/** Districts ranked by count, bars in the map's 41-sample count ramp colour (classOf). */
 function areaRanking(list, classOf, unit, {title, note = '', limit = 10, showProvince = false, id = 'rank-title'} = {}) {
   const top = list.slice(0, limit);
   if (!top.length) return '';
@@ -366,13 +366,13 @@ export function renderVenue(p, ctx = {}) {
       <button type="button" class="btn quiet back" data-action="back">กลับ</button>
       <p class="eyebrow">ศูนย์การค้า${p.area ? ` · <button type="button" class="link-button" data-action="select-area" data-id="${esc(p.area.id)}">${esc(placeName(p.area))}</button> · ${esc(prov)}` : ''}</p>
       <h2>${esc(v.name)}</h2>${v.nameTh ? `<p class="subtle">${esc(v.nameTh)}</p>` : ''}
-      <div class="metrics compact">${metricTile(p.count, unit.one, 'store')}${metricTile(new Set(p.rows.map(r => r.brand?.id).filter(Boolean)).size, 'แบรนด์', 'brand')}</div>
-      <p class="hint">สาขาที่ชุดข้อมูลผูกกับศูนย์การค้านี้${p.all > p.count ? ` · ทุกสถานะ ${num(p.all)} รายการ` : ''}</p>
+      <div class="metrics compact">${metricTile(p.count, unit.one, 'store')}${metricTile(p.brandCount, 'แบรนด์', 'brand')}</div>
+      <p class="hint">${p.inBuilding ? `${esc(unit.one)}ที่ผูกกับศูนย์การค้านี้และ${esc(unit.one)}ที่จุดตกในอาคารเดียวกัน` : `${esc(unit.one)}ที่ชุดข้อมูลผูกกับศูนย์การค้านี้`}${p.all > p.linked ? ` · ผูกไว้ทุกสถานะ ${num(p.all)} รายการ` : ''}</p>
       <div class="detail-actions">${p.area ? link(productionLink({province: p.area.province, area: p.area.id}), 'ดูเขตนี้ใน CityMETER', 'btn quiet source-link') : ''}</div>
     </section>
 `;
-  const boundary = `${v.name} · ตำแหน่งจากทะเบียนศูนย์การค้า CityMETER ${v.scId || ''}`.trim();
-  if (!p.count) return `${head}<div class="empty-note" role="note"><strong>ไม่พบ${esc(unit.subject)}ที่ผูกกับศูนย์การค้านี้ตามตัวกรอง</strong></div>${provenance(ctx, boundary)}`;
+  const boundary = `${v.name} · ตำแหน่งจากทะเบียนศูนย์การค้า CityMETER ${v.scId || ''}${p.building ? ' และอาคาร OpenStreetMap ที่ตำแหน่งนั้นตก' : ''}`.replace(/\s+$/, '');
+  if (!p.count) return `${head}<div class="empty-note" role="note"><strong>ไม่พบ${esc(unit.subject)}ที่ผูกกับศูนย์การค้านี้หรือในอาคารเดียวกันตามตัวกรอง</strong></div>${provenance(ctx, boundary)}`;
   return `${head}    <section class="panel-section"><div class="section-heading">${heading('store', unit.mode === 'listed' ? 'สาขา' : 'รายการ')}<span class="hint">${num(p.count)}</span></div>${storeList(p.rows, {unit})}</section>
     <section class="panel-section"><div class="section-heading">${heading('segment', 'รูปแบบ')}</div>${groupBars(p.byGroup, p.count, unit)}</section>
     ${provenance(ctx, boundary)}`;
@@ -415,8 +415,13 @@ export function renderStore(d, ctx = {}) {
   const point = coords
     ? `<span class="data-number">${esc(coords)}</span><br><span class="hint">${esc(POINT_ROLE_TH[r.pointRole] || 'จุดที่แหล่งเผยแพร่')}</span>`
     : '<span>แหล่งไม่เผยแพร่พิกัด</span><br><span class="hint">จึงไม่มีหมุดบนแผนที่ สาขายังนับอยู่ในพื้นที่ตามที่อยู่</span>';
+  // The building the point falls in: a CityMETER venue's building opens the venue (one list for the building).
   const bd = d.building;
-  const building = bd ? `<dt>อาคาร</dt><dd>${bd.others ? `<button type="button" class="link-button" data-action="select-building" data-id="${esc(bd.key)}">จุดตกในอาคารเดียวกับอีก ${num(bd.others)} ${esc(unit.one)}</button>` : 'จุดตกในอาคารบนแผนที่'}</dd>` : '';
+  const others = bd?.others ? ` · อีก ${num(bd.others)} ${esc(unit.one)}ในอาคารนี้` : '';
+  const building = !bd ? ''
+    : bd.venue && bd.venue.id !== r.venue?.id ? `<dt>อาคาร</dt><dd><button type="button" class="link-button" data-action="select-venue" data-id="${esc(bd.venue.id)}">จุดตกในอาคารเดียวกับ ${esc(bd.venue.name)}${others}</button></dd>`
+    : bd.venue ? (bd.others ? `<dt>อาคาร</dt><dd><button type="button" class="link-button" data-action="select-venue" data-id="${esc(bd.venue.id)}">อีก ${num(bd.others)} ${esc(unit.one)}ในอาคารนี้</button></dd>` : '')
+    : `<dt>อาคาร</dt><dd>${bd.others ? `<button type="button" class="link-button" data-action="select-building" data-id="${esc(bd.key)}">จุดตกในอาคารเดียวกับอีก ${num(bd.others)} ${esc(unit.one)}</button>` : 'จุดตกในอาคารบนแผนที่'}</dd>`;
   const sourceLine = `${esc(SOURCE_TYPE_TH[r.sourceType] || 'แหล่งทางการ')}${r.url ? ` · ${link(r.url, 'เปิดหน้าแหล่ง')}` : ''} · ตรวจ ${esc(thaiDate(r.checked))}`;
   return `<section class="detail-head store">
       <button type="button" class="btn quiet back" data-action="back">กลับ</button>
