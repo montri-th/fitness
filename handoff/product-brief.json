@@ -3,8 +3,8 @@
   "schemaVersion": "1.5.0",
   "documentType": "product-brief",
   "productId": "citymeter-fitness",
-  "productVersion": "0.2.1",
-  "updatedOn": "2026-10-29",
+  "productVersion": "0.3.0",
+  "updatedOn": "2026-10-30",
   "datasetCheckedOn": "2026-10-26",
   "language": "th (UI) · en (contracts)",
   "productName": "CityMETER · Fitness",
@@ -19,13 +19,14 @@
   ],
   "journey": [
     "first Aha in 3D (focused districts of the leading province)",
-    "district panel (format mix, brands, venues, branches)",
-    "brand card (companies with evidence, same-company brands)",
-    "branch (status, place method, point role, official source)",
+    "district panel (format mix, brand logos, venues, branches brand-first)",
+    "brand card (logo, status pills, companies with evidence, same-company brands)",
+    "branch (logo + brand, branch, status, official source, details on demand)",
+    "next question in Google (AI Mode, Maps, Street View)",
     "charts and table",
     "CityMETER production deep link"
   ],
-  "changesSince": "0.2.0 → 0.2.1: guard for a MapLibre 5.6.2 tile-cover TypeError (_updateRetainedTiles, “reading 'key'”) that the live walk found when the pitched building camera zooms out through 13–14 on the OpenFreeMap vector source (js/maplibre-guard.js). 0.1.0 → 0.2.0 (owner 2026-10-29 19:47): building view of CityMETER · Shopping centers — eye camera corner-on on the least-occluded diagonal, zoom to fit the free part of the map on every way in, x-ray over other buildings and road names, see-through front buildings, district labels off the building, zoom up to 21 so small buildings fill too, GeoJSON maxzoom 24; one list per building (venue-linked rows + rows whose points fall in it, no double count); all 41 LDS count samples by rank (owner standing rule). 0.1.0 carried the structure of CityMETER · Luxury Brands 0.5 / Restaurants 0.5 / Pharmacy 0.1.1",
+  "changesSince": "0.2.1 → 0.3.0 (owner 2026-10-29 23:32): brand logo + brand name before the branch name everywhere — HTML pins (logo chips placed without overlap, the selected and nearest the centre first), popup, lists, brand card, district/venue/building panels, table (brand column first) and the brand chart; 126 brand logos from the research master 16_BRAND_LOGOS and its library, SHA-256 checked (scripts/build-logos.py, data/brand-logos.json, js/logos.js) and the logos of the linked venues from the Shopping Centers registry snapshot; shorter panels (identity block, fact chips, status pills, sources behind one disclosure, natural Thai); Google Search AI Mode, Google Maps and Street View actions written for each view (js/ask.js); ?search= URLs restored without the TypeError in restoreFromURL; 139 more branches linked to CityMETER venues by id on evidence (owner “ผูกแล้วเขียนกลับเข้าชีตวิจัย”), written into the research sheet and read back — 147 linked rows, 129 placed at a venue reference point, 34 rows gain a district (Jetts at Gaysorn Village now stands in its building); registry venues without a point frame the district their linked rows share; the build reads the xlsx export and a pinned registry snapshot. 0.2.0 → 0.2.1: guard for a MapLibre 5.6.2 tile-cover TypeError (_updateRetainedTiles, “reading 'key'”) that the live walk found when the pitched building camera zooms out through 13–14 on the OpenFreeMap vector source (js/maplibre-guard.js). 0.1.0 → 0.2.0 (owner 2026-10-29 19:47): building view of CityMETER · Shopping centers — eye camera corner-on on the least-occluded diagonal, zoom to fit the free part of the map on every way in, x-ray over other buildings and road names, see-through front buildings, district labels off the building, zoom up to 21 so small buildings fill too, GeoJSON maxzoom 24; one list per building (venue-linked rows + rows whose points fall in it, no double count); all 41 LDS count samples by rank (owner standing rule). 0.1.0 carried the structure of CityMETER · Luxury Brands 0.5 / Restaurants 0.5 / Pharmacy 0.1.1",
   "rowScopes": {
     "scopeRows": "rows after search, status, format, province and brand filters, before any district/venue selection or focus — the Aha base, the choropleth, the charts and every rank",
     "baseRows": "scopeRows narrowed by the selected เขต/อำเภอ or CityMETER venue",
@@ -60,20 +61,20 @@
         "คลองเตย"
       ],
       "rows": [
-        21,
-        19,
-        16
+        25,
+        20,
+        17
       ],
-      "count": 56,
-      "homePlaced": 147,
-      "homeRows": 186,
-      "homeUnplaced": 39,
-      "sharePercent": 38,
+      "count": 62,
+      "homePlaced": 167,
+      "homeRows": 200,
+      "homeUnplaced": 33,
+      "sharePercent": 37,
       "studio": {
-        "focus": 35,
-        "focusTotal": 56,
-        "rest": 28,
-        "restTotal": 91
+        "focus": 36,
+        "focusTotal": 62,
+        "rest": 32,
+        "restTotal": 105
       },
       "outside": {
         "id": "8301",
@@ -252,6 +253,52 @@
     },
     "choropleth": "LDS count, 41-sample ramp by rank, under the basemap’s first line layer; zoom 8–14.5; the selected จังหวัด from zoom 4 (province view); measured_zero = sample 0 + 2 px zero outline"
   },
+  "brandIdentityContract": {
+    "owner": "2026-10-29 23:32 “มันควรต้องเอา logo + brand ขึ้นก่อน ชื่อสาขามั้ย ทั้ง map ป้าย และ side bar และที่อื่นๆ”",
+    "order": "logo chip (when the brand has one) → brand name → branch name (js/ask.js#branchLabel strips a repeated brand and locator-page suffixes) → venue or district; never the branch alone",
+    "where": [
+      "HTML pins (js/pins.js#placeLogos: greedy, the selected or hovered pin first, then the nearest the map centre; overlay.dataset.visibleLogos)",
+      "pin popup and aria-label",
+      "branch lists in every panel",
+      "brand card and the logo wall of the overview",
+      "district, venue and building panels (logo strip)",
+      "table: first column brand (logo + name), second branch + venue",
+      "brand chart labels",
+      "document title"
+    ],
+    "registry": "data/brand-logos.json from scripts/build-logos.py: 16_BRAND_LOGOS row per brand, file SHA-256 checked against the tab, original bytes when display-sized (SVG, or raster ≤ 512 px and ≤ 64 KB), else a uniform downscale to 384 px (WebP) and/or a trim of a large transparent margin; every transformation recorded with the source SHA-256; no recolouring, tracing or upscaling",
+    "chips": "js/logos.js — theme-invariant backing from the library’s recommended surface (light #FFFFFF, dark #182327, mid-tone #7B877D; 3 recorded corrections), heights xs 18 / sm 22 / md 30 / lg 46 px, width from the artwork ratio (bounded), lazy <img>, decorative alt when the name is written next to it",
+    "venues": "data/venue-logos.json — the registry’s 10_VENUE_LOGOS files of the venues in this dataset, bytes unchanged, registry background rule",
+    "failure": "a missing or invalid record only means no logo; the name always stays; coverage is logged (logoCoverage)",
+    "rights": "เครื่องหมายเป็นของเจ้าของแต่ละราย การแสดงเพื่อระบุแบรนด์ในเดโมนี้ไม่ใช่การรับรองหรือใบอนุญาตเครื่องหมายการค้า"
+  },
+  "contextActionsContract": {
+    "owner": "2026-10-29 23:32 “พร้อม google search AI mode, streetview, search ด้วย context ที่ relevant กับ เสียงในหัวของ user ในขณะนั้น”",
+    "module": "js/ask.js#contextActions(ctx) → [{id, label, href, note}], actionBar(ctx)",
+    "questions": {
+      "store": "{brand} สาขา {branch} ({venue or district}) ยังเปิดอยู่ไหม เปิดกี่โมง ค่าสมาชิกเท่าไร และรีวิวล่าสุดเป็นอย่างไร",
+      "venue": "{venue} {district} มีฟิตเนสหรือสตูดิโออะไรบ้าง แต่ละที่เด่นเรื่องอะไร และเปิดกี่โมง",
+      "building": "{up to 3 brands} {district} อยู่อาคารไหน มีฟิตเนสหรือสตูดิโออื่นในอาคารเดียวกันไหม",
+      "area": "ฟิตเนสและสตูดิโอใน{district} {province} มีที่ไหนน่าสนใจ เทียบราคา บรรยากาศ และคลาส",
+      "brand": "{brand} ในประเทศไทย มีกี่สาขา ใครเป็นผู้ดำเนินงาน ค่าสมาชิก และจุดเด่นเทียบคู่แข่ง",
+      "overview": "ภาพรวมตลาดฟิตเนสและสตูดิโอในประเทศไทยล่าสุด แบรนด์ไหนขยายสาขาเร็ว และรูปแบบไหนกำลังโต"
+    },
+    "urls": {
+      "ai": "https://www.google.com/search?udm=50&q=…",
+      "maps": "https://www.google.com/maps/search/?api=1&query=…",
+      "streetview": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint={lat},{lon}"
+    },
+    "streetView": "only when the view has a point: a published branch point, or a venue’s registry reference point labelled “Street View ใกล้อาคาร” (not the shop entrance)",
+    "privacy": "public names and published points only; no internal ids, filters or user data; target _blank, rel noopener noreferrer",
+    "disclaimer": "one line per bar: เปิดใน Google · ผลลัพธ์ไม่ใช่ข้อมูล CityMETER"
+  },
+  "venueLinkContract": {
+    "key": "common_retail_venue_ids (registry id) and citymeter_shopping_center_id (CityMETER UUID) of 02_STORES with common_retail_venue_link_status accepted_identity_and_located_in; names are search keys only",
+    "reference": "07_SHOPPING_CENTERS first; else the pinned registry snapshot (data/details/*.json of montri-th/shoppingcenter, every file hashed into meta.registry.files)",
+    "point": "a venue with a registry reference point places its linked rows there (role host_registry_reference_point, never a shopfront); without a point the row keeps its address or province placement",
+    "candidates": "held statuses (parent component, registry duplicate, name or numbering) are never drawn as links",
+    "written": "owner 2026-10-29 “ผูกแล้วเขียนกลับเข้าชีตวิจัย”: 908 cells on 157 rows of 02_STORES (139 accepted — 123 with a CityMETER UUID, 125 at a venue reference point; 18 held candidates) written into the sheet itself on 2026-10-30, read back through a full export (every planned cell equal, no other cell changed), then re-exported and rebuilt; host_join_method ends with __review_20261029 so the research team can filter the round"
+  },
   "buildingJoinContract": {
     "module": "js/building-join.js#joinBuildings(pieces, rows, venues) → {buildings, byBuilding, byRow, byVenue, venuesByBuilding, keyOfPiece}",
     "buildings": "focus-tier OpenStreetMap footprints the map draws (js/massing.js); one building = the pieces of one outline cut by z14 tile edges (same OSM id + shared cut points within 2 m, never the id alone), the building:parts inside a hide_3d outline, and every drawn part holding one point (podium + tower) — js/building-join.js#groupPieces; key osm:<smallest id>",
@@ -337,20 +384,25 @@
   },
   "pictogramContract": {
     "file": "assets/icons/material-pictogram-300.woff2",
-    "sha256": "33d9084bbd26b976d5c42002a0c669618573c21123567247816e9e694671c7b0",
+    "sha256": "73ec48664ed89caf4bdb420c5129637dc57d0820b11e6eb49ed6537dbef7dac3",
+    "bytes": 2120,
     "used": {
       "brand": "แบรนด์",
       "store": "สาขา",
       "venue": "ศูนย์การค้า",
       "area": "เขต/อำเภอ",
       "province": "จังหวัด",
-      "segment": "รูปแบบ"
+      "segment": "รูปแบบ",
+      "ai": "ถาม Google AI",
+      "streetview": "Street View",
+      "maps": "Google Maps",
+      "building": "อาคาร"
     },
     "unused": [
       "exclusive (star)",
       "gla"
     ],
-    "status": "owner test exception 2026-10-22, text carries the meaning"
+    "status": "owner test exception 2026-10-22 (ai, streetview, maps, building added 2026-10-29), text carries the meaning"
   },
   "panel": {
     "modes": [
@@ -388,6 +440,8 @@
   },
   "data": {
     "rows": "data/fitness.json (columnar cols + vocab + points + brands + companies + relationships + venues)",
+    "brandLogos": "data/brand-logos.json + assets/brand-logos/ (126 files, 1858 KB, loaded lazily per use)",
+    "venueLogos": "data/venue-logos.json + assets/venue-logos/ (56 files)",
     "index": "data/area-index.json",
     "frames": "data/frames/{CODE}.json",
     "provinces": "data/provinces.geojson",
@@ -395,11 +449,11 @@
     "counts": {
       "rows": 378,
       "listed": 352,
-      "placedListed": 252,
+      "placedListed": 282,
       "brands": 126,
       "companies": 44,
       "relationships": 48,
-      "venues": 7
+      "venues": 128
     }
   },
   "visualSystem": {
@@ -513,6 +567,18 @@
     {
       "id": "INV25",
       "rule": "MapLibre stays pinned at 5.6.2 with the tile-cover guard (js/maplibre-guard.js); re-check the bug and the guard before any upgrade"
+    },
+    {
+      "id": "INV26",
+      "rule": "Brand first: wherever a branch is named, the brand logo (when present) and the brand name come before the branch; a logo never replaces the name"
+    },
+    {
+      "id": "INV27",
+      "rule": "Logos are the original bytes or a recorded derivative (uniform downscale, transparent-margin trim, SVG namespace) with the SHA-256 of both; no recolouring or tracing; chips are theme-invariant; a missing logo only means no logo"
+    },
+    {
+      "id": "INV28",
+      "rule": "Outbound actions use public names and published points only, https, a new tab with noopener; they say once that the answers are Google’s; Street View only with a point, “ใกล้อาคาร” for a registry reference point"
     }
   ],
   "chartContracts": [
@@ -536,7 +602,7 @@
       "viewKey": "brands",
       "title": "แบรนด์",
       "question": "แบรนด์ใดมีสาขามากที่สุดในตัวกรองนี้",
-      "encoding": "sorted horizontal bars in the brand’s format series with its cue",
+      "encoding": "sorted horizontal bars in the brand’s format series with its cue; the label leads with the brand logo chip and name",
       "metric": "rows per brand (all placements)",
       "scope": "top 20 of all brands found"
     }
@@ -545,6 +611,6 @@
     "site": "GitHub Pages from main /root",
     "handoff": "dist/CityMETER-Fitness-Developer-Handoff.zip (START_HERE.md, RELEASE_RECEIPT.json, evidence/, source/)",
     "liveCheck": "npm run verify:live",
-    "cacheTag": "?v=20261029-r3 on every entry file and, through the import map in index.html, on every ES module; the frame files take the same tag from import.meta.url; bump it with package.json version (tests/release.test.js)"
+    "cacheTag": "?v=20261030-r4 on every entry file and, through the import map in index.html, on every ES module; the frame files take the same tag from import.meta.url; bump it with package.json version (tests/release.test.js)"
   }
 }

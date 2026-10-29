@@ -82,7 +82,8 @@ export function decodeDataset(json, index) {
     const group = groups[c.group[i]] || groups.at(-1);
     const brand = brands[c.brand[i]] || null;
     const venue = c.venue[i] >= 0 ? venues[c.venue[i]] : null;
-    const pt = point.get(i) || (venue ? {lat: venue.latitude, lon: venue.longitude, role: 'host_registry_reference_point'} : null);
+    // A linked venue without a registry reference point (registry identity only) gives no point.
+    const pt = point.get(i) || (venue && Number.isFinite(venue.latitude) && Number.isFinite(venue.longitude) ? {lat: venue.latitude, lon: venue.longitude, role: 'host_registry_reference_point'} : null);
     const seg = segments[c.segment[i]] || {id: '', th: ''};
     const row = {
       id: c.key[i], name: c.name[i] || '', index: i,

@@ -3,8 +3,8 @@
   "schemaVersion": "1.5.0",
   "documentType": "product-statement",
   "productId": "citymeter-fitness",
-  "productVersion": "0.2.1",
-  "updatedOn": "2026-10-29",
+  "productVersion": "0.3.0",
+  "updatedOn": "2026-10-30",
   "humanDocument": "../PRODUCT_STATEMENT.md",
   "standard": "Landometer Master Brand Brief v0.5.3 §7.2 (Who / What / Which / How) with the §3.7 evidence standard",
   "evidenceLabels": [
@@ -19,7 +19,7 @@
   "dataset_name_th": "ฟิตเนสและสตูดิโอในประเทศไทย",
   "category": "Location · branch network of a declared brand set",
   "outcome_layer": "See → Understand → Decide (act and learn are future extensions)",
-  "status": "public demo 0.2.1 on GitHub Pages; research master, not a market census",
+  "status": "public demo 0.3.0 on GitHub Pages; research master, not a market census",
   "positioning": {
     "one_line_highlight": "แผนที่เมือง 3 มิติของสาขาฟิตเนสและสตูดิโอในไทย ที่บอกว่ากระจุกตรงไหน เป็นแบบไหน และใครอยู่เบื้องหลัง พร้อมหลักฐานรายสาขา",
     "unique_advantage": "format × district × company in one view, every row linked to the brand’s own official page with its check date and status; districts are CityMETER production codes matched from each row’s own data with the method recorded",
@@ -47,7 +47,10 @@
       "แถวนี้มีพิลาทิสกี่ที่แล้ว?",
       "ยิมเครือใหญ่อยู่เขตไหนบ้าง?",
       "แบรนด์นี้ใครถือสิทธิ์ในไทย?",
-      "ตัวเลขนี้นับอะไร ตรวจเมื่อไร?"
+      "ตัวเลขนี้นับอะไร ตรวจเมื่อไร?",
+      "สาขานี้ยังเปิดอยู่ไหม เปิดกี่โมง ค่าสมาชิกเท่าไร?",
+      "ในอาคารนี้มีฟิตเนสอะไรอีก?",
+      "หน้าร้านจริงเป็นอย่างไร?"
     ],
     "value_proposition": "answer where, which format and who in one screen within a minute, every number traceable to an official page",
     "evidence": "Hypothesis — not yet validated with external users (hypotheses_to_validate)"
@@ -102,7 +105,9 @@
     "district personality: studio share of the concentrated districts against the rest of the province, both bases stated",
     "companies behind brands by recorded role with evidence links, and brands recorded with the same company",
     "3D focus scene that opens on the finding, and a building view that turns corner-on to the building, fits it to the free part of the screen and never lets another building hide it — ready for a meeting room",
-    "production deep links (/v3/citymeter/{province}/D/{district})"
+    "production deep links (/v3/citymeter/{province}/D/{district})",
+    "brand first: the brand logo and name before the branch wherever a branch is named (pins, popup, lists, cards, table, brand chart), so a reader recognises the brand before reading",
+    "the next question of each view one tap away: Google Search AI Mode with a question written for that view, Google Maps, and Street View where a point exists — results stay Google’s, not CityMETER data"
   ],
   "primary_decisions": [
     "which district to open next and in which format",
@@ -120,16 +125,20 @@
     "open a brand card",
     "open the official source of a branch",
     "compare districts and brands in the charts",
-    "open the same district in CityMETER production"
+    "open the same district in CityMETER production",
+    "ask Google AI Mode the next question of the view (a branch: open, hours, membership, reviews; a building: which gyms are inside; a district: how they compare; a brand: branches, operator, price)",
+    "look at the street in Street View where the view has a point"
   ],
   "data_sources": [
     "CityMETER Fitness Thailand — Research Master 2026-10-26 (internal sheet; export sha256 in data/fitness.json meta.exportSha256)",
     "official brand pages per row",
-    "CityMETER Shopping Center registry (7 venues by id)",
+    "CityMETER Shopping Center registry: venues by id from 07_SHOPPING_CENTERS (7) and the public registry snapshot montri-th/shoppingcenter@2eb5532 (2026-10-26) for linked venues the tab does not carry",
+    "brand logos: research master 16_BRAND_LOGOS and the research team’s logo library (126 files, SHA-256 checked; data/brand-logos.json); venue logos of the linked venues from the registry snapshot (56)",
+    "Google Search AI Mode, Google Maps and Street View — outbound links only; nothing is read back into the data",
     "CityMETER production base info and boundaries (receipts in data/boundary-receipts.json)",
     "OpenGISData-Thailand names (CC BY 4.0) for reading English addresses"
   ],
-  "spatial_granularity": "เขต/อำเภอ (252 of 352 listed branches); province (51); none (49); points on 36 rows",
+  "spatial_granularity": "เขต/อำเภอ (282 of 352 listed branches); province (40); none (30); points on 157 rows (28 source points, 129 venue reference points)",
   "temporal_coverage": "single check of each official page on 2026-10-26",
   "update_frequency": "per research round; no automatic refresh yet (backlog N03)",
   "last_updated": "2026-10-26",
@@ -141,6 +150,7 @@
     "other statuses counted apart"
   ],
   "visual_layers": [
+    "brand logo chips beside the brand name on HTML pins at detail zoom (as many as fit without overlap, the selected and nearest the centre first), popups, lists, cards, table and the brand chart",
     "district choropleth (LDS count, all 41 samples by rank)",
     "province frames (count, 41-sample ramp) below zoom 8",
     "format cue symbols for rows with a point",
@@ -208,14 +218,15 @@
   },
   "known_limitations": [
     "a declared set of 126 brands, not every fitness business in Thailand",
-    "100 of 352 listed branches have no district (province only, no province, or a province conflict)",
-    "few points (36 rows); pins are not the distribution — district colours are",
+    "70 of 352 listed branches have no district (province only, no province, or a province conflict)",
+    "157 rows have a point, 129 of them a venue’s registry reference point (not a shopfront); pins are not the distribution — district colours are",
     "status = what the official page shows on the check date, not daily opening, size, members, price or footfall",
     "company names as the sources state them, not checked against the company registry; a missing record does not mean independent",
-    "only 8 rows are linked to a CityMETER venue",
-    "one list per building merges venue-linked rows and rows whose own points fall in the building; in the 2026-10-26 data the nearest own point to any of the 7 venues is 722 m away and no two own points are within 150 m, so every list today is a venue’s linked rows or a single branch",
+    "147 rows are linked to 128 CityMETER venues by id (13 of them without a registry reference point yet); 19 rows are held candidates (name or numbering, registry duplicate, parent component) and are never drawn as links; the links were written into the research sheet on 2026-10-30 and read back cell by cell — the demo never links by name",
+    "one list per building merges venue-linked rows and rows whose own points fall in the building (display-time join on the footprints the map draws); one unlinked own point sits 22 m from a venue point (Gateway Ekamai)",
     "building footprints and heights are OpenStreetMap context via OpenFreeMap; the building view frames what the tiles draw",
-    "no logos collected",
+    "logos identify the brand next to its name and are not a trademark licence; 62 of 126 are the original bytes, the rest a recorded uniform downscale, transparent-margin trim or SVG namespace fix (both SHA-256 kept); 3 (The Cult Fitness Society, Red Rock Canyon Climbing Gym, Fitness7) sit on a dark chip because the library’s recommended light surface hides their white artwork (recorded in data/brand-logos.json surfaceNote, reported to the research team)",
+    "Google AI Mode, Maps and Street View open outside the demo; their answers are Google’s and may disagree with the official pages; Street View near a venue uses the registry reference point, not the shop entrance",
     "data-use rights of each source not yet reviewed (backlog N02)"
   ],
   "methodology_note": "DATA_METHOD.md",
@@ -252,5 +263,5 @@
     }
   ],
   "owner_team": "Landometer · CityMETER (owner: Montri)",
-  "last_reviewed": "2026-10-29"
+  "last_reviewed": "2026-10-30"
 }

@@ -35,9 +35,9 @@ test('the build reconciles with the sheet’s own headline figures (00_README) a
   for (const b of data.brands) {
     const mine = data.rows.filter(r => r.brand?.id === b.id);
     for (const s of ['listed', 'announced', 'closed', 'review']) assert.equal(mine.filter(r => r.status === s).length, b.rows[s], `${b.name} ${s}`);
-    assert.equal(b.logo, 'not_collected', 'no logos were collected in this round');
+    assert.equal(b.logo, 'collected', '01_BRANDS logo_status: every brand has a checked logo (16_BRAND_LOGOS)');
   }
-  assert.match(raw.meta.logos, /not collected/);
+  assert.match(raw.meta.logos.brands, /16_BRAND_LOGOS/);
 });
 
 test('counting unit: the default counts listed branches (“สาขา”); other statuses are counted apart as “รายการ”', () => {
@@ -75,16 +75,16 @@ test('membership: a placed row sits in an existing production district of its ow
   assert.ok(conflicts.every(r => !r.area && !r.province));
   // Snapshot fixture: listed rows by placement.
   const listed = filterRows(data.rows, {});
-  assert.equal(listed.filter(r => r.area).length, 252);
-  assert.equal(listed.filter(r => r.province && !r.area).length, 51);
-  assert.equal(listed.filter(r => !r.province).length, 49);
+  assert.equal(listed.filter(r => r.area).length, 282);
+  assert.equal(listed.filter(r => r.province && !r.area).length, 40);
+  assert.equal(listed.filter(r => !r.province).length, 30);
 });
 
 test('points are the source’s own point or the CityMETER venue registry point, inside Thailand, never invented', () => {
   const {data} = load();
   const withPoint = data.rows.filter(hasPoint);
-  assert.equal(withPoint.length, 36);
-  assert.equal(withPoint.filter(r => r.pointRole === 'host_registry_reference_point').length, 8);
+  assert.equal(withPoint.length, 157);
+  assert.equal(withPoint.filter(r => r.pointRole === 'host_registry_reference_point').length, 129);
   for (const r of withPoint) {
     assert.ok(r.longitude > 97 && r.longitude < 106 && r.latitude > 5 && r.latitude < 21, `${r.id} inside Thailand`);
     assert.ok(r.pointRole, `${r.id} keeps the role of its point`);
@@ -98,16 +98,28 @@ test('points are the source’s own point or the CityMETER venue registry point,
   assert.ok(data.rows.filter(r => r.admin === 'point').every(r => hasPoint(r) && r.pointRole !== 'host_registry_reference_point'));
 });
 
-test('venues: CityMETER Shopping Center registry records; each district matches the registry’s own district', () => {
-  const {data, index} = load();
-  assert.equal(data.venues.length, 7);
+test('venues: CityMETER Shopping Center registry records by id; a point decides the district, no point means no district', () => {
+  const {data, index, raw} = load();
+  assert.equal(data.venues.length, 128);
+  assert.equal(raw.venues.filter(v => v.from === '07').length, 7, 'the sheet’s own 07_SHOPPING_CENTERS');
+  assert.equal(raw.venues.filter(v => v.from === 'registry').length, 121, 'the pinned registry snapshot (meta.registry)');
   for (const v of data.venues) {
-    assert.match(v.id, /^[0-9a-f-]{36}$/, 'the CityMETER venue uuid is the venue id');
-    assert.match(v.scId, /^SC-[A-Z]?\d{4,6}$/, 'the registry’s external id');
-    assert.equal(index.byId.get(v.district)?.name, v.districtTh, `${v.name}: located district = registry district`);
-    assert.equal(v.role, 'host_registry_reference_point_not_shopfront_or_entrance');
+    assert.match(v.scId, /^(SC-(SM-)?[A-Z]?\d{4,6}|VN-[0-9a-f]{14})$/, 'the registry id');
+    // The CityMETER venue uuid is the venue id when the registry has one; otherwise the registry id stands in.
+    assert.ok(/^[0-9a-f-]{36}$/.test(v.id) || v.id === v.scId, `${v.name}: id`);
+    if (Number.isFinite(v.latitude)) {
+      assert.equal(v.role, 'host_registry_reference_point_not_shopfront_or_entrance');
+      assert.equal(index.byId.get(v.district)?.name, v.districtTh, `${v.name}: the district its point falls in`);
+    } else {
+      assert.equal(v.role, 'registry_identity_without_reference_point');
+      assert.equal(v.district, '', `${v.name}: no point, no district`);
+    }
   }
-  assert.equal(data.rows.filter(r => r.venue).length, 8);
+  assert.equal(data.venues.filter(v => !Number.isFinite(v.latitude)).length, 13);
+  assert.equal(data.rows.filter(r => r.venue).length, 147);
+  // Only accepted links are drawn; held candidates and unmatched rows carry no venue.
+  assert.deepEqual(raw.meta.venueLinks, {acceptedNoPoint: 14, acceptedWithPoint: 133, accepted_identity_and_located_in: 147,
+    candidate_name_or_numbering_review: 8, candidate_parent_component_review: 4, candidate_registry_duplicate_review: 7, not_matched: 212});
 });
 
 test('companies and relationships join by id only; every id resolves', () => {

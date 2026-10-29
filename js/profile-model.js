@@ -137,6 +137,21 @@ export function buildBrandProfile(brandId, {allRows, scopeRows, index, data}) {
  * building its registry point falls in (js/app.js#buildingRows, display-time join). Each row appears once;
  * `linked` counts the venue-id rows, `inBuilding` the others. `building`: {key, height} of that building, or null.
  */
+/**
+ * Where a venue sits for navigation: the district its registry point falls in; for a registry venue without a point,
+ * the district (else the province) that every one of its linked rows was matched to at build time — never a guess
+ * from its name. → {area: index record or null, province: code or '', fromRows: boolean}
+ */
+export function venueHome(venue, allRows, index) {
+  if (!venue) return {area: null, province: '', fromRows: false};
+  const own = venue.district ? index.byId.get(venue.district) || null : null;
+  if (own) return {area: own, province: own.province, fromRows: false};
+  const rows = allRows.filter(r => r.venue?.id === venue.id);
+  const areas = [...new Set(rows.map(r => r.area).filter(Boolean))], provs = [...new Set(rows.map(r => r.province).filter(Boolean))];
+  const area = areas.length === 1 && rows.every(r => r.area === areas[0]) ? index.byId.get(areas[0]) || null : null;
+  return {area, province: area ? area.province : provs.length === 1 ? provs[0] : '', fromRows: Boolean(area || provs.length === 1)};
+}
+
 export function buildVenueProfile(venueId, {allRows, scopeRows, index, groups, data, inside = [], building = null}) {
   const venue = data.venues.find(v => v.id === venueId);
   if (!venue) return null;
@@ -144,7 +159,8 @@ export function buildVenueProfile(venueId, {allRows, scopeRows, index, groups, d
   const ids = new Set(linked.map(r => r.id));
   const rows = [...linked, ...inside.filter(r => !ids.has(r.id) && ids.add(r.id))].sort(listOrder);
   const all = allRows.filter(r => r.venue?.id === venueId);
-  return {venue, area: index.byId.get(venue.district) || null, words: levelWords(index.byId.get(venue.district)?.province || ''),
+  const home = venueHome(venue, allRows, index);
+  return {venue, area: home.area, areaFromRows: home.fromRows && Boolean(home.area), words: levelWords(home.province),
     rows, count: rows.length, linked: linked.length, inBuilding: rows.length - linked.length, all: all.length, building,
     brandCount: distinctBrands(rows), ...mixOf(rows, groups)};
 }

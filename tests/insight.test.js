@@ -13,21 +13,21 @@ test('first Aha (snapshot fixture): the three เขต with the most listed bra
   assert.equal(i.mode, 'count');
   assert.equal(i.home, 'BKK');
   assert.deepEqual(i.areaIds, ['1039', '1007', '1033'], 'วัฒนา · ปทุมวัน · คลองเตย');
-  assert.deepEqual(i.areas.map(a => a.count), [21, 19, 16]);
-  assert.equal(i.count, 56);
+  assert.deepEqual(i.areas.map(a => a.count), [25, 20, 17]);
+  assert.equal(i.count, 62);
   // Denominator: the leading province's branches that carry a district; the rest are stated apart.
-  assert.equal(i.homeRows, 186);
-  assert.equal(i.homePlaced, 147);
-  assert.equal(i.homeUnplaced, 39);
-  assert.ok(Math.abs(i.share - (56 / 147) * 100) < 1e-9);
-  assert.equal(Math.round(i.share), 38);
+  assert.equal(i.homeRows, 200);
+  assert.equal(i.homePlaced, 167);
+  assert.equal(i.homeUnplaced, 33);
+  assert.ok(Math.abs(i.share - (62 / 167) * 100) < 1e-9);
+  assert.equal(Math.round(i.share), 37);
   // Personality: studio formats among the focus vs the rest of the province's placed rows.
-  assert.deepEqual(i.studio, {focus: 35, focusTotal: 56, rest: 28, restTotal: 91, focusShare: (35 / 56) * 100, restShare: (28 / 91) * 100});
+  assert.deepEqual(i.studio, {focus: 36, focusTotal: 62, rest: 32, restTotal: 105, focusShare: (36 / 62) * 100, restShare: (32 / 105) * 100});
   // Second finding: the district with the most branches outside the leading province.
   assert.deepEqual(i.outside, {id: '8301', name: 'เมืองภูเก็ต', province: 'PKT', count: 17, tied: [{id: '8301', name: 'เมืองภูเก็ต', province: 'PKT'}]});
   assert.equal(i.spread, null);
   assert.equal(i.totalRows, 352);
-  assert.equal(i.placedRows, 252);
+  assert.equal(i.placedRows, 282);
   // The leading province holds the most placed rows; the three are the top of it by count (ties: brands, name).
   const placed = new Map();
   for (const r of listed) if (r.area) placed.set(r.province, (placed.get(r.province) || 0) + 1);
@@ -41,17 +41,21 @@ test('first Aha (snapshot fixture): the three เขต with the most listed bra
 test('the focus never cuts through a tie; a province where every district holds the same number is “spread”', () => {
   const {data, index} = load();
   const brand = name => filterRows(data.rows, {brand: data.brands.find(b => b.name === name).id});
-  // Jetts: ปทุมวัน 5, then several Bangkok districts with 2 — only the district above the tie is the focus.
+  // Jetts: ปทุมวัน 5, then several Bangkok districts tied below — only the district above the tie is the focus.
   const j = summarizeAreaInsight(brand('Jetts'), index);
   assert.equal(j.home, 'BKK');
   assert.deepEqual(j.areas.map(a => [a.name, a.count]), [['ปทุมวัน', 5]]);
-  assert.deepEqual([j.count, j.homePlaced], [5, 27]);
-  assert.deepEqual([j.outside.count, j.outside.tied.map(a => a.name)], [2, ['บางกรวย', 'ปากเกร็ด', 'เมืองเชียงใหม่', 'เมืองนครราชสีมา', 'เมืองภูเก็ต']], 'every district tied at the top outside count');
-  // Fitness First: one branch in each of 11 Bangkok districts — no focus, a spread finding.
+  assert.deepEqual([j.count, j.homePlaced], [5, 31]);
+  assert.deepEqual([j.outside.count, j.outside.tied.map(a => a.name)], [3, ['ปากเกร็ด']], 'the top outside district');
+  // Fitness First: two districts tied at 2 above the rest — both are the focus, never one of them.
   const ff = summarizeAreaInsight(brand('Fitness First'), index);
-  assert.deepEqual(ff.areas, []);
-  assert.deepEqual(ff.spread, {areas: 11, count: 1});
-  assert.equal(ff.homeAreaIds.length, 11);
+  assert.deepEqual(ff.areas.map(a => [a.name, a.count]), [['ปทุมวัน', 2], ['วัฒนา', 2]]);
+  assert.equal(ff.spread, null);
+  // Space Gym: one branch in each of 15 Bangkok districts — no focus, a spread finding.
+  const sg = summarizeAreaInsight(brand('Space Gym / S PACEGYM'), index);
+  assert.deepEqual(sg.areas, []);
+  assert.deepEqual(sg.spread, {areas: 15, count: 1});
+  assert.equal(sg.homeAreaIds.length, 15);
   // No district after the cut: the ranking is kept as is.
   const pkt = summarizeAreaInsight(filterRows(data.rows, {province: 'PKT'}), index);
   assert.deepEqual(pkt.areas.map(a => [a.name, a.count]), [['เมืองภูเก็ต', 17], ['ถลาง', 6]], 'only two Phuket districts hold a listed branch');
@@ -60,7 +64,7 @@ test('the focus never cuts through a tie; a province where every district holds 
 test('the Aha follows the filters: every status, a province, nothing', () => {
   const {data, index} = load();
   const all = summarizeAreaInsight(filterRows(data.rows, {status: 'all'}), index);
-  assert.deepEqual(all.areas.map(a => [a.name, a.count]), [['วัฒนา', 23], ['ปทุมวัน', 20], ['คลองเตย', 16]]);
+  assert.deepEqual(all.areas.map(a => [a.name, a.count]), [['วัฒนา', 27], ['ปทุมวัน', 21], ['คลองเตย', 17]]);
   const pkt = summarizeAreaInsight(filterRows(data.rows, {province: 'PKT'}), index);
   assert.equal(pkt.home, 'PKT');
   assert.equal(pkt.homePlaced + pkt.homeUnplaced, 25);
@@ -77,16 +81,16 @@ test('district model: EVID-05 — every district is in the research scope, so an
   const all = buildAreaModel(rows, index);
   assert.equal(all.areas.length, 928);
   assert.equal(all.noDataCount, 0);
-  assert.equal(all.zeroCount, 928 - 71, '71 districts hold at least one listed branch');
+  assert.equal(all.zeroCount, 928 - 76, '76 districts hold at least one listed branch');
   assert.ok(all.areas.filter(a => a.state === 'measured_zero').every(a => a.count === 0 && a.fill === all.ramp.zero.fill));
   assert.equal(all.ramp.scaleId, 'count');
   assert.equal(all.ramp.method, 'rank');
-  assert.deepEqual([all.ramp.min, all.ramp.max, all.ramp.steps], [1, 21, 41]);
-  assert.equal(all.byId.get('1039').fill, '#213E70', 'เขตวัฒนา (21, the national maximum) closes the ramp on sample 40');
+  assert.deepEqual([all.ramp.min, all.ramp.max, all.ramp.steps], [1, 25, 41]);
+  assert.equal(all.byId.get('1039').fill, '#213E70', 'เขตวัฒนา (25, the national maximum) closes the ramp on sample 40');
   assert.ok(all.areas.filter(a => a.count === 1).every(a => a.fill === '#F4F0E7'), 'the lowest measured value sits on sample 0');
   const bkk = buildAreaModel(rows, index, {province: 'BKK'});
   assert.equal(bkk.areas.length, 50, 'Bangkok has 50 เขต frames');
-  assert.equal(bkk.zeroCount, 14);
+  assert.equal(bkk.zeroCount, 11);
   const uncovered = new Set(['1001']);
   assert.equal(buildAreaModel(rows, index, {province: 'BKK', noDataIds: uncovered}).byId.get('1001').state, 'no_data', 'the no_data treatment stays available');
 });
@@ -99,9 +103,9 @@ test('province frames count rows per province (a total) in the current unit; row
   const by = new Map();
   for (const r of rows) if (r.province) by.set(r.province, (by.get(r.province) || 0) + 1);
   for (const p of m.provinces) assert.equal(p.count, by.get(p.code) || 0, p.code);
-  assert.equal(m.provinces.reduce((s, p) => s + p.count, 0), 303, '352 listed − 49 without a province');
+  assert.equal(m.provinces.reduce((s, p) => s + p.count, 0), 322, '352 listed − 30 without a province');
   assert.equal(m.ramp.scaleId, 'count');
-  assert.equal(m.provinces.find(p => p.code === 'BKK').fill, '#213E70', 'Bangkok (186) closes the province ramp');
+  assert.equal(m.provinces.find(p => p.code === 'BKK').fill, '#213E70', 'Bangkok (200) closes the province ramp');
   assert.equal(m.zeroCount, 77 - 23);
   const none = buildProvinceModel([], provincesGeo);
   assert.ok(none.provinces.every(p => p.state === 'measured_zero'));

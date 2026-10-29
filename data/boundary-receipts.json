@@ -549,6 +549,34 @@
  },
  "baseSha256": "34abca058312e6c8299cbf58946e00ac38a6afbd8cb9eab2b669c1e9ad0477bd",
  "geometry": {
+  "SUBDISTRICT-06a43cb7-3282-49db-9adb-6597d79746db.meta.json": {
+   "bytes": 4170,
+   "retrievedAt": "2026-10-29T17:10:06+00:00",
+   "sha256": "aea27a1f1128d39a05de19457b0d60a2f8fa3f0d69f1bed014d117ed7d8674b8",
+   "status": 200,
+   "url": "https://landometer.com/api/v2/citymeter-v3/base/info/geom/06a43cb7-3282-49db-9adb-6597d79746db/SUBDISTRICT"
+  },
+  "SUBDISTRICT-0b8a8c8c-bf4e-4a6e-a8d2-9d5ae8fd94cd.meta.json": {
+   "bytes": 2419,
+   "retrievedAt": "2026-10-29T17:10:04+00:00",
+   "sha256": "991ffef00647ecb123922c5f9da6dc3589f08a91b3c8ecacc76e1d78985dec4a",
+   "status": 200,
+   "url": "https://landometer.com/api/v2/citymeter-v3/base/info/geom/0b8a8c8c-bf4e-4a6e-a8d2-9d5ae8fd94cd/SUBDISTRICT"
+  },
+  "SUBDISTRICT-14647959-5caa-475b-a165-213e6a4f87fc.meta.json": {
+   "bytes": 2488,
+   "retrievedAt": "2026-10-29T17:10:11+00:00",
+   "sha256": "4361b7cdc0053d794d1673a872621850873fabdd5bbf4c6bbfe46320c9befdec",
+   "status": 200,
+   "url": "https://landometer.com/api/v2/citymeter-v3/base/info/geom/14647959-5caa-475b-a165-213e6a4f87fc/SUBDISTRICT"
+  },
+  "SUBDISTRICT-1ed65431-60c6-4354-897a-85bac5370db5.meta.json": {
+   "bytes": 1112,
+   "retrievedAt": "2026-10-29T17:09:59+00:00",
+   "sha256": "d20b2182a871f2de572c7f1abd964ad62d94785ac3dd755017c627ae2dffa9a5",
+   "status": 200,
+   "url": "https://landometer.com/api/v2/citymeter-v3/base/info/geom/1ed65431-60c6-4354-897a-85bac5370db5/SUBDISTRICT"
+  },
   "SUBDISTRICT-207b80fc-a6f8-459a-b25f-ffa565dd1005.meta.json": {
    "bytes": 1782,
    "retrievedAt": "2026-10-29T11:26:19+00:00",
@@ -556,12 +584,26 @@
    "status": 200,
    "url": "https://landometer.com/api/v2/citymeter-v3/base/info/geom/207b80fc-a6f8-459a-b25f-ffa565dd1005/SUBDISTRICT"
   },
+  "SUBDISTRICT-2240e773-5476-4bf1-adaa-351fcccb4c4a.meta.json": {
+   "bytes": 3697,
+   "retrievedAt": "2026-10-29T17:10:05+00:00",
+   "sha256": "d9705f4049b9b1cce23da590f17aac8556834da30eada113c8fc82d082632219",
+   "status": 200,
+   "url": "https://landometer.com/api/v2/citymeter-v3/base/info/geom/2240e773-5476-4bf1-adaa-351fcccb4c4a/SUBDISTRICT"
+  },
   "SUBDISTRICT-262e088c-e867-47f7-9803-028e5202224b.meta.json": {
    "bytes": 2857,
    "retrievedAt": "2026-10-29T11:26:17+00:00",
    "sha256": "ea4296ad329dae31be58df21705a5c591cdb5a197b615f795437edbe3928956c",
    "status": 200,
    "url": "https://landometer.com/api/v2/citymeter-v3/base/info/geom/262e088c-e867-47f7-9803-028e5202224b/SUBDISTRICT"
+  },
+  "SUBDISTRICT-2a630dd1-3d3d-4af6-b319-69acc53cb6db.meta.json": {
+   "bytes": 1665,
+   "retrievedAt": "2026-10-29T17:10:02+00:00",
+   "sha256": "66b4345d9715591037eb29246cc9d10f39c39bfaeb881e759ee90223e794e1af",
+   "status": 200,
+   "url": "https://landometer.com/api/v2/citymeter-v3/base/info/geom/2a630dd1-3d3d-4af6-b319-69acc53cb6db/SUBDISTRICT"
   },
   "SUBDISTRICT-35c70bc0-78a7-49fc-b6fe-c8175415102f.meta.json": {
    "bytes": 805,
@@ -577,12 +619,33 @@
    "status": 200,
    "url": "https://landometer.com/api/v2/citymeter-v3/base/info/geom/35f6c2bd-617c-4b9b-84e6-b4d07926ad7a/SUBDISTRICT"
   },
+  "SUBDISTRICT-38770952-0eec-4ee7-bb34-d53a5acad23e.meta.json": {
+   "bytes": 2680,
+   "retrievedAt": "2026-10-29T17:10:08+00:00",
+   "sha256": "5476defdf94723bad585fd73151f911adc02838523f774515e32a53bf3dbfccb",
+   "status": 200,
+   "url": "https://landometer.com/api/v2/citymeter-v3/base/info/geom/38770952-0eec-4ee7-bb34-d53a5acad23e/SUBDISTRICT"
+  },
   "SUBDISTRICT-3af42d2e-84eb-4108-b83b-ba1c459f9204.meta.json": {
    "bytes": 1478,
    "retrievedAt": "2026-10-29T11:26:20+00:00",
    "sha256": "baff5f91ec924768dcef78fd96bd15745d9df73b4711d28005e93a02fefe54e5",
    "status": 200,
    "url": "https://landometer.com/api/v2/citymeter-v3/base/info/geom/3af42d2e-84eb-4108-b83b-ba1c459f9204/SUBDISTRICT"
+  },
+  "SUBDISTRICT-3bde265c-e3b9-47a9-953b-45fec11bff91.meta.json": {
+   "bytes": 3191,
+   "retrievedAt": "2026-10-29T17:10:10+00:00",
+   "sha256": "631a93d299269838be5d0b3a648b12f0ede4ea32e1f7aa14ec82826bcfce5544",
+   "status": 200,
+   "url": "https://landometer.com/api/v2/citymeter-v3/base/info/geom/3bde265c-e3b9-47a9-953b-45fec11bff91/SUBDISTRICT"
+  },
+  "SUBDISTRICT-40087192-5bd0-41ea-a9da-cdc68d4f1b0d.meta.json": {
+   "bytes": 1055,
+   "retrievedAt": "2026-10-29T17:10:02+00:00",
+   "sha256": "ad8d1a2e5648b1afdb794b3a87fa1856d0fec8085a228a9444b559b4b3b97ac1",
+   "status": 200,
+   "url": "https://landometer.com/api/v2/citymeter-v3/base/info/geom/40087192-5bd0-41ea-a9da-cdc68d4f1b0d/SUBDISTRICT"
   },
   "SUBDISTRICT-435dea09-b9d8-4abe-9722-1d5541a5128a.meta.json": {
    "bytes": 788,
@@ -591,12 +654,26 @@
    "status": 200,
    "url": "https://landometer.com/api/v2/citymeter-v3/base/info/geom/435dea09-b9d8-4abe-9722-1d5541a5128a/SUBDISTRICT"
   },
+  "SUBDISTRICT-44c8d185-3ebf-4a80-beda-1cf951766150.meta.json": {
+   "bytes": 1709,
+   "retrievedAt": "2026-10-29T17:10:10+00:00",
+   "sha256": "94f97a996613b8e0ebd6f7d8625101d142f598aea9b01ceb89863f7dfd5c6aaf",
+   "status": 200,
+   "url": "https://landometer.com/api/v2/citymeter-v3/base/info/geom/44c8d185-3ebf-4a80-beda-1cf951766150/SUBDISTRICT"
+  },
   "SUBDISTRICT-452ea64d-dd54-42be-93da-f819f6b5b7ed.meta.json": {
    "bytes": 1826,
    "retrievedAt": "2026-10-29T11:26:18+00:00",
    "sha256": "ab304efaaa8099b8ab71944f55d26bb10c16c49c8b648e9145bdac566a86e47d",
    "status": 200,
    "url": "https://landometer.com/api/v2/citymeter-v3/base/info/geom/452ea64d-dd54-42be-93da-f819f6b5b7ed/SUBDISTRICT"
+  },
+  "SUBDISTRICT-4542fdd7-eba2-4af9-b1bc-3d82fcff3182.meta.json": {
+   "bytes": 3757,
+   "retrievedAt": "2026-10-29T17:10:06+00:00",
+   "sha256": "9beaee9282e6855777619f44440d03251414803a0b0b398c7fe36b3068fae663",
+   "status": 200,
+   "url": "https://landometer.com/api/v2/citymeter-v3/base/info/geom/4542fdd7-eba2-4af9-b1bc-3d82fcff3182/SUBDISTRICT"
   },
   "SUBDISTRICT-4dffc959-307e-4d06-b5b4-c5881a6bf8b1.meta.json": {
    "bytes": 16204,
@@ -612,6 +689,13 @@
    "status": 200,
    "url": "https://landometer.com/api/v2/citymeter-v3/base/info/geom/66665c02-f853-43a5-968b-d907db2fac8c/SUBDISTRICT"
   },
+  "SUBDISTRICT-666bb209-a502-4fa4-abcc-e58e13cec824.meta.json": {
+   "bytes": 7943,
+   "retrievedAt": "2026-10-29T17:10:08+00:00",
+   "sha256": "47e708858b0fcc5bc941fc1a9545b7043136ac9b22165dd7c18d798e05e4700c",
+   "status": 200,
+   "url": "https://landometer.com/api/v2/citymeter-v3/base/info/geom/666bb209-a502-4fa4-abcc-e58e13cec824/SUBDISTRICT"
+  },
   "SUBDISTRICT-81c459b3-d3b7-4fa6-b1b1-a938471aadec.meta.json": {
    "bytes": 1323,
    "retrievedAt": "2026-10-29T11:26:22+00:00",
@@ -626,6 +710,20 @@
    "status": 200,
    "url": "https://landometer.com/api/v2/citymeter-v3/base/info/geom/85f11fe7-fa86-4997-9315-22b912a95fb5/SUBDISTRICT"
   },
+  "SUBDISTRICT-89020e21-1d64-43f3-9e13-b58b27cc3794.meta.json": {
+   "bytes": 2441,
+   "retrievedAt": "2026-10-29T17:10:01+00:00",
+   "sha256": "dc72dea69a8e4620630f042d1f8f05bfb1f7f11484675c3e0bd3a2dcf1749560",
+   "status": 200,
+   "url": "https://landometer.com/api/v2/citymeter-v3/base/info/geom/89020e21-1d64-43f3-9e13-b58b27cc3794/SUBDISTRICT"
+  },
+  "SUBDISTRICT-89c2d229-8fc8-4524-9d49-707ffd1bc098.meta.json": {
+   "bytes": 1679,
+   "retrievedAt": "2026-10-29T17:10:09+00:00",
+   "sha256": "9a5d8617c4c1d9a8ddd826cd6947edb3fed8b9f714f8cc4689fb9c617cc978d8",
+   "status": 200,
+   "url": "https://landometer.com/api/v2/citymeter-v3/base/info/geom/89c2d229-8fc8-4524-9d49-707ffd1bc098/SUBDISTRICT"
+  },
   "SUBDISTRICT-8d4f22af-5f2e-4ff0-92bb-f1e222331420.meta.json": {
    "bytes": 866,
    "retrievedAt": "2026-10-29T11:26:15+00:00",
@@ -639,6 +737,13 @@
    "sha256": "c7646329370ef0306250d653edf84aa79fb3a07a3be6adf67a91f1131726e85a",
    "status": 200,
    "url": "https://landometer.com/api/v2/citymeter-v3/base/info/geom/901690e2-e2bd-4e5d-910b-1c9c226405f0/SUBDISTRICT"
+  },
+  "SUBDISTRICT-979ba660-2045-42aa-8de9-b2ed8b789e8d.meta.json": {
+   "bytes": 5161,
+   "retrievedAt": "2026-10-29T17:10:13+00:00",
+   "sha256": "3e273dbf56b5ee164e33f17282cec222798e082909690eb732dfe8411ac09b78",
+   "status": 200,
+   "url": "https://landometer.com/api/v2/citymeter-v3/base/info/geom/979ba660-2045-42aa-8de9-b2ed8b789e8d/SUBDISTRICT"
   },
   "SUBDISTRICT-9d7293f5-6650-408f-8ed0-eb3ba89574cb.meta.json": {
    "bytes": 1160,
@@ -696,12 +801,54 @@
    "status": 200,
    "url": "https://landometer.com/api/v2/citymeter-v3/base/info/geom/b552990f-6530-46bf-b966-d01dea3703b1/SUBDISTRICT"
   },
+  "SUBDISTRICT-b5d17499-6ce5-41d4-9e13-4b7c92ad03a1.meta.json": {
+   "bytes": 1075,
+   "retrievedAt": "2026-10-29T17:10:03+00:00",
+   "sha256": "5c24ba883b6b4f3940cc2bc9f1de332b06465ecba6a1f4056e5cd2328af4416e",
+   "status": 200,
+   "url": "https://landometer.com/api/v2/citymeter-v3/base/info/geom/b5d17499-6ce5-41d4-9e13-4b7c92ad03a1/SUBDISTRICT"
+  },
+  "SUBDISTRICT-c00f6a12-b05d-4a2c-a41b-d3e89df31810.meta.json": {
+   "bytes": 1593,
+   "retrievedAt": "2026-10-29T17:10:04+00:00",
+   "sha256": "2a31e817944e26e7b77c3f708fb6d85a82b1c9f9b466c427cd3903edc4fcebb6",
+   "status": 200,
+   "url": "https://landometer.com/api/v2/citymeter-v3/base/info/geom/c00f6a12-b05d-4a2c-a41b-d3e89df31810/SUBDISTRICT"
+  },
+  "SUBDISTRICT-c0d9891e-9dbc-4f3d-a147-478ae570a761.meta.json": {
+   "bytes": 3654,
+   "retrievedAt": "2026-10-29T17:10:00+00:00",
+   "sha256": "0759feaab102b381d760fb64b98298dd790bab642dabb1776ef723d06fe5bb08",
+   "status": 200,
+   "url": "https://landometer.com/api/v2/citymeter-v3/base/info/geom/c0d9891e-9dbc-4f3d-a147-478ae570a761/SUBDISTRICT"
+  },
+  "SUBDISTRICT-c2408110-f1c3-455c-99bd-f4a4efe021f9.meta.json": {
+   "bytes": 3708,
+   "retrievedAt": "2026-10-29T17:10:13+00:00",
+   "sha256": "e5bad8d5276289eeeeefca2d92f4f03356239036e8248444697ace39fe444974",
+   "status": 200,
+   "url": "https://landometer.com/api/v2/citymeter-v3/base/info/geom/c2408110-f1c3-455c-99bd-f4a4efe021f9/SUBDISTRICT"
+  },
+  "SUBDISTRICT-ea39e734-b91e-4c43-a179-515fb191adf9.meta.json": {
+   "bytes": 2990,
+   "retrievedAt": "2026-10-29T17:10:12+00:00",
+   "sha256": "730c1ee4456b903151b96ee43142ed978ddd533ddae65f9da8d34b4ca38fa73a",
+   "status": 200,
+   "url": "https://landometer.com/api/v2/citymeter-v3/base/info/geom/ea39e734-b91e-4c43-a179-515fb191adf9/SUBDISTRICT"
+  },
   "SUBDISTRICT-eafd6621-4a17-4315-aba2-038a0d00ea86.meta.json": {
    "bytes": 3161,
    "retrievedAt": "2026-10-29T11:26:23+00:00",
    "sha256": "1b81248e121aefd11589ac37535423468ca5dddd10acbcc9c4e62455bcbfeb03",
    "status": 200,
    "url": "https://landometer.com/api/v2/citymeter-v3/base/info/geom/eafd6621-4a17-4315-aba2-038a0d00ea86/SUBDISTRICT"
+  },
+  "SUBDISTRICT-ec6ffb1d-b504-409f-9cb0-160d08f2207d.meta.json": {
+   "bytes": 3721,
+   "retrievedAt": "2026-10-29T17:10:07+00:00",
+   "sha256": "5c77fda1dcd95fbc270949fe291cf44a2c34e9f25a1709b1ce491cedf7ad43f5",
+   "status": 200,
+   "url": "https://landometer.com/api/v2/citymeter-v3/base/info/geom/ec6ffb1d-b504-409f-9cb0-160d08f2207d/SUBDISTRICT"
   },
   "SUBDISTRICT-fa057a4d-0c30-4b86-bf73-78a79d1ffaae.meta.json": {
    "bytes": 1648,
@@ -711,6 +858,6 @@
    "url": "https://landometer.com/api/v2/citymeter-v3/base/info/geom/fa057a4d-0c30-4b86-bf73-78a79d1ffaae/SUBDISTRICT"
   }
  },
- "geometrySha256": "ca4e9fe795d874fad666c296320c3fd546745aad83f21ad34c1053b295cacf95",
+ "geometrySha256": "6f4b223d1b9721b16f84e837ec63c754263e9b9d5bc91e6a921dc60f6c5e4c91",
  "source": "CityMETER production base info (public read-only API)"
 }

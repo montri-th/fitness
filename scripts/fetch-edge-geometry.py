@@ -7,7 +7,9 @@ subdistricts whose display outline lies within RADIUS_M of such a point, with a 
 (url, status, bytes, sha256, retrievedAt) next to it.
 
   python3 -I scripts/fetch-edge-geometry.py --export <research export> --pharmacy <montri-th/pharmacy checkout> \
-      --frames data/frames --index data/area-index.json --out <geom dir>
+      --frames data/frames --index data/area-index.json --out <geom dir> [--registry <montri-th/shoppingcenter checkout>]
+
+With --registry, the reference points of the registry venues that rows link with an accepted status are checked too.
 """
 import argparse, datetime, hashlib, importlib.util, json, math, os, sys, time, urllib.request
 
@@ -45,6 +47,7 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     for k in ('--export', '--pharmacy', '--frames', '--index', '--out'):
         ap.add_argument(k, required=True)
+    ap.add_argument('--registry', default='')
     a = ap.parse_args()
     build = load_build()
     tabs, _ = build.read_export(a.export)
@@ -55,7 +58,17 @@ def main():
         if r.get('latitude', '').strip() and r.get('longitude', '').strip():
             points.append((float(r['longitude']), float(r['latitude'])))
     for v in tabs['07_SHOPPING_CENTERS']:
-        points.append((float(v['longitude']), float(v['latitude'])))
+        if v.get('latitude', '').strip():
+            points.append((float(v['longitude']), float(v['latitude'])))
+    if a.registry:
+        registry = build.Registry(a.registry)
+        for r in tabs['02_STORES']:
+            if not r.get('common_retail_venue_link_status', '').startswith('accepted'):
+                continue
+            for rid in [x for x in r.get('common_retail_venue_ids', '').replace(';', ',').split(',') if x.strip()]:
+                v = registry.venues.get(rid.strip())
+                if v and v.get('located') and v.get('lat') is not None:
+                    points.append((float(v['lon']), float(v['lat'])))
     near = []
     for lon, lat in points:
         code, edge = locator.locate(lon, lat)

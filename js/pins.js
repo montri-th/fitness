@@ -13,11 +13,16 @@
  * From DETAIL_MIN_ZOOM the focus rows inside the viewport (≤ MAX_DETAIL_PINS, nearest the centre first)
  * become HTML buttons: keyboard-reachable (roving tabindex, arrow keys), co-located rows (several branches
  * at one venue point) get bounded screen-space slots around their own anchor (the point never moves; a
- * leader line joins a hovered/selected pin to it). No logos: the research round did not collect any.
+ * leader line joins a hovered/selected pin to it). Each HTML pin carries its brand logo (brand first, owner
+ * 2026-10-29) where the chip fits: chips are placed greedily (the selected or hovered pin first, then nearest the
+ * centre) and a chip that would cover another chip, a pin or the map chrome stays hidden — the pin and its
+ * accessible name (brand · branch) remain.
  */
 import {hasPoint, STATUS_TH} from './model.js';
 import {cueImage, cueMarkup} from './cues.js';
 import {GEOJSON_MAXZOOM} from './map-layers.js';
+import {brandLogoMarkup} from './logos.js';
+import {branchLabel} from './ask.js';
 
 export const DETAIL_MIN_ZOOM = 15.5;
 export const MAX_DETAIL_PINS = 320;
@@ -227,6 +232,7 @@ export function installBranchPins(map, container, {onSelect, onLayout, reservedB
       button.dataset.displaced = String(Math.hypot(p.x - p.anchorX, p.y - p.anchorY) > 2);
     }
     placement = new Map(placed.map(p => [p.id, {dx: p.x - p.anchorX, dy: p.y - p.anchorY}]));
+    placeLogos(placed, b, pitch);
     const focus = placed.find(p => p.id === (hoveredId || selectedId));
     svg.style.display = focus ? '' : 'none';
     if (focus) {
@@ -234,6 +240,26 @@ export function installBranchPins(map, container, {onSelect, onLayout, reservedB
       anchor.setAttribute('cx', focus.anchorX); anchor.setAttribute('cy', focus.anchorY);
     }
     report(placed.length, b);
+  }
+
+  /** Logo chips beside their pins, greedily, never over another chip, a pin or the map chrome. */
+  function placeLogos(placed, b, pitch) {
+    const cx = (b.left + b.right) / 2, cy = (b.top + b.bottom) / 2;
+    const order = [...placed].sort((p, q) => (q.id === selectedId) - (p.id === selectedId) || (q.id === hoveredId) - (p.id === hoveredId) ||
+      ((p.x - cx) ** 2 + (p.y - cy) ** 2) - ((q.x - cx) ** 2 + (q.y - cy) ** 2));
+    const taken = placed.map(p => pointBox(p.x, p.y, pitch));
+    let shown = 0;
+    for (const p of order) {
+      const chip = p.entry.logo;
+      if (!chip) continue;
+      const w = parseFloat(chip.style.getPropertyValue('--logo-w')) || 40, h = parseFloat(chip.style.getPropertyValue('--logo-h')) || 18;
+      const left = p.x + pitch / 2 + 3, box = {left, right: left + w, top: p.y - h / 2, bottom: p.y + h / 2};
+      const fits = box.right <= b.right && box.top >= b.top && box.bottom <= b.bottom &&
+        !(b.exclusions || []).some(e => intersects(box, e)) && !taken.some(t => intersects(box, t, 1));
+      chip.hidden = !fits;
+      if (fits) { taken.push(box); shown++; }
+    }
+    overlay.dataset.visibleLogos = String(shown);
   }
 
   function report(htmlPins, b) {
@@ -250,13 +276,18 @@ export function installBranchPins(map, container, {onSelect, onLayout, reservedB
     button.className = 'store-pin';
     button.dataset.storeId = row.id;
     button.dataset.category = String(row.series);
-    const text = `${row.name || row.brand?.name || ''}${row.brand && row.brand.name !== row.name ? ' · ' + row.brand.name : ''}${row.status !== 'listed' ? ' · ' + (STATUS_TH[row.status] || '') : ''}`;
+    const branch = branchLabel(row);
+    const text = `${row.brand?.name || row.name || ''}${branch ? ' · ' + branch : ''}${row.status !== 'listed' ? ' · ' + (STATUS_TH[row.status] || '') : ''}`;
     button.setAttribute('aria-label', text);
     button.title = text;
     dot.className = 'pin-dot';
     dot.setAttribute('aria-hidden', 'true');
     dot.innerHTML = cueMarkup(row.series);
     button.append(dot);
+    const holder = document.createElement('span');
+    holder.innerHTML = brandLogoMarkup(row.brand, {size: 'xs', className: 'pin-logo'});
+    const logo = holder.firstElementChild || null;
+    if (logo) { logo.hidden = true; button.append(logo); }
     button.classList.toggle('is-selected', row.id === selectedId);
     button.onclick = () => { select(row.id); onSelect?.(row); };
     button.onmouseenter = () => { hoveredId = row.id; schedule(); };
@@ -271,7 +302,7 @@ export function installBranchPins(map, container, {onSelect, onLayout, reservedB
       visible[j]?.button.focus();
     };
     overlay.append(button);
-    return {row, button};
+    return {row, button, logo};
   }
 
   /**

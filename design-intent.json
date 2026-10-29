@@ -1,7 +1,7 @@
 {
   "artifact": "CityMETER Fitness — 3D-first, district-first map of fitness and studio branches of the brands in the research master, their formats and the companies behind the brands",
-  "productVersion": "0.2.1",
-  "updatedOn": "2026-10-29",
+  "productVersion": "0.3.0",
+  "updatedOn": "2026-10-30",
   "ldsVersion": "0.9.7",
   "release": "v0.9.7-owner.1",
   "revision": "standalone-0.9.7-r1",
@@ -15,7 +15,7 @@
     "latinHeadings": "Arvo 700",
     "dataAndMetrics": "JetBrains Mono 400; tabular numerals",
     "navigation": "Material Symbols Rounded approved nav-7 subset; FILL 0 / wght 300 / GRAD 0 / opsz 24",
-    "pictograms": "Material Symbols Rounded 8-glyph pictogram subset reused byte-for-byte from Luxury Brands 0.5 (owner test exception 2026-10-22); 6 used"
+    "pictograms": "Material Symbols Rounded 12-glyph pictogram subset (2120 B, sha256 73ec48664ed8…): the 8 glyphs of Luxury Brands 0.5 + ai, streetview, maps, building (2026-10-29); owner test exception 2026-10-22; 10 used"
   },
   "colors": {
     "applied": "assets/theme.css — foundation pairs, semantic states, map roles, dataState (noData, zero), categorical series 1–10 (landometer-series-10-v8 soft fill + ink), count classes, basemap-only tokens",
@@ -59,10 +59,12 @@
     "basemap": "generated at runtime by js/map-style.js on https://tiles.openfreemap.org/planet with --basemap-* tokens",
     "choropleth": "count, all 41 samples by rank over the measured nonzero values; beneath the basemap’s first line layer; zoom 8–14.5, the selected จังหวัด from zoom 4; EVID-05 measured / measured_zero (sample 0 + 2 px zero outline)",
     "provinces": "count (41-sample ramp by rank) per province frame below zoom 8 without a จังหวัด filter, outlines to zoom 12, ink-chip labels to zoom 9, panel list with ไม่ระบุจังหวัด apart",
-    "symbols": "focus rows with a point as cue icons; context rows as grey circles; HTML pins from zoom 15.5; no logos",
+    "symbols": "focus rows with a point as cue icons; context rows as grey circles; HTML pins from zoom 15.5 with the brand logo chip where it fits without overlap (selected or hovered first, then nearest the centre); the pin label is brand · branch",
     "buildings": "branch points and venue registry points × focus-tier OSM footprints (display-time join; tile-edge pieces, parts and podium + tower grouped as one building); the building being looked at in map.activeLayer, drawn over every other building and road name by the x-ray, focus buildings in front see-through; one list of branches per building",
     "buildingView": "eye preset corner-on to the building on the least-occluded diagonal, zoom to fit the free part of the map on every way in (js/camera.js#fitBuilding, owner 2026-10-29)",
     "breadcrumb": "ประเทศไทย › จังหวัด › เขต/อำเภอ › ศูนย์การค้า with production codes and /D/ deep links"
   },
-  "copy": "short natural Thai: สาขา / รายการ / แบรนด์ / รูปแบบ / สตูดิโอ / เขต·อำเภอ / ศูนย์การค้า / บริษัท; units on every number; one provenance line per panel view"
+  "logos": "identity support beside the name (INV26–INV27): brand logos from data/brand-logos.json, venue logos from data/venue-logos.json; theme-invariant chips on the library’s recommended surface; the same chip in pins, popups, lists, cards, table and charts",
+  "outboundActions": "js/ask.js — Google AI Mode, Maps and Street View per view, pictograms ai/streetview/maps, one disclaimer line (INV28)",
+  "copy": "brand before branch; short natural Thai: สาขา / รายการ / แบรนด์ / รูปแบบ / สตูดิโอ / เขต·อำเภอ / ศูนย์การค้า / บริษัท; units on every number; one provenance line per panel view"
 }

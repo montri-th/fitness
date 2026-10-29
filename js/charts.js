@@ -5,7 +5,7 @@
  *  - count (URL view key `count`): branches per เขต/อำเภอ, bars in the map's colour (the same 41-sample rank ramp
  *    over the same districts, js/scales.js#buildRamp)
  *  - mix: district × format, a numeric table with equal cells (its own 41-sample ramp over the cells)
- *  - brands: branches per brand, bar in the brand's format series colour with its shape cue
+ *  - brands: branches per brand (logo + name first), bar in the brand's format series colour with its shape cue
  * District marks emit {type:'area', id}; brand marks emit {type:'brand', id}.
  */
 import {buildChartModel, areaMatrix, brandRanking} from './chart-model.js';
@@ -13,6 +13,7 @@ import {buildCountRamp, classify, rampLegendHTML} from './scales.js';
 import {cueMarkup, seriesOf} from './cues.js';
 import {areaWord} from './areas.js';
 import {provinceByCode} from './model.js';
+import {brandLogoMarkup} from './logos.js';
 
 const NUMBER = new Intl.NumberFormat('th-TH', {maximumFractionDigits: 0});
 const esc = v => String(v ?? '').replace(/[&<>"']/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[c]));
@@ -77,7 +78,7 @@ function brands(element, rows, select, selectedBrand, unit, groups) {
     return `<li><button type="button" class="bar-row${pressed ? ' is-selected' : ''}" data-brand="${esc(b.brand.id)}" aria-pressed="${pressed}"
       aria-label="อันดับ ${i + 1} ${esc(b.brand.name)} ${esc(groupName(b.brand.group))}: ${num(b.count)} ${esc(unit.one)} กดเพื่อดูเฉพาะแบรนด์นี้">
       <span class="bar-rank data-number" aria-hidden="true">${i + 1}</span>
-      <span class="bar-label">${cueMarkup(series)}${esc(b.brand.name)}<small>${esc(groupName(b.brand.group))}</small></span>
+      <span class="bar-label bar-label-logo">${brandLogoMarkup(b.brand, {size: 'sm', className: 'bar-logo'})}<span>${esc(b.brand.name)}<small>${cueMarkup(series)}${esc(groupName(b.brand.group))}</small></span></span>
       <span class="bar-track" aria-hidden="true"><span class="bar-fill category-${series}" style="width:${Math.max(2, Math.round((b.count / max) * 100))}%"></span></span>
       <span class="bar-value" aria-hidden="true"><b class="data-number">${num(b.count)}</b><small>${esc(unit.one)}</small></span>
     </button></li>`;

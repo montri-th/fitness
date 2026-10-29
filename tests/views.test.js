@@ -23,7 +23,7 @@ test('every panel view ends with dataset · source · date · boundary and says 
   const jetts = data.brands.find(b => b.name === 'Jetts');
   const views = {
     overview: renderOverview({insight, summary: summarize(insight.areas.flatMap(a => a.rows)), overview: buildOverview(rows, index, {groups: data.groups}), focusMode: 'auto',
-      provinces: [], unknownProvince: 49, province: '', statusCounts: statusCounts(data.rows), ctx}),
+      provinces: [], unknownProvince: 30, province: '', statusCounts: statusCounts(data.rows), ctx}),
     area: renderArea(buildAreaProfile(rows, '1039', index, data.groups, data.venues), () => '#000', ctx),
     store: renderStore(buildStoreDetail(store, common(data, index, rows)), ctx),
     venue: renderVenue(buildVenueProfile(data.venues.find(v => v.name === 'Fifty Fifth Thonglor').id, common(data, index, rows)), ctx),
@@ -42,18 +42,18 @@ test('every panel view ends with dataset · source · date · boundary and says 
     assert.ok(!/ตั้งอยู่ใน|ยอดขาย|ส่วนแบ่งตลาด|ผู้ใช้บริการ/.test(t), `${name}: no located-inside, sales, market-share or footfall claim`);
   }
   const o = text(views.overview);
-  assert.ok(o.includes('38% ของสาขาในกรุงเทพมหานครที่ระบุเขตได้ อยู่ใน 3 เขตนี้'), o.slice(0, 300));
-  assert.ok(o.includes('56 จาก 147 สาขา') && o.includes('อีก 39 สาขา ในกรุงเทพมหานครระบุได้แค่จังหวัด'), 'numerator, denominator and the unplaced rows');
-  assert.ok(o.includes('สตูดิโอ 63% ของสาขาใน 3 เขตนี้ (35/56) · เขตอื่นของกรุงเทพมหานคร 31% (28/91)'), 'the personality comparison states both bases');
+  assert.ok(o.includes('37% ของสาขาในกรุงเทพมหานครที่ระบุเขตได้ อยู่ใน 3 เขตนี้'), o.slice(0, 300));
+  assert.ok(o.includes('62 จาก 167 สาขา') && o.includes('อีก 33 สาขา ในกรุงเทพมหานครระบุได้แค่จังหวัด'), 'numerator, denominator and the unplaced rows');
+  assert.ok(o.includes('สตูดิโอ 58% ของสาขาใน 3 เขตนี้ (36/62) · เขตอื่นของกรุงเทพมหานคร 30% (32/105)'), 'the personality comparison states both bases');
   assert.ok(o.includes('นอกกรุงเทพมหานครมากที่สุด: อำเภอเมืองภูเก็ต ภูเก็ต 17 สาขา'));
   assert.ok(o.includes('ไม่รวมในตัวเลข: ประกาศเปิด 19 · ปิดแล้ว 2 · ต้องตรวจสถานะ 5 รายการ'), 'other statuses are counted apart, one click away');
-  assert.ok(o.includes('ไม่อยู่ในอันดับ ระบุได้แค่จังหวัด 51 · ไม่ระบุจังหวัด 48 · ข้อมูลจังหวัดขัดกัน 1 สาขา'));
+  assert.ok(o.includes('ไม่อยู่ในอันดับ ระบุได้แค่จังหวัด 40 · ไม่ระบุจังหวัด 29 · ข้อมูลจังหวัดขัดกัน 1 สาขา'));
   // Other statuses: the unit word and the provenance clause follow the status.
   assert.ok(text(provenance(ctxFor(data, index, 'announced'), 'x')).includes('รายการ = สาขาที่แหล่งทางการประกาศว่าจะเปิด ณ วันตรวจ · นับแยกจากสาขาที่เปิดตามแหล่ง'));
   assert.ok(text(provenance(ctxFor(data, index, 'all'), 'x')).includes('รายการ = ทุกแถวในชุดข้อมูลทุกสถานะ ไม่ใช่จำนวนสาขาที่เปิด'));
   const a = text(views.area);
-  assert.ok(a.includes('เขตวัฒนา') && a.includes('อันดับ 1 จาก 71 ทั่วประเทศ'), a.slice(0, 200));
-  assert.ok(a.includes('14% = 21 จาก 147 สาขา ในกรุงเทพมหานครที่ระบุเขตได้'));
+  assert.ok(a.includes('เขตวัฒนา') && a.includes('อันดับ 1 จาก 76 ทั่วประเทศ'), a.slice(0, 200));
+  assert.ok(a.includes('15% = 25 จาก 167 สาขา ในกรุงเทพมหานครที่ระบุเขตได้'));
 });
 
 test('brand card: companies by recorded role with their evidence link, investors one level up, brands of the same company by id', () => {
@@ -91,8 +91,8 @@ test('missing stays missing: no point, province only, conflict — each says so,
   assert.ok(t(row(r => !hasPoint(r) && r.area)).includes('แหล่งไม่เผยแพร่พิกัด'));
   assert.ok(t(row(r => r.admin === 'province')).includes('แหล่งระบุได้แค่จังหวัด จึงไม่อยู่ในสีของเขต/อำเภอใด'));
   const c = t(row(r => r.admin === 'conflict'));
-  assert.ok(c.includes('จังหวัดในชุดข้อมูลไม่ตรงกับที่อยู่ จึงยังไม่ระบุพื้นที่') && c.includes('พื้นที่ ไม่ระบุ'));
-  assert.ok(t(row(r => r.venue)).includes('ตำแหน่งอ้างอิงของศูนย์การค้าในทะเบียน CityMETER ไม่ใช่ทางเข้าสาขา'));
+  assert.ok(c.includes('จังหวัดในชุดข้อมูลไม่ตรงกับที่อยู่ จึงยังไม่ระบุพื้นที่') && c.includes('ไม่ระบุจังหวัด'));
+  assert.ok(t(row(r => r.venue && r.pointRole === 'host_registry_reference_point')).includes('ตำแหน่งอ้างอิงของศูนย์การค้าในทะเบียน CityMETER ไม่ใช่ทางเข้าสาขา'));
   // Vocabularies cover every code the data uses.
   for (const r of data.rows) {
     assert.ok(SOURCE_TYPE_TH[r.sourceType], r.sourceType);
@@ -106,7 +106,7 @@ test('missing stays missing: no point, province only, conflict — each says so,
   assert.ok(z.includes('ไม่พบสาขาฟิตเนสและสตูดิโอในเขตพระนคร'));
   assert.ok(z.includes('ไม่มีแบรนด์ใดในชุดข้อมูลที่หน้าทางการระบุสาขาในพื้นที่นี้ ณ วันตรวจ'));
   assert.ok(z.includes('ตัวกรองเดียวกันพบ 352 สาขาในพื้นที่อื่น'));
-  assert.deepEqual(unplacedOf(rows), {noArea: 51, noProvince: 48, conflict: 1, total: 100});
+  assert.deepEqual(unplacedOf(rows), {noArea: 40, noProvince: 29, conflict: 1, total: 70});
 });
 
 test('charts: districts by count, district × format matrix with equal cells, brands by count', () => {
@@ -114,8 +114,8 @@ test('charts: districts by count, district × format matrix with equal cells, br
   const rows = filterRows(data.rows, {});
   const m = buildChartModel(rows, index, data.groups);
   assert.equal(m.areas.length, 20);
-  assert.equal(m.totalAreas, 71);
-  assert.equal(m.placedRows, 252);
+  assert.equal(m.totalAreas, 76);
+  assert.equal(m.placedRows, 282);
   for (let i = 1; i < m.areas.length; i++) assert.ok(m.areas[i - 1].count >= m.areas[i].count);
   const mx = areaMatrix(m);
   assert.equal(mx.cells.length, 12 * data.groups.length);
@@ -189,12 +189,15 @@ test('brand Ahas: one district above a tie is named in the headline; equal distr
     return text(renderOverview({insight, summary: summarize(focus), overview: buildOverview(rows, index, {groups: data.groups}), focusMode: insight.areaIds.length ? 'auto' : 'none', province: '', ctx}));
   };
   const j = render('Jetts');
-  assert.ok(j.includes('19% ของสาขาในกรุงเทพมหานครที่ระบุเขตได้ อยู่ในเขตปทุมวัน'), j.slice(0, 200));
-  assert.ok(j.includes('นอกกรุงเทพมหานครมากที่สุด 2 สาขา เท่ากัน 5 พื้นที่: อำเภอบางกรวย นนทบุรี · อำเภอปากเกร็ด นนทบุรี · อำเภอเมืองเชียงใหม่ เชียงใหม่ และอีก 2 พื้นที่'));
+  assert.ok(j.includes('16% ของสาขาในกรุงเทพมหานครที่ระบุเขตได้ อยู่ในเขตปทุมวัน'), j.slice(0, 200));
+  assert.ok(j.includes('นอกกรุงเทพมหานครมากที่สุด: อำเภอปากเกร็ด นนทบุรี 3 สาขา'));
   const ff = render('Fitness First');
-  assert.ok(ff.includes('11 เขตในกรุงเทพมหานคร มีสาขาเขตละ 1 สาขาเท่ากัน') && ff.includes('สาขากระจาย ไม่กระจุกในเขตใด'), ff.slice(0, 200));
-  assert.ok(!ff.includes('นอกกรุงเทพมหานครมากที่สุด'), 'a top outside count of 1 says nothing');
-  assert.ok(!/\d+% ของสาขา/.test(ff.slice(0, 200)), 'no concentration share for a spread brand');
+  assert.ok(ff.includes('25% ของสาขาในกรุงเทพมหานครที่ระบุเขตได้ อยู่ใน 2 เขตนี้') && ff.includes('ปทุมวัน · วัฒนา'), 'two districts tied above the rest are both named');
+  // Fitness24Seven: one branch in each of 7 Bangkok districts and one outside — spread, and the outside 1 says nothing.
+  const f7 = render('Fitness24Seven');
+  assert.ok(f7.includes('7 เขตในกรุงเทพมหานคร มีสาขาเขตละ 1 สาขาเท่ากัน') && f7.includes('สาขากระจาย ไม่กระจุกในเขตใด'), f7.slice(0, 200));
+  assert.ok(!f7.includes('นอกกรุงเทพมหานครมากที่สุด'), 'a top outside count of 1 says nothing');
+  assert.ok(!/\d+% ของสาขา/.test(f7.slice(0, 200)), 'no concentration share for a spread brand');
 });
 
 test('one list per building (owner 2026-10-29): venue-linked rows and rows whose points fall in its building, each once', () => {
@@ -210,7 +213,7 @@ test('one list per building (owner 2026-10-29): venue-linked rows and rows whose
   assert.deepEqual([p.linked, p.inBuilding], [linked.length, 1]);
   assert.deepEqual(p.rows.map(r => r.id).sort(), [...linked, other].map(r => r.id).sort());
   const t = text(renderVenue(p, ctx));
-  assert.ok(t.includes('สาขาที่ผูกกับศูนย์การค้านี้และสาขาที่จุดตกในอาคารเดียวกัน'), t.slice(0, 400));
+  assert.ok(t.includes('สาขาที่ผูกกับศูนย์การค้านี้ และที่จุดตกในอาคารเดียวกัน'), t.slice(0, 400));
   assert.ok(t.includes(other.name), 'the branch whose point falls in the building is in the same list');
   assert.equal((renderVenue(p, ctx).match(/class="outlet-list"/g) || []).length, 1, 'one list, not two');
   assert.ok(t.includes('และอาคาร OpenStreetMap ที่ตำแหน่งนั้นตก'), 'the boundary clause names the building join');

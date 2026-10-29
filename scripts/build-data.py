@@ -107,8 +107,10 @@ def public_url(value):
 
 
 def read_export(path):
-    """{tab: [row dict]} from the '## Sheet name:' text export."""
+    """{tab: [row dict]} from the '## Sheet name:' text export, or from an .xlsx export of the same sheet."""
     raw = open(path, 'rb').read()
+    if path.lower().endswith('.xlsx'):
+        return read_xlsx(raw), hashlib.sha256(raw).hexdigest()
     body = raw.decode('utf-8')
     parts = re.split(r'^## Sheet name: (.+)$', body, flags=re.M)
     tabs = {}
@@ -117,6 +119,63 @@ def read_export(path):
         header = rows[0] if rows else []
         tabs[parts[i].strip()] = [dict(zip(header, r)) for r in rows[1:] if any(c.strip() for c in r)]
     return tabs, hashlib.sha256(raw).hexdigest()
+
+
+def xlsx_text(v):
+    """Cell value → the text the CSV export writes: whole numbers without '.0', dates as YYYY-MM-DD."""
+    if v is None:
+        return ''
+    if isinstance(v, bool):
+        return 'TRUE' if v else 'FALSE'
+    if isinstance(v, datetime.datetime):
+        return v.strftime('%Y-%m-%d') if (v.hour, v.minute, v.second) == (0, 0, 0) else v.isoformat(sep=' ')
+    if isinstance(v, datetime.date):
+        return v.isoformat()
+    if isinstance(v, float):
+        return str(int(v)) if v.is_integer() and abs(v) < 1e15 else repr(v)
+    return str(v)
+
+
+def read_xlsx(raw):
+    import openpyxl
+    wb = openpyxl.load_workbook(io.BytesIO(raw), read_only=True, data_only=True)
+    tabs = {}
+    for ws in wb.worksheets:
+        rows = [[xlsx_text(c) for c in r] for r in ws.iter_rows(values_only=True)]
+        header = [h.strip() for h in rows[0]] if rows else []
+        tabs[ws.title.strip()] = [dict(zip(header, r)) for r in rows[1:] if any(c.strip() for c in r)]
+    return tabs
+
+
+class Registry:
+    """Read-only snapshot of the CityMETER Shopping Centers & Retail Venues registry as published by the Shopping
+    Centers demo (data/venues.json + data/details/*.json + data/venue-logos.json at a pinned commit). Every file read
+    is hashed into meta.registry. Used for the reference point of a venue the research sheet links (accepted) that the
+    sheet's own 07_SHOPPING_CENTERS tab does not carry."""
+
+    def __init__(self, root):
+        self.root, self.files, self.venues = root, {}, {}
+        if not root:
+            return
+        details = os.path.join(root, 'data', 'details')
+        for name in sorted(os.listdir(details)):
+            raw = self._read(os.path.join('data', 'details', name))
+            self.venues.update(json.loads(raw)['venues'])
+        meta = json.loads(self._read(os.path.join('data', 'venues.json')))['meta']
+        self.as_of = meta.get('asOf', '')
+        self.logos = json.loads(self._read(os.path.join('data', 'venue-logos.json')))
+
+    def _read(self, rel):
+        raw = open(os.path.join(self.root, rel), 'rb').read()
+        self.files[rel.replace(os.sep, '/')] = hashlib.sha256(raw).hexdigest()
+        return raw
+
+    def logo_of(self, vid):
+        by_key = {a['key']: a for a in self.logos.get('assets', [])}
+        for v in self.logos.get('venues', []):
+            if v.get('id') == vid and v.get('key') in by_key:
+                return {**by_key[v['key']], 'role': v.get('role', '')}
+        return None
 
 
 class DistrictLocator:
@@ -214,8 +273,11 @@ def main():
     ap.add_argument('--index', required=True)
     ap.add_argument('--frames', required=True)
     ap.add_argument('--out', required=True)
+    ap.add_argument('--registry', default='', help='checkout of montri-th/shoppingcenter (registry snapshot for linked venues)')
+    ap.add_argument('--registry-commit', default='', help='git commit of that checkout (recorded in meta.registry)')
     ap.add_argument('--audit', help='write a row-by-row admin audit (internal; contains address words) to this path')
     a = ap.parse_args()
+    registry = Registry(a.registry)
 
     tabs, export_sha = read_export(a.export)
     gaz = Gazetteer(a.api, os.path.join(a.ogd, 'districts.geojson'), os.path.join(a.ogd, 'subdistricts.geojson'))
@@ -270,23 +332,61 @@ def main():
             'coverage': cov, 'checkedOn': iso(b.get('checked_on')),
             'operator': text(b.get('operator_company_id')), 'owner': text(b.get('brand_owner_company_id')), 'parent': text(b.get('parent_company_id')),
             'corporate': text(b.get('corporate_evidence_status')), 'corporateUrl': public_url(b.get('corporate_source_url')),
-            'logo': 'not_collected',
+            'logo': text(b.get('logo_status')) or 'not_collected',
         })
     # ---- venues (CityMETER Shopping Center registry reference points) ----
-    venues, venue_index = [], {}
+    # 07_SHOPPING_CENTERS first (the sheet's own bounded copy); a venue the sheet links (accepted) that 07 does not
+    # carry comes from the registry snapshot by its registry id (common_retail_venue_ids). Keys: the CityMETER UUID
+    # (citymeter_shopping_center_id) and the registry id, both pointing at one venue.
+    venues, venue_index, venue_logo_files = [], {}, {}
+    ROLE_POINT = 'host_registry_reference_point_not_shopfront_or_entrance'
+
+    def add_venue(rec):
+        venue_index[rec['id']] = len(venues)
+        if rec.get('scId'):
+            venue_index[rec['scId']] = len(venues)
+        venues.append(rec)
+        return len(venues) - 1
+
     for v in tabs['07_SHOPPING_CENTERS']:
         vid = text(v.get('citymeter_id'))
         if not vid:
             continue
         lat, lon = float(v['latitude']), float(v['longitude'])
         dcode, edge = locator.locate(lon, lat)
-        venue_index[vid] = len(venues)
-        venues.append({'id': vid, 'scId': text(v.get('mall_external_id')), 'name': text(v.get('name_en')), 'nameTh': text(v.get('name_th')),
-                       'latitude': round(lat, 6), 'longitude': round(lon, 6), 'district': dcode, 'districtTh': text(v.get('district')),
-                       'type': text(v.get('mall_type')), 'format': text(v.get('building_format')),
-                       'role': 'host_registry_reference_point_not_shopfront_or_entrance', 'edgeM': round(edge)})
+        add_venue({'id': vid, 'scId': text(v.get('mall_external_id')), 'name': text(v.get('name_en')), 'nameTh': text(v.get('name_th')),
+                   'latitude': round(lat, 6), 'longitude': round(lon, 6), 'district': dcode, 'districtTh': text(v.get('district')),
+                   'type': text(v.get('mall_type')), 'format': text(v.get('building_format')),
+                   'role': ROLE_POINT, 'edgeM': round(edge), 'from': '07'})
         if dcode and gaz.districts[dcode]['th'] != text(v.get('district')):
             sys.exit(f"venue {vid}: registry district {v.get('district')} ≠ located {gaz.districts[dcode]['th']}")
+
+    def registry_venue(rid, uuid):
+        """A registry venue (located or not) as a venue record; None when the registry has no such id."""
+        r = registry.venues.get(rid)
+        if not r:
+            return None
+        if uuid and r.get('citymeterId') and r['citymeterId'] != uuid:
+            sys.exit(f'venue {rid}: CityMETER UUID in the sheet {uuid} ≠ registry {r["citymeterId"]}')
+        located = bool(r.get('located')) and r.get('lat') is not None and r.get('lon') is not None
+        rec = {'id': r.get('citymeterId') or rid, 'scId': rid, 'name': text(r.get('nameEn')) or text(r.get('name')),
+               'nameTh': text(r.get('nameTh')) if text(r.get('nameTh')) != (text(r.get('nameEn')) or text(r.get('name'))) else '',
+               'latitude': None, 'longitude': None, 'district': '', 'districtTh': '',
+               'type': text(r.get('venueType')), 'format': '', 'role': ROLE_POINT if located else 'registry_identity_without_reference_point',
+               'edgeM': None, 'from': 'registry'}
+        if located:
+            lat, lon = float(r['lat']), float(r['lon'])
+            dcode, edge = locator.locate(lon, lat)
+            # districtTh: the production name of the district the point falls in (the registry's addrDistrict is free text)
+            rec.update({'latitude': round(lat, 6), 'longitude': round(lon, 6), 'district': dcode, 'edgeM': round(edge),
+                        'districtTh': gaz.districts[dcode]['th'] if dcode else ''})
+            if dcode and r.get('districtCode') and str(r['districtCode']) != dcode:
+                print(f'note: venue {rid} registry district {r["districtCode"]} ≠ point-in-polygon {dcode} (point decides)')
+        logo = registry.logo_of(rid)
+        if logo:
+            rec['logo'] = logo['key']
+            venue_logo_files[logo['key']] = logo
+        return rec
 
     # ---- rows ----
     urls, url_index = [], {}
@@ -338,14 +438,28 @@ def main():
             if role not in POINT_ROLES:
                 sys.exit(f'row {i + 2}: unknown geometry_role {role!r}')
         vid = text(r.get('citymeter_shopping_center_id'))
-        if vid:
-            if vid not in venue_index:
-                sys.exit(f'row {i + 2}: CityMETER venue {vid} not in 07_SHOPPING_CENTERS')
-            venue = venue_index[vid]
+        link_status = text(r.get('common_retail_venue_link_status'))
+        rids = [x.strip() for x in re.split(r'[;,\s]+', text(r.get('common_retail_venue_ids'))) if x.strip()]
+        stats[f'link.{link_status or "blank"}'] += 1
+        if vid or (rids and link_status.startswith('accepted')):
+            if not link_status.startswith('accepted'):
+                sys.exit(f'row {i + 2}: CityMETER venue {vid} without an accepted link status ({link_status!r})')
+            if len(rids) > 1:
+                sys.exit(f'row {i + 2}: more than one accepted venue id {rids}')
+            vkey = vid if vid in venue_index else (rids[0] if rids and rids[0] in venue_index else '')
+            if not vkey:
+                rec = registry_venue(rids[0], vid) if rids else None
+                if not rec:
+                    sys.exit(f'row {i + 2}: linked venue {vid or rids} is in neither 07_SHOPPING_CENTERS nor the registry snapshot')
+                vkey = rec['id']
+                add_venue(rec)
+            venue = venue_index[vkey]
+            stats['link.acceptedWithPoint' if venues[venue]['latitude'] is not None else 'link.acceptedNoPoint'] += 1
         how, words, note = '', [], ''
         p_code = d_code = None
         method = None
-        if pt or venue >= 0:
+        host_point = venue >= 0 and venues[venue]['latitude'] is not None
+        if pt or host_point:
             lat, lon = pt if pt else (venues[venue]['latitude'], venues[venue]['longitude'])
             d_code, edge = locator.locate(lon, lat)
             if d_code and edge < EDGE_M:
@@ -430,7 +544,8 @@ def main():
             points.append([i, round(pt[0], 6), round(pt[1], 6), POINT_ROLES.index(role)])
         stats[f'status.{status}'] += 1
         stats['points.source'] += 1 if pt else 0
-        stats['points.host'] += 1 if venue >= 0 else 0
+        stats['points.host'] += 1 if (not pt and host_point) else 0
+        stats['links.venue'] += 1 if venue >= 0 else 0
 
     def encode(name):
         values = sorted(set(v for v in cols[name] if v))
@@ -496,7 +611,16 @@ def main():
             'receipts': len(receipts),
             'receiptsSha256': hashlib.sha256(json.dumps(receipts, sort_keys=True).encode()).hexdigest(),
         },
-        'logos': 'not collected in this research round (01_BRANDS logo_status = ยังไม่รวบรวม; 10_VENUE_LOGOS empty)',
+        'logos': {'brands': '01_BRANDS logo_status + 16_BRAND_LOGOS (data/brand-logos.json, scripts/build-logos.py)',
+                  'venues': 'venue logos of the linked venues from the CityMETER Shopping Centers registry snapshot (data/venue-logos.json)'},
+        'venueLinks': {k[5:]: v for k, v in sorted(stats.items()) if k.startswith('link.')},
+        'registry': {'dataset': 'CityMETER Shopping Centers & Retail Venues Thailand — Research Master (public snapshot of montri-th/shoppingcenter)',
+                     'asOf': getattr(registry, 'as_of', ''), 'commit': a.registry_commit,
+                     'files': {'count': len(registry.files),
+                               'listSha256': hashlib.sha256(''.join(f'{p} {h}\n' for p, h in sorted(registry.files.items())).encode()).hexdigest(),
+                               'listMethod': 'SHA-256 of the lines "<path> <sha256 of the file>\\n" of every registry file read, sorted by path',
+                               'index': {p: registry.files[p] for p in ('data/venues.json', 'data/venue-logos.json') if p in registry.files}},
+                     'use': 'reference point and name of a venue a branch row links with an accepted status when 07_SHOPPING_CENTERS does not carry it; never a branch coordinate, unit or opening state'} if a.registry else None,
         'excludedFields': ['address', 'unit_floor', 'public_business_phone', 'map_url', 'raw coordinates strings', 'notes',
                            'branch_source_id', 'company_research_note', 'coverage_note', 'sister_brand_names (15_SISTER_BRANDS: Thai presence mostly not established)', 'README text', 'venue source_url',
                            'internal sheet and registry URLs'],
@@ -512,7 +636,54 @@ def main():
         'provinces': province_codes, 'districts': district_codes,
         'cols': cols, 'points': points,
     }
+    # Venue logos (identity support) for the venues in this file, from the registry snapshot: the original bytes when
+    # display-sized (SVG, or raster ≤ 512 px and ≤ 64 KB), else the same recorded display derivative as the brand logos
+    # (scripts/build-logos.py: uniform downscale to 384 px longest side, WebP; colours and proportions unchanged).
+    for v in venues:
+        if 'logo' not in v and v.get('scId') and a.registry:
+            lg = registry.logo_of(v['scId'])
+            if lg:
+                v['logo'] = lg['key']; venue_logo_files[lg['key']] = lg
+    logo_dir = os.path.join(a.out, 'assets', 'venue-logos')
+    if os.path.isdir(logo_dir):
+        for name in os.listdir(logo_dir):
+            os.remove(os.path.join(logo_dir, name))
+    venue_logos = []
+    for key, lg in sorted(venue_logo_files.items()):
+        raw = open(os.path.join(a.registry, lg['file']), 'rb').read()
+        if hashlib.sha256(raw).hexdigest() != lg['sha256']:
+            sys.exit(f'venue logo {key}: file differs from the registry SHA-256')
+        os.makedirs(logo_dir, exist_ok=True)
+        name, data, mime, (width, height), transformations = os.path.basename(lg['file']), raw, lg['mime'], (lg['width'], lg['height']), []
+        if mime != 'image/svg+xml' and (max(width, height) > 512 or len(raw) > 64 * 1024):
+            from PIL import Image  # only needed for oversize raster logos
+            im = Image.open(io.BytesIO(raw)); im.load()
+            alpha = im.mode in ('RGBA', 'LA', 'PA') or (im.mode == 'P' and 'transparency' in im.info)
+            im = im.convert('RGBA' if alpha else 'RGB')
+            scale = min(1.0, 384 / max(im.size))
+            size = (max(1, round(im.size[0] * scale)), max(1, round(im.size[1] * scale)))
+            if size != im.size:
+                im = im.resize(size, Image.LANCZOS)
+            buf = io.BytesIO()
+            im.save(buf, 'WEBP', **({'lossless': True, 'quality': 100, 'method': 6} if alpha else {'quality': 90, 'method': 6}))
+            data, mime, (width, height) = buf.getvalue(), 'image/webp', im.size
+            name = os.path.splitext(name)[0] + '.webp'
+            transformations.append({'operation': 'display_downscale', 'source_sha256': lg['sha256'], 'source_size': [lg['width'], lg['height']],
+                                    'output_size': [width, height], 'method': 'Pillow LANCZOS to at most 384 px longest side; WebP ' + ('lossless' if alpha else 'quality 90'),
+                                    'colour_and_geometry': 'unchanged (uniform scale only)'})
+        open(os.path.join(logo_dir, name), 'wb').write(data)
+        venue_logos.append({'key': key, 'file': f'assets/venue-logos/{name}', 'mime': mime, 'bytes': len(data), 'sha256': hashlib.sha256(data).hexdigest(),
+                            'width': width, 'height': height, 'background': lg.get('background', ''), 'role': lg.get('role', ''),
+                            'original': {'sha256': lg['sha256'], 'mime': lg['mime'], 'bytes': lg['bytes'], 'width': lg['width'], 'height': lg['height']},
+                            'transformations': transformations,
+                            'sourcePage': public_url(lg.get('sourcePage')), 'assetURL': public_url(lg.get('assetURL')), 'checkedOn': lg.get('checkedOn', '')})
     os.makedirs(os.path.join(a.out, 'data'), exist_ok=True)
+    with open(os.path.join(a.out, 'data', 'venue-logos.json'), 'w', encoding='utf-8') as fh:
+        json.dump({'meta': {'asOf': registry.logos.get('meta', {}).get('asOf', '') if a.registry else '', 'count': len(venue_logos),
+                            'source': 'CityMETER Shopping Centers & Retail Venues registry, tab 10_VENUE_LOGOS (public snapshot): original bytes when display-sized, else a recorded uniform downscale (original SHA-256 kept)',
+                            'rights': 'เครื่องหมายเป็นของเจ้าของแต่ละราย การแสดงเพื่อระบุสถานที่ไม่ใช่ใบอนุญาตเครื่องหมายการค้า',
+                            'backgroundRule': 'transparent marks on #E5E9E6, light transparent marks on #182327, opaque files on #FFFFFF (registry rule); colours and proportions unchanged'},
+                   'logos': venue_logos}, fh, ensure_ascii=False, separators=(',', ':'))
     path = os.path.join(a.out, 'data', 'fitness.json')
     with open(path, 'w', encoding='utf-8') as fh:
         json.dump(out, fh, ensure_ascii=False, separators=(',', ':'))

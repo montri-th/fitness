@@ -11,7 +11,9 @@ pass its path. Requires fonttools + brotli.
 Pictogram roles (test exception approved by the owner 2026-10-22, to be folded
 into LDS if it proves itself): brand = diamond, store = storefront,
 venue = local_mall, area = map, province = location_city, exclusive = star,
-gla = square_foot, segment = category.
+gla = square_foot, segment = category; 0.3.0 adds ai = auto_awesome, streetview,
+maps = location_on, building = apartment (owner 2026-10-29: show icons and
+symbols to keep the panel text short). Outbound links keep the nav-7 open_in_new mark.
 """
 import hashlib, json, sys
 from pathlib import Path
@@ -28,6 +30,11 @@ GLYPHS = {
     'exclusive': ('star', 0xF09A),
     'gla': ('square_foot', 0xEA49),
     'segment': ('category', 0xE72C),
+    # 0.3.0 (owner 2026-10-29: icons and symbols instead of long text): contextual actions and the building view.
+    'ai': ('auto_awesome', 0xE65F),
+    'streetview': ('streetview', 0xE56E),
+    'maps': ('location_on', 0xE0C8),
+    'building': ('apartment', 0xEA40),
 }
 AXES = {'FILL': 0, 'wght': 300, 'GRAD': 0, 'opsz': 24}
 ROOT = Path(__file__).resolve().parent.parent
@@ -63,7 +70,7 @@ def main(src):
         'license': 'Apache-2.0 (assets/icons/material-symbols-Apache-2.0.txt)',
         'axes': AXES,
         'glyphs': {role: {'name': name, 'codepoint': f'U+{cp:04X}'} for role, (name, cp) in GLYPHS.items()},
-        'status': 'test exception to LDS nav-7 (owner 2026-10-22); nav-7 subset unchanged',
+        'status': 'test exception to LDS nav-7 (owner 2026-10-22; actions and building added 2026-10-29); nav-7 subset unchanged',
     }
     MANIFEST.write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + '\n')
     print(f'wrote {OUT} ({len(data)} bytes, sha256 {manifest["sha256"]}) and {MANIFEST.name}')

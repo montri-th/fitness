@@ -1,6 +1,6 @@
-# Implementation Plan — CityMETER Fitness 0.2.1
+# Implementation Plan — CityMETER Fitness 0.3.0
 
-คู่กับ [implementation-plan.json](implementation-plan.json) · 29 ต.ค. 2569
+คู่กับ [implementation-plan.json](implementation-plan.json) · 30 ต.ค. 2569
 
 ## สถาปัตยกรรม
 
@@ -13,7 +13,9 @@ Static site บน GitHub Pages (main / root) · ES modules ผ่าน import 
 | `js/areas.js` · `js/frames.js` | ดัชนีเขต/อำเภอ/จังหวัด, ผูกขอบเขตที่โหลด, locator สำหรับป้าย |
 | `js/area-insight.js` | ข้อค้นพบแรก (กติกาค่าเท่ากัน, spread, บุคลิกสตูดิโอ, นอกบ้าน) |
 | `js/profile-model.js` | โมเดลของแผงทุกโหมด รวมบริษัทและแบรนด์ที่บันทึกกับบริษัทเดียวกัน |
-| `js/panel.js` · `js/breadcrumb.js` | HTML ของแผงและ breadcrumb (pure) |
+| `js/panel.js` · `js/breadcrumb.js` | HTML ของแผงและ breadcrumb (pure) — ตัวตนแบรนด์ก่อนสาขา, fact chips, ป้ายสถานะ, รายละเอียดแหล่งพับไว้ |
+| `js/logos.js` | ทะเบียนโลโก้แบรนด์/ศูนย์การค้า → chip (`brandLogoMarkup`, `venueLogoMarkup`, `logoCoverage`) |
+| `js/ask.js` | ปุ่มถามต่อใน Google ตามมุมมอง (`contextActions`, `actionBar`, `branchLabel`) |
 | `js/scales.js` · `js/cues.js` | LDS count LUT + ramp 41 ระดับตามลำดับค่า (`buildRamp`, `rampLegendHTML`), series และรูปทรงของรูปแบบ |
 | `js/map-layers.js` · `js/provinces.js` · `js/pins.js` · `js/building-join.js` | choropleth + ป้าย, กรอบจังหวัด, สัญลักษณ์และหมุด, จุดของสาขาและศูนย์การค้า × อาคาร (`joinBuildings`, `groupPieces`) |
 | `js/venue-xray.js` | อาคารที่ดูอยู่วาดเหนืออาคารอื่นและชื่อถนน (custom layer, scissored depth clear, hit test) |
@@ -41,17 +43,23 @@ Static site บน GitHub Pages (main / root) · ES modules ผ่าน import 
 | P13 | สีครบ 41 ระดับของ LDS ตามลำดับค่า (กติกาประจำของเจ้าของ) ทั้งแผนที่ กรอบจังหวัด กราฟ และคำอธิบาย | P05 | AC29 | done |
 | P14 | เผยแพร่ 0.2.0, verify live, เดินตรวจมุมมองอาคารบนเว็บจริง (desktop และ 390 px สองธีม) | P11–P13 | AC24 AC25 AC26 AC27 | done (เดินตรวจพบ P15) |
 | P15 | กัน TypeError ของ MapLibre 5.6.2 (`_updateRetainedTiles`) ที่พบตอนเดินตรวจ: กล้อง eye บินระหว่างอาคารผ่าน zoom 13–14 บน vector source | P14 | AC31 | done |
-| P16 | เผยแพร่ 0.2.1, verify live, เดินตรวจซ้ำบนเว็บจริงว่า console ไม่มี error | P15 | AC24 AC25 AC31 | ดู VERIFICATION.md |
+| P16 | เผยแพร่ 0.2.1, verify live, เดินตรวจซ้ำบนเว็บจริงว่า console ไม่มี error | P15 | AC24 AC25 AC31 | done |
+| P17 | ทะเบียนโลโก้แบรนด์จาก `16_BRAND_LOGOS` + คลังโลโก้ (ตรวจ SHA-256, บันทึกการย่อ/ตัดขอบ) และโลโก้ศูนย์การค้าที่ผูกจาก snapshot ของทะเบียน | P04 | AC33 | done |
+| P18 | แบรนด์มาก่อนสาขาทุกที่ (เจ้าของ 29 ต.ค. 23:32): หมุดพร้อม chip โลโก้ popup รายชื่อ การ์ด แผง ตาราง กราฟแบรนด์ ชื่อแท็บ | P17 | AC32 AC18 | done |
+| P19 | แผงสั้นลง: บล็อกตัวตน fact chips ป้ายสถานะ แหล่งพับไว้ ภาษาไทยเป็นธรรมชาติ | P18 | AC09 AC12 AC19 | done |
+| P20 | คำถามถัดไปของแต่ละมุมมอง: Google AI Mode, Maps, Street View (`js/ask.js`) + pictogram 4 แบบ | P19 | AC34 | done |
+| P21 | ผูกสาขากับศูนย์การค้าระดับงานวิจัย (เจ้าของ 29 ต.ค. “ผูกแล้วเขียนกลับเข้าชีตวิจัย”): จับคู่จากหลักฐาน เขียน id สถานะ และหลักฐานลงชีต export ใหม่ แล้วสร้างข้อมูลใหม่ | P04 | AC36 | done — เขียน 908 เซลล์ 30 ต.ค. อ่านกลับตรงทุกเซลล์ |
+| P22 | เผยแพร่ 0.3.0, verify live, เดินตรวจแบรนด์ก่อนสาขา โลโก้ และปุ่ม Google (desktop และ 390 px สองธีม) | P18–P20 | AC24 AC25 AC32 AC34 AC35 | ดู VERIFICATION.md |
 
 ## Acceptance criteria
 
-AC01 โหลดครั้งแรก · AC02 ข้อค้นพบแรกค่าเริ่มต้น · AC03 หน่วยเริ่มต้น · AC04 ตัวกรองสถานะ · AC05 ความเป็นสมาชิกพื้นที่ · AC06 conflict · AC07 ค่าเท่ากัน · AC08 EVID-05 · AC09 provenance · AC10 บัตรแบรนด์ · AC11 แผงเขต · AC12 แผงสาขา · AC13 ขอบเขตรายจังหวัด · AC14 focus + quiet · AC15 ศูนย์การค้า · AC16 มุมมองประเทศ · AC17 กราฟ · AC18 ตาราง · AC19 ภาษาไทย · AC20 LDS parity · AC21 ความสะอาดของข้อมูลที่เผยแพร่ · AC22 ใบรับ · AC23 ความสอดคล้องของรุ่น · AC24 ไบต์บนเว็บจริง · AC25 เดินตรวจเว็บจริง · AC26 กล้องมุมมองอาคาร · AC27 ไม่มีอาคารอื่นบัง · AC28 รายการเดียวต่ออาคาร · AC29 สีครบ 41 ระดับ · AC30 ชิ้นอาคารเป็นอาคารเดียว · AC31 ไม่มี error ของ MapLibre เมื่อกล้องเอียงซูมออกจากอาคาร (ข้อความเต็มและวิธีตรวจใน JSON)
+AC01 โหลดครั้งแรก · AC02 ข้อค้นพบแรกค่าเริ่มต้น · AC03 หน่วยเริ่มต้น · AC04 ตัวกรองสถานะ · AC05 ความเป็นสมาชิกพื้นที่ · AC06 conflict · AC07 ค่าเท่ากัน · AC08 EVID-05 · AC09 provenance · AC10 บัตรแบรนด์ · AC11 แผงเขต · AC12 แผงสาขา · AC13 ขอบเขตรายจังหวัด · AC14 focus + quiet · AC15 ศูนย์การค้า · AC16 มุมมองประเทศ · AC17 กราฟ · AC18 ตาราง · AC19 ภาษาไทย · AC20 LDS parity · AC21 ความสะอาดของข้อมูลที่เผยแพร่ · AC22 ใบรับ · AC23 ความสอดคล้องของรุ่น · AC24 ไบต์บนเว็บจริง · AC25 เดินตรวจเว็บจริง · AC26 กล้องมุมมองอาคาร · AC27 ไม่มีอาคารอื่นบัง · AC28 รายการเดียวต่ออาคาร · AC29 สีครบ 41 ระดับ · AC30 ชิ้นอาคารเป็นอาคารเดียว · AC31 ไม่มี error ของ MapLibre เมื่อกล้องเอียงซูมออกจากอาคาร · AC32 แบรนด์มาก่อนสาขา · AC33 ทะเบียนโลโก้ · AC34 ปุ่มถามต่อใน Google · AC35 URL `?search=` · AC36 การผูกศูนย์การค้าเขียนกลับและอ่านกลับแล้ว (ข้อความเต็มและวิธีตรวจใน JSON)
 
 ## วิธีทำงานต่อ
 
 1. อ่าน `AGENTS.md` แล้ว `handoff/README.md`, `PRODUCT_STATEMENT.md` และ brief คู่ md/json
 2. รัน `npm test` ก่อนแก้ คงสัญญา row scopes หน่วยตามสถานะ โหมดโฟกัส กติกาค่าเท่ากัน ตัวชี้วัด ขอบเขต และ action ของแผง
-3. ทำทีละงาน คง id ของ invariant INV01–INV25
+3. ทำทีละงาน คง id ของ invariant INV01–INV28
 4. ตรวจการคำนวณบนข้อมูลจริงใน `tests/`
 5. ตรวจหน้าจอภาษาไทยที่ 390 px และ desktop ทั้งสองธีม ถ้า tiles ถูกบล็อกใช้ harness ในเครื่องตรวจ layout แล้วยืนยันภาพจริงบนเว็บ
 6. เพิ่ม cache tag และ version พร้อมกัน เผยแพร่ รัน `npm run verify:live` และเดินตรวจเว็บจริงก่อนรายงาน
@@ -60,12 +68,12 @@ AC01 โหลดครั้งแรก · AC02 ข้อค้นพบแร
 
 | id | งาน | ผู้รับ |
 |---|---|---|
-| N01 | ทะเบียนโลโก้แบรนด์ (ไบต์ต้นฉบับ sha256 บทบาท) และโลโก้ที่ zoom ใกล้ | research + developer |
+| N01 | ~~ทะเบียนโลโก้แบรนด์ (ไบต์ต้นฉบับ sha256 บทบาท) และโลโก้ที่ zoom ใกล้~~ — เสร็จใน 0.3.0 (P17–P18) | research + developer |
 | N02 | ตรวจเงื่อนไขการใช้ของแต่ละแหล่งทางการก่อนใช้เชิงพาณิชย์/production และบันทึกการตัดสินใจ | owner / legal |
 | N03 | รอบตรวจซ้ำตามกำหนดพร้อมบันทึกการเปลี่ยนแปลง (เปิด ปิด ประกาศ) และคลังตามวันที่ | data engineer |
 | N04 | ผูก Locale Insight id เพื่อบริบทย่าน (id join เท่านั้น) | data engineer |
 | N05 | ตรวจบริษัทกับทะเบียนนิติบุคคลและบันทึกเลขทะเบียน | research |
-| N06 | ผูกสาขากับศูนย์การค้า CityMETER เพิ่มด้วย venue id (งานวิจัย) ไม่ใช้ชื่อ | research |
+| N06 | ผูกสาขากับศูนย์การค้า CityMETER เพิ่มด้วย venue id (งานวิจัย) ไม่ใช้ชื่อ — ผูกแล้ว 139 แถวใน 0.3.0 เหลือ 19 แถวที่พักไว้ | research |
 | N07 | ลดสาขาที่ระบุพื้นที่ไม่ได้: ขอคำเขต/อำเภอหรือจุดจากหน้าทางการในรอบวิจัยถัดไป | research |
 | N08 | ตรวจภาคสนามตัวอย่างสาขาเพื่อวัดช่องว่างระหว่าง “แสดงในแหล่ง” กับเปิดจริง | research |
 | N09 | dataset ใน CityMETER production (พารามิเตอร์ `d=`) เมื่อมี product dataset id | owner + platform |
@@ -74,4 +82,9 @@ AC01 โหลดครั้งแรก · AC02 ข้อค้นพบแร
 | N12 | มุมมองประเทศ: คำบรรยายกราฟ “สีเดียวกับแผนที่” หมายถึงชั้นเขต/อำเภอ ขณะที่แผนที่แสดงกรอบจังหวัด | developer |
 | N13 | ปุ่มซูม/เข็มทิศของ MapLibre ในธีมมืดยังเป็นพื้นขาว (ผูก token foundation) | developer |
 | N14 | การ์ดบนแผนที่ของมุมมองอาคารบนมือถือเมื่อปิด sheet (ชื่อ + ตัวเลขหลัก) แบบ Shopping centers — รอเจ้าของตัดสิน | owner + developer |
+| N16 | ทะเบียนศูนย์การค้าซ้ำที่พบตอนผูก (Pantip Lifestyle Hub, The Walk Kaset-Nawamin, The Walk Ratchapreuk): รวมหรืออธิบายในทะเบียน แถวเหล่านี้พักไว้ก่อน | registry team |
+| N17 | `16_BRAND_LOGOS` ระบุพื้นสว่างให้ The Cult Fitness Society, Red Rock Canyon Climbing Gym, Fitness7 แต่ส่วนสีขาวของโลโก้ต้องใช้พื้นมืด: แก้คลังโลโก้ | research |
+| N18 | 15 ศูนย์ที่ผูกแล้วยังไม่มี uuid ของ CityMETER และ 13 ศูนย์ไม่มีจุดอ้างอิง (16 และ 14 แถว) · ทะเบียนระบุรหัสเขตของ Central Rama 9 (1026) และ Lasalle’s Avenue (1101) ไม่ตรงจุดของตัวเอง (1017, 1047): เติม id จุด และเขต | registry team |
+| N19 | Physique 57 Bangkok (Erawan): จุดของแหล่งห่าง Erawan Bangkok ที่ที่อยู่ผูกไว้ 688 ม. — ตรวจจุดของแหล่ง | research |
+| N20 | ระบายสีอาคารที่มีสาขาตามตัวกรอง (เช่น ค้น “jet”) ในโฟกัส ไม่ใช่เฉพาะอาคารที่กำลังดู — ต้องมี map role ของ LDS สำหรับ highlight รอง; รอเจ้าของตัดสิน | owner + developer |
 | N15 | เดโมพี่น้องที่ใช้ MapLibre 5.6.2 กับกล้องเอียง (Shopping centers, Luxury Brands, Restaurants, Pharmacy) น่าจะเจอ error เดียวกันบน vector source: ใส่ guard เดียวกัน หรืออัปเกรด MapLibre หลังตรวจว่าแก้แล้ว | owner + developer |

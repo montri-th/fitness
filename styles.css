@@ -147,7 +147,7 @@ input[type="search"]::-webkit-search-cancel-button { -webkit-appearance: none; }
   font-family: "LDS Material Symbols Rounded Pictogram";
   src: url("assets/icons/material-pictogram-300.woff2") format("woff2");
   font-style: normal; font-weight: 300; font-display: block;
-  unicode-range: U+EAD5, U+EA12, U+E54C, U+E55B, U+E7F1, U+F09A, U+EA49, U+E72C;
+  unicode-range: U+EAD5, U+EA12, U+E54C, U+E55B, U+E7F1, U+F09A, U+EA49, U+E72C, U+E65F, U+E56E, U+E0C8, U+EA40;
 }
 .pictogram { display: inline-block; width: 20px; height: 20px; font: 300 20px/1 "LDS Material Symbols Rounded Pictogram"; font-variation-settings: "FILL" 0, "wght" 300, "GRAD" 0, "opsz" 24; letter-spacing: normal; text-transform: none; font-synthesis: none; vertical-align: -4px; visibility: hidden; color: var(--text-secondary); }
 .pictograms-ready .pictogram { visibility: visible; }
@@ -160,6 +160,10 @@ input[type="search"]::-webkit-search-cancel-button { -webkit-appearance: none; }
 .pic-gla::before { content: "\EA49"; }
 .pic-segment::before { content: "\E72C"; }
 .pic-venue::before { content: "\E54C"; }
+.pic-ai::before { content: "\E65F"; }
+.pic-streetview::before { content: "\E56E"; }
+.pic-maps::before { content: "\E0C8"; }
+.pic-building::before { content: "\EA40"; }
 .pic-plain { display: none; }
 .section-heading h3 .pictogram { width: 18px; height: 18px; font-size: 18px; margin-right: 6px; vertical-align: -3px; }
 .metric { position: relative; padding-left: 26px; }
@@ -546,3 +550,72 @@ td small { display: block; color: var(--text-metadata); font-size: 12px; margin-
 .map-panel:not(.has-open-building) .legend-building-item { display: none; }
 .legend-building { width: 12px; height: 12px; background: var(--map-active-layer); border: 1px solid var(--map-selected-stroke); transform: skewY(-12deg); }
 .legend-marks #legend-pin .cue-shape { width: 11px; height: 11px; }
+
+/* ---------- Logos, brand-first rows and contextual actions (0.3.0, owner 2026-10-29) ---------- */
+/* A logo sits on its library-recommended backing (theme-invariant) inside a hairline chip; the image keeps its own
+   colours and proportions (object-fit: contain). The name is always written next to it. */
+.logo-chip { display: inline-flex; align-items: center; justify-content: center; flex: 0 0 auto; box-sizing: border-box; width: var(--logo-w); height: var(--logo-h); padding: var(--logo-pad); background: var(--logo-bg); border: 1px solid var(--border-hairline); border-radius: 4px; overflow: hidden; vertical-align: middle; }
+.logo-chip img { display: block; width: 100%; height: 100%; object-fit: contain; }
+.logo-chip.logo-lg { border-radius: 8px; }
+.outlet-list .brand-row { display: flex; gap: 10px; align-items: flex-start; }
+.row-logo { margin-top: 1px; }
+.row-text { display: grid; gap: 1px; min-width: 0; }
+.row-text strong { font-size: 14px; line-height: 1.4; overflow-wrap: anywhere; }
+.row-branch { font-size: 13px; line-height: 1.4; color: var(--text-primary); overflow-wrap: anywhere; }
+.row-meta { display: flex; align-items: center; gap: 5px; font-size: 12px; line-height: 1.45; color: var(--text-metadata); }
+.row-meta:empty { display: none; }
+.row-cue-inline { display: inline-block; width: 10px; height: 10px; flex: 0 0 10px; vertical-align: -1px; margin-right: 4px; }
+.row-pic { width: 22px; height: 22px; font-size: 22px; flex: 0 0 22px; }
+.identity { display: flex; gap: 12px; align-items: center; margin-top: 4px; }
+.identity > div { min-width: 0; }
+.identity .eyebrow { margin-bottom: 2px; }
+.identity-pic { width: 46px; height: 46px; font-size: 42px; flex: 0 0 46px; }
+.branch-name { font-size: 15px; line-height: 1.45; color: var(--text-secondary); margin-top: 2px; overflow-wrap: anywhere; }
+.title-link { font: inherit; color: inherit; padding: 0; min-height: 0; border: 0; background: none; text-align: left; white-space: normal; text-decoration: none; }
+.title-link:hover { text-decoration: underline; text-underline-offset: 4px; }
+.store-status { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin-top: 8px; font-size: 13px; }
+.chip-link { font-size: 12px; }
+.fact-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.fact-chip { display: inline-flex; align-items: center; gap: 6px; min-height: 32px; padding: 3px 10px 3px 6px; border: 1px solid var(--border-default); border-radius: 999px; background: var(--surface-raised); color: var(--text-primary); font: 400 12px/1.3 var(--font-body); text-align: left; white-space: normal; }
+.fact-chip .pictogram { width: 16px; height: 16px; font-size: 16px; vertical-align: 0; }
+button.fact-chip { cursor: pointer; }
+button.fact-chip:hover { background: var(--surface-alt); }
+.fact-chip.is-quiet { color: var(--text-metadata); background: transparent; border-style: dashed; }
+.fact-line { display: flex; align-items: center; flex-wrap: wrap; gap: 4px; margin-top: 8px; font-size: 13px; color: var(--text-secondary); }
+.fact-icon { width: 16px; height: 16px; font-size: 16px; vertical-align: -3px; }
+.ask-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 12px; }
+.ask-link { display: inline-flex; align-items: center; gap: 6px; min-height: 36px; padding: 4px 12px 4px 8px; border: 1px solid var(--border-default); border-radius: 999px; background: var(--surface-raised); color: var(--text-primary); font-size: 12px; font-weight: 600; text-decoration: none; }
+.ask-link:hover { background: var(--surface-alt); border-color: var(--border-emphasis); }
+.ask-link .pictogram { width: 18px; height: 18px; font-size: 18px; vertical-align: 0; color: var(--interaction-accent); }
+.pictograms-unavailable .ask-link { padding-left: 12px; }
+.ask-note { flex-basis: 100%; font-size: 11px; color: var(--text-metadata); }
+.source-details { margin-top: 12px; padding-top: 6px; border-top: 1px solid var(--border-hairline); }
+.source-details summary { display: flex; align-items: center; min-height: 36px; cursor: pointer; font-size: 12px; font-weight: 600; color: var(--text-secondary); list-style: none; }
+.source-details summary::-webkit-details-marker { display: none; }
+.source-details summary::before { content: ""; flex: 0 0 auto; width: 6px; height: 6px; margin: 0 10px 0 4px; border-right: 1.5px solid currentColor; border-bottom: 1.5px solid currentColor; transform: rotate(-45deg); transition: transform .15s ease; }
+.source-details[open] summary::before { transform: rotate(45deg); }
+.source-details .facts { margin-top: 4px; }
+.logo-wall .brand-chip { padding-left: 4px; }
+.related { display: grid; gap: 6px; margin-top: 12px; }
+.logo-strip { list-style: none; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+.logo-button { display: grid; justify-items: center; align-content: start; gap: 4px; width: 96px; min-height: 0; padding: 6px 4px; border: 1px solid transparent; border-radius: var(--radius-sm); background: transparent; color: var(--text-secondary); font-size: 11px; line-height: 1.3; text-align: center; white-space: normal; overflow-wrap: anywhere; }
+.logo-button:hover { background: var(--surface-alt); border-color: var(--border-hairline); }
+.store-pin .pin-logo { position: absolute; left: calc(100% + 3px); top: 50%; transform: translateY(-50%); pointer-events: none; box-shadow: 0 0 0 1px var(--map-marker-halo); }
+.store-pin .pin-logo[hidden] { display: none; }
+.popup-identity { display: flex; gap: 10px; align-items: center; margin-right: 28px; }
+.map-panel .maplibregl-popup-content .popup-identity h3 { margin-right: 0; }
+.map-panel .maplibregl-popup-content .popup-branch { margin-top: 0; color: var(--text-primary); }
+.map-panel .maplibregl-popup-content .popup-venue { display: flex; align-items: center; gap: 6px; margin-top: 8px; }
+.map-panel .maplibregl-popup-content .popup-meta { font-size: 12px; }
+.bar-label-logo { display: flex; align-items: center; gap: 8px; }
+.bar-label-logo > span:last-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.bar-label-logo small { display: flex; align-items: center; gap: 4px; }
+.bar-label-logo small .cue-shape { width: 10px; height: 10px; }
+.bar-row:has(.bar-label-logo) { grid-template-columns: 20px minmax(130px, 210px) minmax(0, 1fr) 92px; }
+#result-rows .row-name { display: inline-flex; align-items: center; gap: 8px; text-align: left; }
+#result-rows td small { display: flex; align-items: center; gap: 4px; }
+@media (max-width: 760px) and (orientation: portrait) {
+  .ask-link { min-height: 40px; }
+  .logo-button { width: 84px; }
+  .bar-row:has(.bar-label-logo) { grid-template-columns: 20px minmax(110px, 1fr) minmax(0, 1fr) 72px; }
+}

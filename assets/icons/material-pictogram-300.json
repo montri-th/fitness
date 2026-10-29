@@ -1,10 +1,10 @@
 {
   "family": "LDS Material Symbols Rounded Pictogram",
   "file": "material-pictogram-300.woff2",
-  "bytes": 1732,
-  "sha256": "33d9084bbd26b976d5c42002a0c669618573c21123567247816e9e694671c7b0",
+  "bytes": 2120,
+  "sha256": "73ec48664ed89caf4bdb420c5129637dc57d0820b11e6eb49ed6537dbef7dac3",
   "source": "google/material-design-icons variablefont/MaterialSymbolsRounded[FILL,GRAD,opsz,wght].ttf",
-  "sourceSha256": "32e4011709e055596eb8d2dd0f7cb547b47c1d40ac9ecb8fad54f7f7eac202e7",
+  "sourceSha256": "7e74e36533ccee12c2b81e75bfcf3ccf123d3bb7e7e46d65d94445f23db0c97c",
   "license": "Apache-2.0 (assets/icons/material-symbols-Apache-2.0.txt)",
   "axes": {
     "FILL": 0,
@@ -44,7 +44,23 @@
     "segment": {
       "name": "category",
       "codepoint": "U+E72C"
+    },
+    "ai": {
+      "name": "auto_awesome",
+      "codepoint": "U+E65F"
+    },
+    "streetview": {
+      "name": "streetview",
+      "codepoint": "U+E56E"
+    },
+    "maps": {
+      "name": "location_on",
+      "codepoint": "U+E0C8"
+    },
+    "building": {
+      "name": "apartment",
+      "codepoint": "U+EA40"
     }
   },
-  "status": "test exception to LDS nav-7 (owner 2026-10-22); nav-7 subset unchanged"
+  "status": "test exception to LDS nav-7 (owner 2026-10-22; actions and building added 2026-10-29); nav-7 subset unchanged"
 }

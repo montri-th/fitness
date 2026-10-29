@@ -54,8 +54,10 @@ import {installBranchPins} from './pins.js';
 import {installAreaLayers, installAreaLabels, buildAreaModel, AREA_MIN_ZOOM, PROVINCE_VIEW_MIN_ZOOM} from './map-layers.js';
 import {installProvinceLayers, buildProvinceModel, PROVINCE_FILL_MAX_ZOOM, PROVINCE_LABEL_MAX_ZOOM} from './provinces.js';
 import {createFrameStore, provinceLocator} from './frames.js';
-import {buildOverview, buildAreaProfile, buildStoreDetail, buildBuildingProfile, buildBrandProfile, buildVenueProfile, listOrder} from './profile-model.js';
+import {buildOverview, buildAreaProfile, buildStoreDetail, buildBuildingProfile, buildBrandProfile, buildVenueProfile, venueHome, listOrder} from './profile-model.js';
 import {renderOverview, renderArea, renderBuilding, renderStore, renderVenue, renderBrandCard, renderFilterChips, esc, num, pct, words, ADMIN_TH} from './panel.js';
+import {configureLogos, brandLogoMarkup, venueLogoMarkup, logoCoverage} from './logos.js';
+import {branchLabel} from './ask.js';
 import {joinBuildings} from './building-join.js';
 import {buildMapStyle, basemapPalette, TILEJSON_URL, MASSING_BEFORE, VENUE_XRAY_BEFORE} from './map-style.js';
 import {installMassing, outerRings} from './massing.js';
@@ -100,6 +102,9 @@ const unit = () => unitWords($('status').value);
 const rowById = id => state.rowById.get(id) || null;
 const areaById = id => state.index.byId.get(id) || null;
 const venueById = id => state.data.venues.find(v => v.id === id) || null;
+const hasVenuePoint = v => Number.isFinite(v?.latitude) && Number.isFinite(v?.longitude);
+/** The venue's home for navigation (its point's district, else the district all its linked rows share). */
+const homeOf = v => venueHome(v, state.data.rows, state.index);
 const provinceRecord = code => state.index.provinceById.get(code) || null;
 // Null-safe: an embedding page or extension may detach the tray while map callbacks are still queued.
 const bottomSpace = () => ($('insights')?.getBoundingClientRect().height ?? 0) + 12;
@@ -120,7 +125,8 @@ const currentBuilding = () => (state.panel.mode === 'building' ? state.buildingS
  * part of the map (owner 2026-10-29 19:47: “อาคารที่เลือก หรือ on focus ให้แสดงด้วยมุมมอง 2-point perspective เสมอ
  * zoom to fit viewport เสมอ”).
  */
-const twoPoint = () => ['venue', 'building'].includes(state.panel.mode) || (state.panel.mode === 'store' && hasPoint(rowById(state.panel.id)));
+const twoPoint = () => state.panel.mode === 'building' || (state.panel.mode === 'venue' && hasVenuePoint(venueById(state.panel.id)))
+  || (state.panel.mode === 'store' && hasPoint(rowById(state.panel.id)));
 const cameraPreset = () => presetFor({view3d: state.view3d, mode: state.panel.mode === 'overview' ? 'overview' : 'detail', twoPoint: twoPoint()});
 
 function saveURL() {
@@ -257,7 +263,7 @@ function wantedProvinces() {
   const area = state.selectedArea && areaById(state.selectedArea);
   if (area) codes.add(area.province);
   const venue = state.selectedVenue && venueById(state.selectedVenue);
-  if (venue?.district) codes.add(areaById(venue.district)?.province);
+  if (venue) codes.add(homeOf(venue).province);
   for (const id of state.focusIds) { const a = areaById(id); if (a) codes.add(a.province); }
   if (state.panel.mode === 'store') { const r = rowById(state.panel.id); if (r?.province) codes.add(r.province); }
   return [...codes].filter(Boolean);
@@ -298,13 +304,13 @@ function renderCrumbs() {
     const r = mode === 'store' ? rowById(id) : currentBuilding()?.rows[0];
     crumbs = buildBreadcrumb({area: r?.area ? areaById(r.area) : null, province: r?.province || ''});
   } else if (mode === 'venue') {
-    const v = venueById(id);
-    crumbs = buildBreadcrumb({area: v?.district ? areaById(v.district) : null, venue: v});
+    const v = venueById(id), home = homeOf(v);
+    crumbs = buildBreadcrumb({area: home.area, province: home.province, venue: v});
   } else {
     crumbs = buildBreadcrumb({province: $('province').value, area: state.selectedArea ? areaById(state.selectedArea) : null});
   }
   $('crumbs').innerHTML = renderBreadcrumb(crumbs);
-  const title = mode === 'store' ? `${rowById(id)?.name || ''} · ` : mode === 'building' ? 'อาคาร · ' : '';
+  const title = mode === 'store' ? `${[rowById(id)?.brand?.name, branchLabel(rowById(id) || {})].filter(Boolean).join(' ') || rowById(id)?.name || ''} · ` : mode === 'building' ? 'อาคาร · ' : '';
   document.title = `${title}${breadcrumbText(crumbs)} · Fitness · CityMETER`;
   return crumbs;
 }
@@ -434,23 +440,26 @@ function selectVenue(id) {
   const v = venueById(id);
   if (!v) return;
   if (state.panel.mode !== 'venue' || state.panel.id !== id) pushHistory();
-  alignProvince(areaById(v.district)?.province || '');
+  alignProvince(homeOf(v).province);
   state.selectedVenue = id; state.selectedArea = '';
   state.focusAreaIds = [];
   state.panel = {mode: 'venue', id};
   update();
   openMobilePanel({frame: false});
-  // Every way in (list, search, crumb, building, x-ray, URL) frames the building again.
+  // Every way in (list, search, crumb, building, x-ray, URL) frames the building again; a registry venue without
+  // a reference point frames the district its linked rows share.
   state.framed = null;
-  if (state.loaded) { frameFocus(); state.lastPreset = cameraPreset(); }
+  if (state.loaded) { if (!frameFocus()) fitMap(); state.lastPreset = cameraPreset(); }
   announce(`ศูนย์การค้า ${v.name}`);
 }
 
 function storePopup(r) {
-  const wrap = document.createElement('div'), h = document.createElement('h3'), p = document.createElement('p');
-  h.textContent = r.name || r.brand?.name || 'ไม่มีชื่อในแหล่งข้อมูล';
-  p.textContent = [state.data.groups[r.group]?.th, r.brand && r.brand.name !== r.name ? r.brand.name : '', r.status !== 'listed' ? STATUS_TH[r.status] : ''].filter(Boolean).join(' · ');
-  wrap.append(h, p);
+  // Brand first: logo + brand, then the branch, then the building it is linked to.
+  const wrap = document.createElement('div'), branch = branchLabel(r);
+  wrap.className = 'popup-card';
+  const meta = [state.data.groups[r.group]?.th, r.status !== 'listed' ? STATUS_TH[r.status] : ''].filter(Boolean).join(' · ');
+  wrap.innerHTML = `<div class="popup-identity">${brandLogoMarkup(r.brand, {size: 'md'})}<div><h3>${esc(r.brand?.name || r.name || 'ไม่มีชื่อในแหล่งข้อมูล')}</h3>${branch ? `<p class="popup-branch">${esc(branch)}</p>` : ''}</div></div>
+    ${r.venue ? `<p class="popup-venue">${venueLogoMarkup(r.venue, {size: 'xs'})}<span>${esc(r.venue.name)}</span></p>` : ''}${meta ? `<p class="popup-meta">${esc(meta)}</p>` : ''}`;
   return wrap;
 }
 
@@ -596,7 +605,8 @@ function focusTarget() {
   }
   if (mode === 'venue') {
     const v = venueById(id);
-    return v ? {id: `venue:${v.id}`, ...of(j?.byVenue.get(v.id)), anchor: [v.longitude, v.latitude]} : null;
+    // A registry venue without a reference point has no building to look at (its district frames instead).
+    return v && hasVenuePoint(v) ? {id: `venue:${v.id}`, ...of(j?.byVenue.get(v.id)), anchor: [v.longitude, v.latitude]} : null;
   }
   if (mode === 'store') {
     const r = rowById(id);
@@ -881,11 +891,11 @@ function renderTable() {
   if (!renderTable.sorted || renderTable.source !== list) { renderTable.sorted = [...list].sort(listOrder); renderTable.source = list; }
   const rs = renderTable.sorted.slice(start, start + pageSize);
   $('result-rows').innerHTML = rs.map(r => `<tr>
-      <td><button type="button" class="row-name brand-row" data-id="${esc(r.id)}">${cueMarkup(r.series, {className: 'row-cue'})}<span>${esc(r.name || r.brand?.name || 'ไม่มีชื่อในแหล่งข้อมูล')}</span></button><small>${esc(state.data.groups[r.group]?.th || '')}</small></td>
-      <td>${r.brand ? esc(r.brand.name) : '<span class="hint">—</span>'}</td>
+      <td><button type="button" class="row-name brand-row" data-id="${esc(r.id)}">${brandLogoMarkup(r.brand, {size: 'sm', className: 'row-logo'}) || cueMarkup(r.series, {className: 'row-cue'})}<span>${esc(r.brand?.name || r.name || 'ไม่มีชื่อในแหล่งข้อมูล')}</span></button><small>${cueMarkup(r.series, {className: 'row-cue-inline'})}${esc(state.data.groups[r.group]?.th || '')}</small></td>
+      <td>${branchLabel(r) ? esc(branchLabel(r)) : '<span class="hint">—</span>'}${r.venue ? `<small>${esc(r.venue.name)}</small>` : ''}</td>
       <td><span class="status-pill tone-${esc(r.status)}">${esc(STATUS_TH[r.status] || '')}</span></td>
       <td>${areaCell(r)}</td>
-      <td><span title="${esc(ADMIN_TH[r.admin] || '')}">${esc(HOW_SHORT[r.admin] || '—')}</span>${r.venue ? `<small>${esc(r.venue.name)}</small>` : ''}</td>
+      <td><span title="${esc(ADMIN_TH[r.admin] || '')}">${esc(HOW_SHORT[r.admin] || '—')}</span></td>
       <td>${hasPoint(r) ? `<small class="data-number">${r.latitude.toFixed(5)}, ${r.longitude.toFixed(5)}</small>` : '<span class="hint">ไม่มี</span>'}</td></tr>`).join('') ||
     `<tr><td colspan="6">ไม่พบ${esc(u.one)}ตามตัวกรอง</td></tr>`;
   $('page-label').textContent = list.length ? `${num(start + 1)}–${num(Math.min(start + pageSize, list.length))} / ${num(list.length)}` : `0 ${u.one}`;
@@ -955,8 +965,10 @@ function fitMap({instant = false} = {}) {
   // A venue, a building or a branch with a point: the building camera (two-point, zoomed to fit) — before the
   // district it was opened from.
   if (frameFocus({instant})) return;
-  const area = state.selectedArea ? areaById(state.selectedArea) : null;
+  const home = state.panel.mode === 'venue' ? homeOf(venueById(state.panel.id)) : null;
+  const area = state.selectedArea ? areaById(state.selectedArea) : home?.area;
   if (area) { fitRecord(area, {instant}); return; }
+  if (home?.province) { fitRecord(provinceRecord(home.province), {instant}); return; }
   // A spread Aha (no district stands out) frames the leading province's districts that hold rows.
   const spread = !state.focusIds.length && state.autoFocus && state.insight?.spread ? state.insight.homeAreaIds : [];
   const focus = (state.focusIds.length ? state.focusIds : spread).map(areaById).filter(Boolean);
@@ -1092,7 +1104,9 @@ function massingRegions() {
   }
   if (state.panel.mode === 'venue') {
     const v = venueById(state.panel.id);
-    if (v) return [squareAround(v.longitude, v.latitude, 350)];
+    if (v && hasVenuePoint(v)) return [squareAround(v.longitude, v.latitude, 350)];
+    const a = v ? homeOf(v).area : null;
+    if (a?.feature) return outerRings(a.feature);
   }
   if (state.panel.mode === 'store') {
     const r = rowById(state.panel.id);
@@ -1112,13 +1126,14 @@ function updateSpatialLayers() {
   state.provinceLabels?.update(pm ? pm.provinces.filter(p => p.count > 0 || p.code === code).sort((a, b) => (b.code === code) - (a.code === code) || b.count - a.count)
     .map(p => ({id: p.code, name: p.name, value: num(p.count), state: p.state, quiet: Boolean(code) && p.code !== code, selected: p.code === code, center: p.label, swatch: p.fill || '', title: `${p.name} · ${num(p.count)} ${u.one}`})) : [], {visible: true});
   const venue = state.selectedVenue ? venueById(state.selectedVenue) : null;
-  const focusIds = venue?.district ? [venue.district] : mapFocusIds();
+  const venueArea = venue ? homeOf(venue).area : null;
+  const focusIds = venueArea ? [venueArea.id] : mapFocusIds();
   syncMapFocus.key = mapFocusIds().join(',');
   state.areaLayers?.update({model: state.areaModel, selectedId: state.selectedArea, focusIds, outlineFocus: !venue, visible: state.showAreas, provinceCode: code});
   state.labels?.update(state.showAreas ? areaLabelItems() : [], {visible: state.showAreas});
   renderLegend();
   const target = twoPoint() ? focusTarget() : null;
-  const anchorPoints = target ? [target.anchor] : venue ? [[venue.longitude, venue.latitude]]
+  const anchorPoints = target ? [target.anchor] : venue && hasVenuePoint(venue) ? [[venue.longitude, venue.latitude]]
     : (state.selectedArea ? [areaById(state.selectedArea)] : state.focusIds.map(areaById)).filter(Boolean).map(r => r.label).filter(Array.isArray);
   const anchors = anchorPoints.length ? anchorPoints : [state.map.getCenter().toArray()];
   state.massing?.update({regions: massingRegions(), hosts: [], anchors, enabled: true, city: state.view3d, zoom: state.map.getZoom(), latitude: state.map.getCenter().lat})?.catch(e => console.warn('Massing', e));
@@ -1403,7 +1418,7 @@ function refreshOptionCounts() {
 
 function restoreFromURL() {
   const p = new URLSearchParams(location.search);
-  for (const f of FIELDS) if (p.has(f)) { const v = f === 'province' ? provinceCodeFrom(p.get(f)) : p.get(f); if ([...$(f).options].some(o => o.value === v) || f === 'search') $(f).value = v; }
+  for (const f of FIELDS) if (p.has(f)) { const v = f === 'province' ? provinceCodeFrom(p.get(f)) : p.get(f); if (f === 'search' || [...($(f).options || [])].some(o => o.value === v)) $(f).value = v; }
   if (['count', 'mix', 'brands'].includes(p.get('view'))) state.view = p.get('view');
   if (p.get('area') && areaById(p.get('area'))) state.selectedArea = p.get('area');
   else if (p.get('venue') && venueById(p.get('venue'))) state.selectedVenue = p.get('venue');
@@ -1484,6 +1499,12 @@ async function init() {
       fetchJSON('data/area-index.json', {timeout: 30000}),
       fetchJSON('data/provinces.geojson', {timeout: 30000}).catch(e => { console.warn('Province frames unavailable', e); return null; }),
     ]);
+    // Logos are identity support: a missing or invalid registry only means no logos (names stay).
+    const [brandLogos, venueLogos] = await Promise.all([
+      fetchJSON('data/brand-logos.json').catch(e => { console.warn('Brand logos unavailable', e); return null; }),
+      fetchJSON('data/venue-logos.json').catch(e => { console.warn('Venue logos unavailable', e); return null; }),
+    ]);
+    state.logos = configureLogos({brandLogos, venueLogos});
     if (!Array.isArray(indexJSON?.provinces) || !indexJSON.provinces.length || !Array.isArray(indexJSON?.areas?.id)) {
       const e = new Error('Invalid area index'); e.resource = 'data/area-index.json'; e.phase = 'data-schema'; throw e;
     }
@@ -1491,6 +1512,8 @@ async function init() {
     state.index = buildAreaIndex(indexJSON);
     state.provincesGeo = validFeatureCollection(provincesJSON) ? provincesJSON : {type: 'FeatureCollection', features: []};
     state.data = decodeDataset(rowsJSON, state.index);
+    const coverage = logoCoverage(state.data.brands);
+    if (!coverage.complete) console.warn('Brand logo coverage', coverage);
     if (state.data.dropped) console.warn('Rows outside the area index', state.data.dropped);
     state.rowById = new Map(state.data.rows.map(r => [r.id, r]));
     state.frames = createFrameStore({index: state.index, fetchJSON, version: RELEASE, onLoad: onFramesLoaded,

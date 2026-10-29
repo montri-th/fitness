@@ -22,12 +22,13 @@ export const NAV_GLYPHS = Object.freeze({
  */
 export const PICTOGRAM_CONTRACT = Object.freeze({
   family: 'LDS Material Symbols Rounded Pictogram',
-  file: 'assets/icons/material-pictogram-300.woff2', bytes: 1732,
-  sha256: '33d9084bbd26b976d5c42002a0c669618573c21123567247816e9e694671c7b0',
+  file: 'assets/icons/material-pictogram-300.woff2', bytes: 2120,
+  sha256: '73ec48664ed89caf4bdb420c5129637dc57d0820b11e6eb49ed6537dbef7dac3',
   manifest: 'assets/icons/material-pictogram-300.json',
   axes: Object.freeze({FILL: 0, wght: 300, GRAD: 0, opsz: 24}),
-  glyphs: Object.freeze({brand: '\uEAD5', store: '\uEA12', venue: '\uE54C', area: '\uE55B', province: '\uE7F1', exclusive: '\uF09A', gla: '\uEA49', segment: '\uE72C'}),
-  status: 'test exception to LDS nav-7 (owner 2026-10-22)',
+  glyphs: Object.freeze({brand: '\uEAD5', store: '\uEA12', venue: '\uE54C', area: '\uE55B', province: '\uE7F1', exclusive: '\uF09A', gla: '\uEA49', segment: '\uE72C',
+    ai: '\uE65F', streetview: '\uE56E', maps: '\uE0C8', building: '\uEA40'}),
+  status: 'test exception to LDS nav-7 (owner 2026-10-22; action and building glyphs added 2026-10-29)',
   fallback: 'Text labels carry the meaning; pictograms stay hidden until the font has loaded.',
 });
 export const NAV_ICON_CONTRACT = Object.freeze({

@@ -3,8 +3,8 @@
   "schemaVersion": "1.5.0",
   "documentType": "implementation-plan",
   "productId": "citymeter-fitness",
-  "productVersion": "0.2.1",
-  "updatedOn": "2026-10-29",
+  "productVersion": "0.3.0",
+  "updatedOn": "2026-10-30",
   "brief": "product-brief.json",
   "statement": "product-statement.json",
   "humanPlan": "IMPLEMENTATION_PLAN.md",
@@ -13,6 +13,8 @@
     "commands": {
       "start": "npm start",
       "test": "npm test",
+      "logos": "python3 -I scripts/build-logos.py --library <logo library dir> --sheet <16_BRAND_LOGOS.csv> --brands <01_BRANDS.csv> --out .",
+      "data": "python3 -I scripts/build-data.py --export <export.xlsx|dir> … --registry <montri-th/shoppingcenter checkout> --registry-commit <sha>",
       "lds": "npm run check:lds -- --lds <file>",
       "manifest": "npm run handoff:manifest",
       "bundle": "npm run handoff:bundle",
@@ -26,6 +28,7 @@
       "js/app.js",
       "js/area-insight.js",
       "js/areas.js",
+      "js/ask.js",
       "js/breadcrumb.js",
       "js/building-join.js",
       "js/camera.js",
@@ -35,6 +38,7 @@
       "js/frames.js",
       "js/geometry.js",
       "js/launch.js",
+      "js/logos.js",
       "js/map-layers.js",
       "js/map-style.js",
       "js/maplibre-guard.js",
@@ -384,6 +388,116 @@
       "files": [
         "handoff/VERIFICATION.md"
       ],
+      "status": "done"
+    },
+    {
+      "id": "P17",
+      "title": "Brand logo registry from 16_BRAND_LOGOS and the library (SHA-256 checked, display derivatives recorded); venue logos of linked venues from the registry snapshot",
+      "dependsOn": [
+        "P04"
+      ],
+      "acceptanceCriteria": [
+        "AC33"
+      ],
+      "files": [
+        "scripts/build-logos.py",
+        "data/brand-logos.json",
+        "assets/brand-logos/",
+        "scripts/build-data.py",
+        "data/venue-logos.json",
+        "assets/venue-logos/",
+        "js/logos.js"
+      ],
+      "status": "done"
+    },
+    {
+      "id": "P18",
+      "title": "Brand first everywhere (owner 2026-10-29 23:32): pins with logo chips, popup, lists, cards, panels, table, brand chart, document title",
+      "dependsOn": [
+        "P17"
+      ],
+      "acceptanceCriteria": [
+        "AC32",
+        "AC18"
+      ],
+      "files": [
+        "js/pins.js",
+        "js/app.js",
+        "js/panel.js",
+        "js/charts.js",
+        "styles.css"
+      ],
+      "status": "done"
+    },
+    {
+      "id": "P19",
+      "title": "Shorter panels: identity block, fact chips, status pills, sources behind one disclosure, natural Thai",
+      "dependsOn": [
+        "P18"
+      ],
+      "acceptanceCriteria": [
+        "AC09",
+        "AC12",
+        "AC19"
+      ],
+      "files": [
+        "js/panel.js",
+        "styles.css"
+      ],
+      "status": "done"
+    },
+    {
+      "id": "P20",
+      "title": "The next question of each view: Google AI Mode, Maps, Street View (js/ask.js) and four pictograms (ai, streetview, maps, building)",
+      "dependsOn": [
+        "P19"
+      ],
+      "acceptanceCriteria": [
+        "AC34"
+      ],
+      "files": [
+        "js/ask.js",
+        "js/panel.js",
+        "scripts/build-pictogram-font.py",
+        "assets/icons/",
+        "js/navigation.js"
+      ],
+      "status": "done"
+    },
+    {
+      "id": "P21",
+      "title": "Venue links research-grade (owner 2026-10-29 “ผูกแล้วเขียนกลับเข้าชีตวิจัย”): match 02_STORES rows to registry venues on evidence, write ids, status and evidence back into the sheet, re-export, rebuild",
+      "dependsOn": [
+        "P04"
+      ],
+      "acceptanceCriteria": [
+        "AC36"
+      ],
+      "files": [
+        "scripts/build-data.py",
+        "scripts/fetch-edge-geometry.py",
+        "(internal) 02_STORES"
+      ],
+      "status": "done (written 2026-10-30, read back)"
+    },
+    {
+      "id": "P22",
+      "title": "Publish 0.3.0, verify live bytes and walk brand-first views, logos and actions (desktop and 390 px, both themes)",
+      "dependsOn": [
+        "P18",
+        "P19",
+        "P20"
+      ],
+      "acceptanceCriteria": [
+        "AC24",
+        "AC25",
+        "AC32",
+        "AC34",
+        "AC35"
+      ],
+      "files": [
+        "handoff/VERIFICATION.md"
+      ],
       "status": "see VERIFICATION.md"
     }
   ],
@@ -397,7 +511,7 @@
     {
       "id": "AC02",
       "scenario": "Default first Aha",
-      "expected": "38% ของสาขาในกรุงเทพมหานครที่ระบุเขตได้ อยู่ใน 3 เขตนี้ — วัฒนา · ปทุมวัน · คลองเตย, 56 จาก 147, อีก 39 ระบุได้แค่จังหวัด, สตูดิโอ 63% (35/56) vs 31% (28/91), นอกกรุงเทพมหานคร: อำเภอเมืองภูเก็ต 17; computed, not constants",
+      "expected": "37% ของสาขาในกรุงเทพมหานครที่ระบุเขตได้ อยู่ใน 3 เขตนี้ — วัฒนา · ปทุมวัน · คลองเตย, 62 จาก 167, อีก 33 ระบุได้แค่จังหวัด, สตูดิโอ 58% (36/62) vs 30% (32/105), นอกกรุงเทพมหานคร: อำเภอเมืองภูเก็ต 17; computed, not constants",
       "verificationType": "unit + browser"
     },
     {
@@ -427,7 +541,7 @@
     {
       "id": "AC07",
       "scenario": "Ties",
-      "expected": "Jetts → ปทุมวัน only; Fitness First → spread (11 เขต เขตละ 1); outside ties listed; an outside top of 1 hidden",
+      "expected": "Jetts → ปทุมวัน only; Fitness First → ปทุมวัน · วัฒนา (tied at 2, both); Space Gym → spread (15 เขต เขตละ 1); Fitness24Seven → spread with its outside top of 1 hidden",
       "verificationType": "unit"
     },
     {
@@ -493,7 +607,7 @@
     {
       "id": "AC18",
       "scenario": "Table",
-      "expected": "Branch, brand, status, district/province, place method, point; paged 25; opens the branch",
+      "expected": "Brand (logo + name, format) first, then branch + venue, status, district/province, place method, point; paged 25; opens the branch",
       "verificationType": "browser"
     },
     {
@@ -573,12 +687,42 @@
       "scenario": "Tile-cover guard",
       "expected": "No MapLibre error in the console when the pitched building camera flies between buildings or the user zooms out of a building view through 13–14; the guard is installed only on MapLibre 5.6.2",
       "verificationType": "unit + browser"
+    },
+    {
+      "id": "AC32",
+      "scenario": "Brand first",
+      "expected": "Pins, popup, every branch list, the brand card, district/venue/building panels, the table and the brand chart show the logo (when present) and the brand name before the branch; pins carry logo chips only where they fit without overlap",
+      "verificationType": "unit + browser"
+    },
+    {
+      "id": "AC33",
+      "scenario": "Logo registry",
+      "expected": "Every brand of the data has one logo record; every file matches its SHA-256 and MIME; derivatives name their source SHA-256 and operation; the folder holds exactly the registry files; no Drive or private link",
+      "verificationType": "unit"
+    },
+    {
+      "id": "AC34",
+      "scenario": "Context actions",
+      "expected": "Branch, venue, building, district, brand and overview views carry the actions that apply, with view-specific questions, https Google URLs, new tab + noopener, one disclaimer; Street View only with a point and “ใกล้อาคาร” for a registry point",
+      "verificationType": "unit + browser"
+    },
+    {
+      "id": "AC35",
+      "scenario": "Search URL",
+      "expected": "?search=jet restores the search box and filters the rows without a console error",
+      "verificationType": "browser"
+    },
+    {
+      "id": "AC36",
+      "scenario": "Venue links written back",
+      "expected": "Every planned cell of 02_STORES reads back with the new value on the row of the same outlet_id; the rebuild places the accepted rows at their venue points and keeps held candidates unlinked; no district changes against the address",
+      "verificationType": "sheet read-back + unit"
     }
   ],
   "developerWorkflow": [
     "Read AGENTS.md, then handoff/README.md, PRODUCT_STATEMENT.md and the paired human/machine briefs",
     "Run npm test before changes; keep the row scopes, status unit, focus modes, tie rule, metric, frames and coverage contracts and the panel action contract",
-    "Change one bounded task at a time; preserve invariant IDs INV01–INV25",
+    "Change one bounded task at a time; preserve invariant IDs INV01–INV28",
     "Validate calculations with the real data in tests/ (tests/helpers.js loads it once)",
     "Review rendered Thai at 390 px and desktop in both themes; when tiles are blocked use a local harness for layout, then confirm the real-tile look live",
     "Bump the cache tag and versions together; publish; run npm run verify:live and walk the live site before reporting"
@@ -588,7 +732,7 @@
       "id": "N01",
       "title": "Brand logo registry (original bytes, sha256, role) and logos at detail zoom",
       "ownerRole": "research + developer",
-      "status": "backlog"
+      "status": "done (0.3.0)"
     },
     {
       "id": "N02",
@@ -618,7 +762,7 @@
       "id": "N06",
       "title": "Link more branches to CityMETER venues by venue id (research), never by name",
       "ownerRole": "research",
-      "status": "backlog"
+      "status": "partly done (P21: 139 rows linked in 0.3.0; 19 held candidates wait for the registry)"
     },
     {
       "id": "N07",
@@ -665,6 +809,36 @@
     {
       "id": "N14",
       "title": "Phone building view with the sheet closed: a map card with the name and the main figure, as in Shopping centers — owner to decide",
+      "ownerRole": "owner + developer",
+      "status": "backlog"
+    },
+    {
+      "id": "N16",
+      "title": "Registry duplicates met while linking (Pantip Lifestyle Hub, The Walk Kaset-Nawamin, The Walk Ratchapreuk): merge or explain in the Shopping Centers registry; the rows stay held candidates",
+      "ownerRole": "registry team",
+      "status": "backlog"
+    },
+    {
+      "id": "N17",
+      "title": "16_BRAND_LOGOS lists a light surface for The Cult Fitness Society, Red Rock Canyon Climbing Gym, Fitness7 whose white artwork needs a dark one: correct the library",
+      "ownerRole": "research",
+      "status": "backlog"
+    },
+    {
+      "id": "N18",
+      "title": "15 linked venues have no CityMETER UUID and 13 no reference point in the registry (16 and 14 rows); the registry gives Central Rama 9 district 1026 and Lasalle’s Avenue 1101 while their points fall in 1017 and 1047: give them ids, points and districts",
+      "ownerRole": "registry team",
+      "status": "backlog"
+    },
+    {
+      "id": "N19",
+      "title": "Physique 57 Bangkok (Erawan): the source point is 688 m from Erawan Bangkok, the venue its address links to — check the source point",
+      "ownerRole": "research",
+      "status": "backlog"
+    },
+    {
+      "id": "N20",
+      "title": "Tint the buildings that hold the filtered branches (e.g. search “jet”) in the focus, not only the building being looked at — needs an LDS map role for a secondary highlight; owner to decide",
       "ownerRole": "owner + developer",
       "status": "backlog"
     },
