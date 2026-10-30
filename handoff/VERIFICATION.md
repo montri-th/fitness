@@ -4,7 +4,7 @@
 
 | รุ่น | commit | Pages | ไบต์บนเว็บ (`npm run verify:live`) |
 |---|---|---|---|
-| 0.3.1 | tag r6 · commit และผลบันทึกในส่วน Live ด้านล่าง | `main` / root · 30 ต.ค. 2569 | ดูส่วน Live |
+| 0.3.1 | `6775063` (tag r6) · บันทึกผลใน commit ถัดไป | `main` / root · 30 ต.ค. 2569 (Pages run 40975562078 success) | 344 ok · 0 failed (commit `6775063`) |
 | 0.3.0 | `a3fdc80` (tag r4) · `7597b34` (tag r5: ฟอนต์ไอคอนอ้างด้วย hash) · บันทึกผลใน commit ถัดไป | `main` / root · 30 ต.ค. 2569 | 344 ok · 0 failed (commit `a3fdc80` และ `7597b34`) |
 | 0.2.1 | `8e212d0` (guard เอกสาร handoff ผลเดินตรวจ 0.2.0) · อัปเดตเอกสารนี้ใน commit ถัดไป | `main` / root · 29 ต.ค. 2569 | 158 ok · 0 failed (commit `8e212d0`) |
 | 0.2.0 | `621bc47` (โค้ด เอกสาร handoff) · บันทึกผล `c5a1dbd` | `main` / root · 29 ต.ค. 2569 | 157 ok · 0 failed (commit `621bc47`) |
@@ -32,7 +32,12 @@
 
 ### 0.3.1 · Live
 
-(บันทึกหลังเผยแพร่)
+Chrome ของเจ้าของ (tiles จริง ธีมมืดตามระบบ) 30 ต.ค. 2569 หลัง Pages ของ `6775063` และ CityMETER ศูนย์การค้า `0659c1c` · module ทุกตัวโหลด `?v=20261030-r6` · console ไม่มี error
+
+- `?store=POS-FIT-8b70023548ef` → มุมมองอาคาร หมุด Physique 57 อยู่ที่จุดของ Erawan Bangkok (13.743645, 100.540513, บทบาท `host_registry_reference_point`) · ชิป Erawan Bangkok · “อีก 1 สาขาในอาคารนี้” (Breathe Pilates) · รายละเอียดแหล่งขึ้น “เจ้าของข้อมูลยืนยัน 30 ต.ค. 2569 ว่าสาขาอยู่ใน Erawan Bangkok · จุดที่หน้าทางการเผยแพร่ห่าง 689 ม. จึงไม่ใช้” (AC37)
+- `?venue=SC-C1138` (รหัสทะเบียน) → Gaysorn Village เปิดเป็นมุมมองอาคาร URL เปลี่ยนเป็น uuid · หมุด Jetts มีโลโก้ · ลิงก์ “ดูศูนย์นี้ใน CityMETER ศูนย์การค้า” → `shoppingcenter/?venue=SC-C1138` · `?venue=SC-001278` → Erawan Bangkok 2 สาขา และลิงก์กลับ (AC38)
+- ปลายทางบน CityMETER ศูนย์การค้า 0.1.5: Gaysorn Village แสดง Jetts ในร้านข้างใน และ Erawan Bangkok แสดง Breathe Pilates Thailand กับ Physique 57 Bangkok พร้อมโลโก้ ลิงก์มาที่เว็บนี้ด้วยรหัสทะเบียนเดียวกัน
+- ยังไม่ได้ตรวจบนเว็บจริง: จอ 390 px (ตรวจใน harness แล้ว ไม่ล้นแนวนอน) และธีมสว่างของเว็บนี้
 
 ## รุ่น 0.3.0 — แบรนด์มาก่อนสาขา · โลโก้ · แผงสั้น · ถามต่อใน Google · ผูกศูนย์การค้า
 
