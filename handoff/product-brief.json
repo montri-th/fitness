@@ -3,7 +3,7 @@
   "schemaVersion": "1.5.0",
   "documentType": "product-brief",
   "productId": "citymeter-fitness",
-  "productVersion": "0.4.0",
+  "productVersion": "0.4.1",
   "updatedOn": "2026-10-30",
   "datasetCheckedOn": "2026-10-26",
   "language": "th (UI) · en (contracts)",
@@ -623,6 +623,6 @@
     "site": "GitHub Pages from main /root",
     "handoff": "dist/CityMETER-Fitness-Developer-Handoff.zip (START_HERE.md, RELEASE_RECEIPT.json, evidence/, source/)",
     "liveCheck": "npm run verify:live",
-    "cacheTag": "?v=20261109-r1 on every entry file and, through the import map in index.html, on every ES module; the frame files take the same tag from import.meta.url; bump it with package.json version (tests/release.test.js); icon fonts inside the stylesheets carry ?v=<first 8 hex of their SHA-256> (tests/icons.test.js)"
+    "cacheTag": "?v=20261109-r2 on every entry file and, through the import map in index.html, on every ES module; the frame files take the same tag from import.meta.url; bump it with package.json version (tests/release.test.js); icon fonts inside the stylesheets carry ?v=<first 8 hex of their SHA-256> (tests/icons.test.js)"
   }
 }
