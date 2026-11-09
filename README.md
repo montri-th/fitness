@@ -64,7 +64,7 @@ js/building-join.js   จุดของสาขาและศูนย์ก�
 js/venue-xray.js      วาดอาคารที่ดูอยู่เหนืออาคารอื่นทั้งหมด (custom layer, ใช้ร่วมกับ Luxury Brands / Shopping centers / Restaurants)
 js/massing.js · js/geometry.js · js/mvt.js · js/map-style.js · js/camera.js · js/vendors.js
                       มวลอาคารเมือง, basemap, กล้อง (fitBuilding · twoPointBearing จาก Shopping centers), MapLibre loader
-js/profile-model.js · js/panel.js · js/chart-model.js · js/charts.js · js/breadcrumb.js · js/navigation.js · js/launch.js
+js/profile-model.js · js/panel.js · js/chart-model.js · js/charts.js · js/breadcrumb.js · js/navigation.js · js/shell/launch.js
 data/                 fitness.json, area-index.json, frames/{CODE}.json (77 จังหวัด), provinces.geojson, boundary-receipts.json,
                       brand-logos.json, venue-logos.json (+ assets/brand-logos/, assets/venue-logos/)
 scripts/              build-boundaries.py, admin_text.py, build-data.py, build-logos.py, fetch-edge-geometry.py, build-receipts.py,
