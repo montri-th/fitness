@@ -22,7 +22,7 @@ Static site บน GitHub Pages (main / root) · ES modules ผ่าน import 
 | `js/maplibre-guard.js` | กัน TypeError ของ MapLibre 5.6.2 ใน tile cover เมื่อกล้องเอียงซูมออกผ่าน 13–14 (`guardRetainedTiles`, ติดตั้งเมื่อ style โหลด, ใช้เฉพาะรุ่น 5.6.2) |
 | `js/massing.js` · `js/geometry.js` · `js/mvt.js` · `js/map-style.js` · `js/camera.js` · `js/vendors.js` | มวลอาคาร (`featuresOf`, `fitPointsOf`, `obstaclesNear`, `setScene`) basemap กล้อง (`fitBuilding`, `twoPointBearing` จาก Shopping centers) และ loader |
 | `js/chart-model.js` · `js/charts.js` | กราฟ count / mix / brands |
-| `js/navigation.js` · `js/launch.js` | ไอคอน nav-7 + help dialog, หน้าโหลดและ error |
+| `js/navigation.js` · `js/shell/launch.js` | ไอคอน nav-7 + help dialog, หน้าโหลดและ error |
 
 ## งาน
 

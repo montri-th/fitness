@@ -43,7 +43,9 @@
  * PROVINCE_FILL_MAX_ZOOM a เขต/อำเภอ of the selected จังหวัด, else a province → เขต/อำเภอ (`area-hit`, every zoom
  * from AREA_MIN_ZOOM). Quiet context dots are never targets.
  * Panel modes: overview (+ brand card with a brand filter) | area | venue | building | store (with a back stack).
- * URL state: filters, area, venue, areas, view, store, view3d.
+ * URL state (own names, inside): filters, area, venue, areas, view, store, view3d — written in the shared grammar
+ * at · e · f.* · focus · view · v3d by citymeter-shell (js/shell/url.js), one browser history entry per level (the
+ * back button goes up a level).
  */
 import {provinces as provinceList, provinceByCode, provinceCodeFrom, setProvinces, decodeDataset, filterRows, summarize, hasPoint, unitWords, STATUS_TH} from './model.js';
 import {buildAreaIndex, areaWord, areaLocator, recordBounds} from './areas.js';
@@ -65,6 +67,8 @@ import {presetFor, applyPreset, fitPitched, fitBuilding, twoPointBearing, screen
 import {installVenueXray} from './venue-xray.js';
 import {guardRetainedTiles} from './maplibre-guard.js';
 import {buildBreadcrumb, renderBreadcrumb, breadcrumbText} from './breadcrumb.js';
+import {createCodec, createNavigator} from './shell/url.js';
+import {pageTitle} from './shell/title.js';
 import {rampLegendHTML} from './scales.js';
 import {cueMarkup} from './cues.js';
 
@@ -130,6 +134,21 @@ const twoPoint = () => state.panel.mode === 'building' || (state.panel.mode === 
   || (state.panel.mode === 'store' && hasPoint(rowById(state.panel.id)));
 const cameraPreset = () => presetFor({view3d: state.view3d, mode: state.panel.mode === 'overview' ? 'overview' : 'detail', twoPoint: twoPoint()});
 
+/* ---------- address (citymeter-shell, js/shell/url.js) ---------- */
+// The page keeps its own parameter names inside (saveURL / restoreFromURL); the shell writes them in the shared
+// grammar at · e · f.* · focus · view · v3d, and opening a district, a venue or a branch adds one browser history
+// entry, so the back button goes up a level. `at` reaches the district (BKK/D/1039). The dataset registry has no code
+// for this dataset, so the address carries no `d` (citymeter-shell 0.4.3). The `e` kinds are provisional until the
+// registry declares them: `store` (this dataset's branch ids) and `venue` (the venue's CityMETER host id; the
+// Shopping Center registry id SC-… still opens it, as Shopping Center links here). Old links (?province=, ?area=,
+// ?venue=, ?store=, ?areas=, ?view=, ?view3d= …) still open and are rewritten. A building view has no address of its
+// own: the address stays on what it was opened from.
+const nav = createNavigator(createCodec({
+  dataset: '', levels: ['P', 'D'], place: {province: 'province', D: 'area'},
+  items: {store: 'store', venue: 'venue'}, filters: FIELDS,
+  provinceOf: (code, kind) => (kind === 'D' ? areaById(code)?.province || '' : ''),
+}), {onPop: restoreFromHistory});
+
 function saveURL() {
   const f = values(), p = new URLSearchParams();
   for (const [k, v] of Object.entries(f)) if (v) p.set(k, v);
@@ -140,7 +159,8 @@ function saveURL() {
   if (state.view !== 'count') p.set('view', state.view);
   if (state.panel.mode === 'store' && state.panel.id) p.set('store', state.panel.id);
   if (!state.view3d) p.set('view3d', '0');
-  history.replaceState(null, '', location.pathname + (p.size ? '?' + p : ''));
+  // A building view has no address of its own: the address stays on what it was opened from.
+  if (state.panel.mode !== 'building') nav.commit(p);
 }
 
 /* ---------- theme ---------- */
@@ -311,8 +331,10 @@ function renderCrumbs() {
     crumbs = buildBreadcrumb({province: $('province').value, area: state.selectedArea ? areaById(state.selectedArea) : null});
   }
   $('crumbs').innerHTML = renderBreadcrumb(crumbs);
-  const title = mode === 'store' ? `${[rowById(id)?.brand?.name, branchLabel(rowById(id) || {})].filter(Boolean).join(' ') || rowById(id)?.name || ''} · ` : mode === 'building' ? 'อาคาร · ' : '';
-  document.title = `${title}${breadcrumbText(crumbs)} · Fitness · CityMETER`;
+  // Tab title: what the view shows, then the product, ≤ 60 characters (LDS FAVICON-01, js/shell/title.js).
+  const place = crumbs[crumbs.length - 1].label;
+  document.title = pageTitle(mode === 'store' ? [rowById(id)?.brand?.name, branchLabel(rowById(id) || {})].filter(Boolean).join(' ') || rowById(id)?.name || place
+    : mode === 'building' ? `อาคาร ${place}` : mode === 'venue' ? place : `${unit().subject} ${place}`);
   return crumbs;
 }
 
@@ -406,6 +428,8 @@ function pushHistory() {
 }
 
 function goBack() {
+  // Every level change is a browser history entry (citymeter-shell): go up the way the browser's button does.
+  if (state.panel.mode !== 'building' && nav.canGoBack()) { nav.back(); return; }
   const previous = state.history.pop();
   if (!previous) { state.selectedArea = ''; state.selectedVenue = ''; state.panel = overviewPanel(); update({fit: true}); return; }
   // Leaving or reaching a building view always moves the camera (the building view sits at building zoom).
@@ -814,7 +838,7 @@ function onPanelAction(event) {
     case 'crumb-country': $('province').value = ''; resetToOverview(); break;
     case 'crumb-province': { const c = provinceCodeFrom(id); if (c) $('province').value = c; resetToOverview(); break; }
     case 'crumb-area': selectArea(id); break;
-    case 'crumb-venue': selectVenue(id); break;
+    case 'crumb-site': selectVenue(id); break;
     case 'crumb-expand': { const ol = target.closest('.crumbs'); ol.classList.add('is-expanded'); target.setAttribute('aria-expanded', 'true'); ol.querySelector('.crumb:not(.crumb-more)')?.focus({preventScroll: true}); break; }
     default: break;
   }
@@ -1418,7 +1442,7 @@ function refreshOptionCounts() {
 }
 
 function restoreFromURL() {
-  const p = new URLSearchParams(location.search);
+  const p = nav.read();
   for (const f of FIELDS) if (p.has(f)) { const v = f === 'province' ? provinceCodeFrom(p.get(f)) : p.get(f); if (f === 'search' || [...($(f).options || [])].some(o => o.value === v)) $(f).value = v; }
   if (['count', 'mix', 'brands'].includes(p.get('view'))) state.view = p.get('view');
   if (p.get('area') && areaById(p.get('area'))) state.selectedArea = p.get('area');
@@ -1433,6 +1457,25 @@ function restoreFromURL() {
   if (store) {
     if (!p.has('status') && store.status !== 'listed') $('status').value = 'all';
     state.panel = {mode: 'store', id: store.id};
+  }
+}
+
+/** Browser back / forward (citymeter-shell): show the level the restored address names, framed as on a fresh load. */
+function restoreFromHistory() {
+  for (const f of FIELDS) $(f).value = '';
+  Object.assign(state, {view: 'count', selectedArea: '', selectedVenue: '', focusAreaIds: [], autoFocus: true, panel: overviewPanel(), history: [], buildingSel: null, framed: null});
+  state.popup?.remove(); state.popup = null;
+  refreshOptionCounts();
+  restoreFromURL();
+  refreshOptionCounts();
+  $('toggle-3d').setAttribute('aria-pressed', String(state.view3d));
+  const r = state.panel.mode === 'store' ? rowById(state.panel.id) : null;
+  const own = twoPoint() || Boolean(r && (r.area || r.province));
+  update({fit: !own});
+  if (own && state.loaded) {
+    if (twoPoint()) frameFocus();
+    else fitRecord(r.area ? areaById(r.area) : provinceRecord(r.province), {maxZoom: 15});
+    state.lastPreset = cameraPreset();
   }
 }
 
