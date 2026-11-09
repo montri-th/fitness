@@ -3,8 +3,8 @@
   "schemaVersion": "1.5.0",
   "documentType": "product-statement",
   "productId": "citymeter-fitness",
-  "productVersion": "0.4.4",
-  "updatedOn": "2026-10-30",
+  "productVersion": "0.4.5",
+  "updatedOn": "2026-11-09",
   "humanDocument": "../PRODUCT_STATEMENT.md",
   "standard": "Landometer Master Brand Brief v0.5.3 §7.2 (Who / What / Which / How) with the §3.7 evidence standard",
   "evidenceLabels": [
@@ -138,7 +138,7 @@
     "CityMETER production base info and boundaries (receipts in data/boundary-receipts.json)",
     "OpenGISData-Thailand names (CC BY 4.0) for reading English addresses"
   ],
-  "spatial_granularity": "เขต/อำเภอ (282 of 352 listed branches); province (40); none (30); points on 157 rows (27 source points, 130 venue reference points)",
+  "spatial_granularity": "เขต/อำเภอ (288 of 358 listed branches); province (40); none (30); points on 158 rows (27 branch source points, 1 attributed building reference point, 130 venue registry points)",
   "temporal_coverage": "single check of each official page on 2026-10-26",
   "update_frequency": "per research round; no automatic refresh yet (backlog N03)",
   "last_updated": "2026-10-26",
@@ -218,8 +218,8 @@
   },
   "known_limitations": [
     "a declared set of 126 brands, not every fitness business in Thailand",
-    "70 of 352 listed branches have no district (province only, no province, or a province conflict)",
-    "157 rows have a point, 130 of them a venue’s registry reference point (not a shopfront); pins are not the distribution — district colours are",
+    "70 of 358 listed branches have no district (province only, no province, or a province conflict)",
+    "158 rows have a point, 130 of them a venue’s registry reference point (not a shopfront); pins are not the distribution — district colours are",
     "status = what the official page shows on the check date, not daily opening, size, members, price or footfall",
     "company names as the sources state them, not checked against the company registry; a missing record does not mean independent",
     "147 rows are linked to 128 CityMETER venues by id (13 of them without a registry reference point yet); 19 rows are held candidates (name or numbering, registry duplicate, parent component) and are never drawn as links; the links were written into the research sheet on 2026-10-30 and read back cell by cell — the demo never links by name",

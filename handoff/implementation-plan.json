@@ -3,8 +3,8 @@
   "schemaVersion": "1.5.0",
   "documentType": "implementation-plan",
   "productId": "citymeter-fitness",
-  "productVersion": "0.4.4",
-  "updatedOn": "2026-10-30",
+  "productVersion": "0.4.5",
+  "updatedOn": "2026-11-09",
   "brief": "product-brief.json",
   "statement": "product-statement.json",
   "humanPlan": "IMPLEMENTATION_PLAN.md",
@@ -546,13 +546,13 @@
     {
       "id": "AC02",
       "scenario": "Default first Aha",
-      "expected": "37% ของสาขาในกรุงเทพมหานครที่ระบุเขตได้ อยู่ใน 3 เขตนี้ — วัฒนา · ปทุมวัน · คลองเตย, 62 จาก 167, อีก 33 ระบุได้แค่จังหวัด, สตูดิโอ 58% (36/62) vs 30% (32/105), นอกกรุงเทพมหานคร: อำเภอเมืองภูเก็ต 17; computed, not constants",
+      "expected": "36% ของสาขาในกรุงเทพมหานครที่ระบุเขตได้ อยู่ใน 3 เขตนี้ — วัฒนา · ปทุมวัน · คลองเตย, 63 จาก 173, อีก 33 ระบุได้แค่จังหวัด, สตูดิโอ 57% (36/63) vs 29% (32/110), นอกกรุงเทพมหานคร: อำเภอเมืองภูเก็ต 17; computed, not constants",
       "verificationType": "unit + browser"
     },
     {
       "id": "AC03",
       "scenario": "Default unit",
-      "expected": "352 สาขา (listed); announced 19 / closed 2 / review 5 named apart in one line",
+      "expected": "358 สาขา (listed); announced 19 / closed 2 / review 5 named apart in one line",
       "verificationType": "unit"
     },
     {

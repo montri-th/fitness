@@ -29,7 +29,7 @@ A province disagreement is never settled by choosing a side: the row stays in th
 every area, and is listed in meta.conflicts for the research team.
 
 Not copied: addresses, unit/floor, phone numbers, map links, coordinates' raw strings, researcher notes, branch
-source ids, company research notes, internal sheet URLs. Source links are public https pages of the operator.
+source ids, outlet-level company research, internal sheet URLs. Source links are public https evidence.
 """
 import argparse, collections, csv, datetime, hashlib, io, json, math, os, re, sys
 
@@ -72,11 +72,12 @@ STATUS_OF = {
 ADMIN = ['point', 'host', 'address', 'province', 'conflict', 'none']
 ADDRESS_HOW = ['', 'marker', 'pair', 'mueang', 'trailing']
 POINT_ROLES = ['store_source_point', 'operator_published_map_destination_point', 'official_social_profile_map_point_historical',
-               'host_registry_reference_point']
+               'host_registry_reference_point', 'external_host_reference_point']
 SOURCE_TYPES = ['official_operator_page', 'official_operator_web', 'official_operator_locator_rendered', 'official_operator_social',
                 'official_line_oa', 'official_operator_facebook', 'official_operator_network_locator', 'official_linktree',
                 'official_operator_facebook_closure_notice', 'official_operator_website', 'official_company_profile_index',
-                'official_facebook_rendered', 'official_host_directory']
+                'official_facebook_rendered', 'official_host_directory', 'leasing_agent_statement',
+                'published_branch_launch', 'business_map_listing']
 COVERAGE = ['full', 'full_locator_enumerated', 'official_sites_enumerated', 'partial']
 PRIVATE_HOST = re.compile(r'(^|\.)(drive\.google\.com|docs\.google\.com|drive\.usercontent\.google\.com|googleusercontent\.com|maps\.app\.goo\.gl|goo\.gl)$')
 MAPS_PATH = re.compile(r'^https://(www\.)?google\.[a-z.]+/maps', re.I)
@@ -545,6 +546,10 @@ def main():
         status = STATUS_OF[raw_status]
         src = public_url(r.get('source_url'))
         stat_url = public_url(r.get('status_source_url'))
+        if not stat_url and text(r.get('status_source_url')):
+            # The sheet retains the external map link. A public merchant listing is supplementary evidence.
+            stat_url = next((u for u in map(public_url, text(r.get('alternate_source_urls')).splitlines())
+                             if u.startswith('https://www.ktc.co.th/upload/promotion-sports-fitness/')), '')
         cols['key'].append(key)
         cols['name'].append(text(r.get('store_name')))
         cols['brand'].append(brand_index[bid])
@@ -603,6 +608,17 @@ def main():
     if cov_bad:
         sys.exit(f'14_NETWORK_COVERAGE observed_pos_rows differ for {cov_bad}')
 
+    # Outlet-level company research stays in the sheet. Preserve companies that also have a public role.
+    outlet_companies = {r['company'] for r in relationships if r['objectType'] == 'outlet'}
+    for r in relationships:
+        if r['objectType'] == 'outlet' and r['object'] not in seen:
+            sys.exit(f"relationship {r['id']}: outlet {r['object']} not in 02_STORES")
+    public_relationships = [r for r in relationships if r['objectType'] != 'outlet']
+    public_company_ids = {r['company'] for r in public_relationships}
+    public_company_ids.update(r['object'] for r in public_relationships if r['objectType'] == 'company')
+    public_company_ids.update(b[role] for b in brands for role in ('operator', 'owner', 'parent'))
+    public_companies = [c for c in companies if c['id'] not in outlet_companies or c['id'] in public_company_ids]
+
     receipts = {f: json.load(open(os.path.join(a.api, f))) for f in sorted(os.listdir(a.api)) if f.endswith('.meta.json')}
     meta = {
         'dataset': 'CityMETER Fitness', 'datasetTh': 'ฟิตเนสและสตูดิโอในประเทศไทย',
@@ -610,9 +626,10 @@ def main():
         'sheetTitle': 'CityMETER Fitness Thailand — Research Master 2026-10-26',
         'exportSha256': export_sha, 'sheetStatus': 'research_master',
         'asOf': checked, 'checkedOn': checked, 'builtOn': datetime.date.today().isoformat(),
+        'latestBranchCheck': max((d for d in cols['checked'] if re.fullmatch(r'\d{4}-\d{2}-\d{2}', d)), default=checked),
         'rows': n, 'counts': dict(sorted(stats.items())), 'readmeCheck': {k: v[0] for k, v in check.items()},
         'unit': {
-            'row': 'one row of 02_STORES — a source-qualified branch observation (official operator page, locator, social profile or announcement); not a field-verified storefront',
+            'row': 'one row of 02_STORES — a source-qualified branch observation, with the evidence type shown on each row',
             'default': 'listed — rows whose source still lists the service on the check date (source_listed); announced, closed and review rows are counted apart and never added to it',
         },
         'statusMap': STATUS_OF,
@@ -641,6 +658,8 @@ def main():
         'ownerConfirmedHost': {
             'rule': 'map_audit_status owner_confirmed_located_in_host_YYYYMMDD: the owner confirmed on the map that the branch is inside its accepted venue; the venue registry reference point is drawn and the published source point (kept in the sheet and in points.source) is not',
             'rows': owner_host},
+        'externalHostPointAttribution': {'provider': '© OpenStreetMap contributors', 'license': 'ODbL',
+                                         'url': 'https://www.openstreetmap.org/copyright'},
         'registry': {'dataset': 'CityMETER Shopping Centers & Retail Venues Thailand — Research Master (public snapshot of montri-th/shoppingcenter)',
                      'asOf': getattr(registry, 'as_of', ''), 'commit': a.registry_commit,
                      'files': {'count': len(registry.files),
@@ -650,13 +669,13 @@ def main():
                      'use': 'reference point and name of a venue a branch row links with an accepted status when 07_SHOPPING_CENTERS does not carry it; never a branch coordinate, unit or opening state'} if a.registry else None,
         'excludedFields': ['address', 'unit_floor', 'public_business_phone', 'map_url', 'raw coordinates strings', 'notes',
                            'branch_source_id', 'company_research_note', 'coverage_note', 'sister_brand_names (15_SISTER_BRANDS: Thai presence mostly not established)', 'README text', 'venue source_url',
-                           'internal sheet and registry URLs'],
+                           'outlet-level company research', 'internal sheet and registry URLs'],
     }
     out = {
         'meta': meta,
         'groups': [{'id': g[0], 'th': g[1], 'en': g[2], 'segments': g[3]} for g in GROUPS],
         'segments': [{'id': s, 'th': SEGMENT_TH[s], 'group': GROUPS[SEGMENT_GROUP[s]][0]} for s in segments],
-        'brands': brands, 'companies': companies, 'relationships': relationships, 'venues': venues,
+        'brands': brands, 'companies': public_companies, 'relationships': public_relationships, 'venues': venues,
         'urls': urls,
         'vocab': {'status': STATUS, 'statusRaw': raw_statuses, 'admin': ADMIN, 'how': ADDRESS_HOW, 'pointRoles': POINT_ROLES,
                   'sourceTypes': SOURCE_TYPES, 'scope': cols.pop('scopeVocab'), 'origin': cols.pop('originVocab')},

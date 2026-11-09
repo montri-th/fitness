@@ -5,14 +5,14 @@ import {hasPoint, filterRows, provinces, unitWords, STATUS_TH} from '../js/model
 
 const raw = () => load().raw;
 
-test('fitness.json decodes to the 378 rows of the research master, nothing dropped, ids unique', () => {
+test('fitness.json decodes to the 384 rows of the research master, nothing dropped, ids unique', () => {
   const {raw, data} = load();
-  assert.equal(raw.meta.rows, 378);
+  assert.equal(raw.meta.rows, 384);
   assert.equal(raw.meta.sheetStatus, 'research_master', 'the source sheet is a research master: the demo says so in its handoff');
   for (const k of ['key', 'name', 'brand', 'group', 'segment', 'status', 'statusRaw', 'source', 'url', 'statusUrl', 'checked', 'province', 'district', 'admin', 'how', 'words', 'venue']) {
-    assert.equal(raw.cols[k].length, 378, `column ${k} is complete`);
+    assert.equal(raw.cols[k].length, 384, `column ${k} is complete`);
   }
-  assert.equal(data.rows.length, 378);
+  assert.equal(data.rows.length, 384);
   assert.equal(data.dropped, 0, 'every placed row resolves to a production district');
   assert.equal(new Set(data.rows.map(r => r.id)).size, data.rows.length, 'row keys are unique');
   assert.ok(data.rows.every(r => /^POS-FIT-[0-9a-f]{12}$/.test(r.id)), 'the sheet’s own outlet ids');
@@ -21,7 +21,7 @@ test('fitness.json decodes to the 378 rows of the research master, nothing dropp
 test('the build reconciles with the sheet’s own headline figures (00_README) and its coverage tab', () => {
   const {raw, data} = load();
   // Snapshot values (regression fixtures, never UI constants).
-  assert.deepEqual(raw.meta.readmeCheck, {brands: 126, rows: 378, listed: 352, points: 28, companies: 44, relationships: 48});
+  assert.deepEqual(raw.meta.readmeCheck, {brands: 126, rows: 384, listed: 358, points: 29, companies: 50, relationships: 54});
   assert.equal(data.brands.length, 126);
   assert.equal(data.companies.size, 44);
   assert.equal(data.relationships.length, 48);
@@ -30,7 +30,7 @@ test('the build reconciles with the sheet’s own headline figures (00_README) a
   for (const r of data.rows) { add(`status.${r.status}`); add(`admin.${r.admin}`); if (r.how) add(`address.${r.how}`); }
   for (const [k, v] of Object.entries(counts)) assert.equal(raw.meta.counts[k], v, k);
   assert.deepEqual({listed: counts['status.listed'], announced: counts['status.announced'], closed: counts['status.closed'], review: counts['status.review']},
-    {listed: 352, announced: 19, closed: 2, review: 5});
+    {listed: 358, announced: 19, closed: 2, review: 5});
   // Every brand's rows by status are its own rows (01_BRANDS ↔ 02_STORES by brand id).
   for (const b of data.brands) {
     const mine = data.rows.filter(r => r.brand?.id === b.id);
@@ -42,10 +42,10 @@ test('the build reconciles with the sheet’s own headline figures (00_README) a
 
 test('counting unit: the default counts listed branches (“สาขา”); other statuses are counted apart as “รายการ”', () => {
   const {data, listed} = load();
-  assert.equal(filterRows(data.rows, {}).length, 352, 'the default unit is listed rows');
-  assert.equal(listed.length, 352);
+  assert.equal(filterRows(data.rows, {}).length, 358, 'the default unit is listed rows');
+  assert.equal(listed.length, 358);
   assert.equal(filterRows(data.rows, {status: 'announced'}).length, 19);
-  assert.equal(filterRows(data.rows, {status: 'all'}).length, 378);
+  assert.equal(filterRows(data.rows, {status: 'all'}).length, 384);
   assert.equal(unitWords().one, 'สาขา');
   assert.equal(unitWords('listed').one, 'สาขา');
   for (const s of ['announced', 'closed', 'review', 'all']) assert.equal(unitWords(s).one, 'รายการ', s);
@@ -75,7 +75,7 @@ test('membership: a placed row sits in an existing production district of its ow
   assert.ok(conflicts.every(r => !r.area && !r.province));
   // Snapshot fixture: listed rows by placement.
   const listed = filterRows(data.rows, {});
-  assert.equal(listed.filter(r => r.area).length, 282);
+  assert.equal(listed.filter(r => r.area).length, 288);
   assert.equal(listed.filter(r => r.province && !r.area).length, 40);
   assert.equal(listed.filter(r => !r.province).length, 30);
 });
@@ -83,7 +83,7 @@ test('membership: a placed row sits in an existing production district of its ow
 test('points are the source’s own point or the CityMETER venue registry point, inside Thailand, never invented', () => {
   const {data} = load();
   const withPoint = data.rows.filter(hasPoint);
-  assert.equal(withPoint.length, 157);
+  assert.equal(withPoint.length, 158);
   // 129 rows without a source point + Physique 57 Erawan, whose source point the owner superseded (meta.ownerConfirmedHost)
   assert.equal(withPoint.filter(r => r.pointRole === 'host_registry_reference_point').length, 130);
   for (const r of withPoint) {
@@ -111,9 +111,9 @@ test('owner map audit (2026-10-30): a branch confirmed inside its venue is drawn
   assert.deepEqual([r.latitude, r.longitude], [r.venue.latitude, r.venue.longitude]);
   assert.deepEqual(r.ownerHost, {on: '2026-10-30', sourcePointM: 689});
   assert.ok(!raw.points.some(([i]) => raw.cols.key[i] === r.id), 'the superseded source point is not published as a drawn point');
-  // The 00_README cross-check still counts the published source points (28); 27 are drawn.
-  assert.equal(raw.meta.counts['points.source'], 28);
-  assert.equal(raw.points.length, 27);
+  // The 00_README cross-check still counts the published source points (29); 28 are drawn.
+  assert.equal(raw.meta.counts['points.source'], 29);
+  assert.equal(raw.points.length, 28);
   assert.equal(raw.meta.counts['points.ownerConfirmedHost'], 1);
   assert.ok(data.rows.filter(x => x.ownerHost).length === 1);
 });
@@ -139,7 +139,8 @@ test('venues: CityMETER Shopping Center registry records by id; a point decides 
   assert.equal(data.rows.filter(r => r.venue).length, 147);
   // Only accepted links are drawn; held candidates and unmatched rows carry no venue.
   assert.deepEqual(raw.meta.venueLinks, {acceptedNoPoint: 14, acceptedWithPoint: 133, accepted_identity_and_located_in: 147,
-    candidate_name_or_numbering_review: 8, candidate_parent_component_review: 4, candidate_registry_duplicate_review: 7, not_matched: 212});
+    candidate_name_or_numbering_review: 8, candidate_parent_component_review: 3, candidate_registry_duplicate_review: 7, not_matched: 215,
+    review_named_host_component_identity_or_operation: 1, source_qualified_named_host_identity: 3});
 });
 
 test('companies and relationships join by id only; every id resolves', () => {
