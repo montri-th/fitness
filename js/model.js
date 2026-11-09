@@ -3,7 +3,7 @@
  *
  * Rows are the branch observations of “CityMETER Fitness Thailand — Research Master 2026-10-26”
  * (data/fitness.json, built by scripts/build-data.py). One row = one row of the sheet's 02_STORES: an
- * official operator page, locator, social profile or announcement naming one branch. Nothing here merges,
+ * source observation naming one branch. Nothing here merges,
  * moves or mutates a row.
  *
  * Counting unit (a contract, see DATA_METHOD.md §2):
@@ -27,7 +27,7 @@ export const FAMILY = Object.freeze({gym: 'gym', ems: 'gym', training: 'studio',
 
 export const STATUS_TH = Object.freeze({listed: 'เปิดตามแหล่ง', announced: 'ประกาศเปิด', closed: 'ปิดแล้ว', review: 'ต้องตรวจสถานะ'});
 export const STATUS_RAW_TH = Object.freeze({
-  source_listed: 'แหล่งทางการยังแสดงสาขานี้ ณ วันตรวจ',
+  source_listed: 'แหล่งที่ตรวจสอบยังระบุสาขานี้ ณ วันตรวจ',
   announced_opening_soon: 'แหล่งทางการประกาศว่ากำลังจะเปิด', announced_coming_soon: 'แหล่งทางการประกาศ coming soon',
   announced_presale: 'แหล่งทางการเปิดขายสมาชิกล่วงหน้า (presale)', announced_opening_date_today: 'แหล่งทางการประกาศวันเปิดตรงกับวันตรวจ',
   permanently_closed: 'แหล่งทางการแจ้งปิดถาวร', closed_official: 'แหล่งทางการระบุว่าปิดแล้ว',

@@ -34,17 +34,17 @@ test('every panel view ends with dataset · source · date · boundary and says 
   for (const [name, html] of Object.entries(views)) {
     const t = text(html);
     assert.ok(t.includes('ชุดข้อมูล CityMETER Fitness'), `${name}: dataset`);
-    assert.ok(t.includes('แหล่ง หน้าทางการของแต่ละแบรนด์'), `${name}: source`);
+    assert.ok(t.includes('แหล่ง หน้าทางการและหลักฐานรายสาขา'), `${name}: source`);
     assert.ok(t.includes('ตรวจ 26 ต.ค. 2569'), `${name}: date`);
     assert.ok(/ขอบเขต \S/.test(t), `${name}: boundary`);
-    assert.ok(t.includes('สาขา = สาขาที่หน้าทางการของแบรนด์ยังแสดง ณ วันตรวจ · 126 แบรนด์ในชุดข้อมูล ไม่ใช่ทุกฟิตเนสในประเทศ'), `${name}: unit`);
+    assert.ok(t.includes('สาขา = สาขาที่แหล่งที่ตรวจสอบยังระบุ ณ วันตรวจ · 126 แบรนด์ในชุดข้อมูล ไม่ใช่ทุกฟิตเนสในประเทศ'), `${name}: unit`);
     assert.equal((html.match(/class="hint panel-foot provenance"/g) || []).length, 1, `${name}: exactly one provenance line`);
     assert.ok(!/ตั้งอยู่ใน|ยอดขาย|ส่วนแบ่งตลาด|ผู้ใช้บริการ/.test(t), `${name}: no located-inside, sales, market-share or footfall claim`);
   }
   const o = text(views.overview);
-  assert.ok(o.includes('37% ของสาขาในกรุงเทพมหานครที่ระบุเขตได้ อยู่ใน 3 เขตนี้'), o.slice(0, 300));
-  assert.ok(o.includes('62 จาก 167 สาขา') && o.includes('อีก 33 สาขา ในกรุงเทพมหานครระบุได้แค่จังหวัด'), 'numerator, denominator and the unplaced rows');
-  assert.ok(o.includes('สตูดิโอ 58% ของสาขาใน 3 เขตนี้ (36/62) · เขตอื่นของกรุงเทพมหานคร 30% (32/105)'), 'the personality comparison states both bases');
+  assert.ok(o.includes('36% ของสาขาในกรุงเทพมหานครที่ระบุเขตได้ อยู่ใน 3 เขตนี้'), o.slice(0, 300));
+  assert.ok(o.includes('63 จาก 173 สาขา') && o.includes('อีก 33 สาขา ในกรุงเทพมหานครระบุได้แค่จังหวัด'), 'numerator, denominator and the unplaced rows');
+  assert.ok(o.includes('สตูดิโอ 57% ของสาขาใน 3 เขตนี้ (36/63) · เขตอื่นของกรุงเทพมหานคร 29% (32/110)'), 'the personality comparison states both bases');
   assert.ok(o.includes('นอกกรุงเทพมหานครมากที่สุด: อำเภอเมืองภูเก็ต ภูเก็ต 17 สาขา'));
   assert.ok(o.includes('ไม่รวมในตัวเลข: ประกาศเปิด 19 · ปิดแล้ว 2 · ต้องตรวจสถานะ 5 รายการ'), 'other statuses are counted apart, one click away');
   assert.ok(o.includes('ไม่อยู่ในอันดับ ระบุได้แค่จังหวัด 40 · ไม่ระบุจังหวัด 29 · ข้อมูลจังหวัดขัดกัน 1 สาขา'));
@@ -53,7 +53,7 @@ test('every panel view ends with dataset · source · date · boundary and says 
   assert.ok(text(provenance(ctxFor(data, index, 'all'), 'x')).includes('รายการ = ทุกแถวในชุดข้อมูลทุกสถานะ ไม่ใช่จำนวนสาขาที่เปิด'));
   const a = text(views.area);
   assert.ok(a.includes('เขตวัฒนา') && a.includes('อันดับ 1 จาก 76 ทั่วประเทศ'), a.slice(0, 200));
-  assert.ok(a.includes('15% = 25 จาก 167 สาขา ในกรุงเทพมหานครที่ระบุเขตได้'));
+  assert.ok(a.includes('15% = 26 จาก 173 สาขา ในกรุงเทพมหานครที่ระบุเขตได้'));
 });
 
 test('brand card: companies by recorded role with their evidence link, investors one level up, brands of the same company by id', () => {
@@ -104,8 +104,8 @@ test('missing stays missing: no point, province only, conflict — each says so,
   const rows = filterRows(data.rows, {});
   const z = text(renderArea(buildAreaProfile(rows, '1001', index, data.groups, data.venues), () => '#000', ctxFor(data, index)));
   assert.ok(z.includes('ไม่พบสาขาฟิตเนสและสตูดิโอในเขตพระนคร'));
-  assert.ok(z.includes('ไม่มีแบรนด์ใดในชุดข้อมูลที่หน้าทางการระบุสาขาในพื้นที่นี้ ณ วันตรวจ'));
-  assert.ok(z.includes('ตัวกรองเดียวกันพบ 352 สาขาในพื้นที่อื่น'));
+  assert.ok(z.includes('ไม่พบสาขาในพื้นที่นี้ตามแหล่งที่ตรวจสอบของชุดข้อมูล'));
+  assert.ok(z.includes('ตัวกรองเดียวกันพบ 358 สาขาในพื้นที่อื่น'));
   assert.deepEqual(unplacedOf(rows), {noArea: 40, noProvince: 29, conflict: 1, total: 70});
 });
 
@@ -115,7 +115,7 @@ test('charts: districts by count, district × format matrix with equal cells, br
   const m = buildChartModel(rows, index, data.groups);
   assert.equal(m.areas.length, 20);
   assert.equal(m.totalAreas, 76);
-  assert.equal(m.placedRows, 282);
+  assert.equal(m.placedRows, 288);
   for (let i = 1; i < m.areas.length; i++) assert.ok(m.areas[i - 1].count >= m.areas[i].count);
   const mx = areaMatrix(m);
   assert.equal(mx.cells.length, 12 * data.groups.length);

@@ -81,12 +81,15 @@ export const SOURCE_TYPE_TH = Object.freeze({
   official_operator_social: 'โซเชียลทางการ', official_operator_facebook: 'Facebook ทางการ', official_facebook_rendered: 'Facebook ทางการ',
   official_operator_facebook_closure_notice: 'ประกาศบน Facebook ทางการ', official_line_oa: 'LINE ทางการ', official_linktree: 'Linktree ทางการ',
   official_company_profile_index: 'หน้าบริษัททางการ', official_host_directory: 'รายชื่อร้านของศูนย์การค้า',
+  leasing_agent_statement: 'ข้อมูลจากตัวแทนให้เช่าพื้นที่', published_branch_launch: 'ข่าวเปิดสาขา',
+  business_map_listing: 'รายการสถานที่บนแผนที่',
 });
 export const POINT_ROLE_TH = Object.freeze({
   store_source_point: 'จุดที่หน้าทางการของสาขาเผยแพร่',
   operator_published_map_destination_point: 'จุดปลายทางแผนที่ที่ผู้ดำเนินงานเผยแพร่',
   official_social_profile_map_point_historical: 'จุดจากโปรไฟล์โซเชียลทางการ',
   host_registry_reference_point: 'ตำแหน่งอ้างอิงของศูนย์การค้าในทะเบียน CityMETER ไม่ใช่ทางเข้าสาขา',
+  external_host_reference_point: 'ตำแหน่งอ้างอิงของอาคาร',
 });
 /** Branch-list coverage of a brand (01_BRANDS.branch_coverage). Counts stay ours, never in the label. */
 export const COVERAGE_TH = Object.freeze({
@@ -104,7 +107,7 @@ export const COVERAGE_TH = Object.freeze({
 export const coverageLabel = code => COVERAGE_TH[code] || (String(code).startsWith('full') ? 'ครบตามแหล่งทางการ' : String(code).startsWith('partial') ? 'บางส่วน' : 'ตามแหล่งทางการ');
 const STATUS_ORDER = ['listed', 'announced', 'closed', 'review'];
 const STATUS_UNIT = Object.freeze({
-  listed: 'สาขาที่หน้าทางการของแบรนด์ยังแสดง ณ วันตรวจ',
+  listed: 'สาขาที่แหล่งที่ตรวจสอบยังระบุ ณ วันตรวจ',
   announced: 'สาขาที่แหล่งทางการประกาศว่าจะเปิด ณ วันตรวจ',
   closed: 'สาขาที่แหล่งทางการแจ้งว่าปิดแล้ว',
   review: 'สาขาที่สถานะในแหล่งยังไม่ชัด',
@@ -122,12 +125,13 @@ export function statusPill(status, raw = '') {
 export function provenance(ctx = {}, boundary = '') {
   const meta = ctx.meta || {}, unit = ctx.unit || {mode: 'listed', one: 'สาขา'};
   const brands = meta.readmeCheck?.brands;
+  const latest = meta.latestBranchCheck > meta.checkedOn ? ` · ตรวจเพิ่มบางสาขา ${esc(thaiDate(meta.latestBranchCheck))}` : '';
   const clause = unit.mode === 'listed'
     ? `สาขา = ${STATUS_UNIT.listed}${brands ? ` · ${num(brands)} แบรนด์ในชุดข้อมูล ไม่ใช่ทุกฟิตเนสในประเทศ` : ''}`
     : unit.mode === 'all'
       ? 'รายการ = ทุกแถวในชุดข้อมูลทุกสถานะ ไม่ใช่จำนวนสาขาที่เปิด'
       : `รายการ = ${STATUS_UNIT[unit.mode] || 'แถวในชุดข้อมูล'} · นับแยกจากสาขาที่เปิดตามแหล่ง`;
-  return `<p class="hint panel-foot provenance"><span>ชุดข้อมูล CityMETER Fitness</span> · <span>แหล่ง หน้าทางการของแต่ละแบรนด์</span> · <span>ตรวจ ${esc(thaiDate(meta.checkedOn || ''))}</span> · <span>ขอบเขต ${esc(boundary)}</span><br>${esc(clause)}</p>`;
+  return `<p class="hint panel-foot provenance"><span>ชุดข้อมูล CityMETER Fitness</span> · <span>แหล่ง หน้าทางการและหลักฐานรายสาขา</span> · <span>ตรวจ ${esc(thaiDate(meta.checkedOn || ''))}${latest}</span> · <span>ขอบเขต ${esc(boundary)}</span><br>${esc(clause)}</p>`;
 }
 
 /* ---------- shared fragments ---------- */
@@ -345,7 +349,7 @@ function selectionNote(p, place, ctx) {
   const unit = ctx.unit;
   const base = ctx.filtered
     ? `<span>0 ${esc(unit.one)}ภายใต้ตัวกรองนี้</span>`
-    : `<span>ไม่มีแบรนด์ใดในชุดข้อมูลที่หน้าทางการระบุ${esc(unit.one)}ในพื้นที่นี้ ณ วันตรวจ</span>`;
+    : `<span>ไม่พบ${esc(unit.one)}ในพื้นที่นี้ตามแหล่งที่ตรวจสอบของชุดข้อมูล</span>`;
   const elsewhere = p.scopeCount > 0
     ? `<span>ตัวกรองเดียวกันพบ <strong class="data-number">${num(p.scopeCount)}</strong> ${esc(unit.one)}ในพื้นที่อื่น</span><button type="button" class="btn quiet" data-action="leave-area">ดูพื้นที่ที่พบ</button>`
     : '';
@@ -443,6 +447,8 @@ export function renderStore(d, ctx = {}) {
   const prov = provinceName(r.province);
   const coords = hasPoint(r) ? `${r.latitude.toFixed(6)}, ${r.longitude.toFixed(6)}` : '';
   const host = r.pointRole === 'host_registry_reference_point';
+  const externalHost = r.pointRole === 'external_host_reference_point';
+  const attribution = externalHost ? ctx.meta?.externalHostPointAttribution : null;
   const areaChip = d.area
     ? `<button type="button" class="fact-chip" data-action="select-area" data-id="${esc(d.area.id)}"><i class="pictogram pic-area" aria-hidden="true"></i>${esc(w.area)}${esc(d.area.name)} · ${esc(prov)}</button>`
     : r.province ? `<button type="button" class="fact-chip" data-action="select-province" data-id="${esc(r.province)}"><i class="pictogram pic-province" aria-hidden="true"></i>${esc(prov)} · ระบุได้แค่จังหวัด</button>` : '<span class="fact-chip is-quiet">ไม่ระบุจังหวัด</span>';
@@ -458,19 +464,19 @@ export function renderStore(d, ctx = {}) {
   const ownerHost = r.ownerHost && host
     ? `<br><span class="hint">เจ้าของข้อมูลยืนยัน ${esc(thaiDate(r.ownerHost.on))} ว่าสาขาอยู่ใน ${esc(r.venue?.name || 'ศูนย์การค้านี้')}${r.ownerHost.sourcePointM ? ` · จุดที่หน้าทางการเผยแพร่ห่าง ${num(r.ownerHost.sourcePointM)} ม. จึงไม่ใช้` : ''}</span>` : '';
   const point = coords
-    ? `<span class="data-number">${esc(coords)}</span><br><span class="hint">${esc(POINT_ROLE_TH[r.pointRole] || 'จุดที่แหล่งเผยแพร่')}</span>${ownerHost}`
+    ? `<span class="data-number">${esc(coords)}</span><br><span class="hint">${esc(POINT_ROLE_TH[r.pointRole] || 'จุดที่แหล่งเผยแพร่')}${attribution ? ` · ${link(attribution.url, attribution.provider)} (${esc(attribution.license)})` : ''}</span>${ownerHost}`
     : '<span>แหล่งไม่เผยแพร่พิกัด</span><br><span class="hint">จึงไม่มีหมุดบนแผนที่ สาขายังนับอยู่ในพื้นที่ตามที่อยู่</span>';
-  const statusUrl = r.statusUrl && r.statusUrl !== r.url ? ` · ${link(r.statusUrl, 'หน้าที่ระบุสถานะ')}` : '';
+  const statusUrl = r.statusUrl && r.statusUrl !== r.url ? ` · ${link(r.statusUrl, 'ดูหลักฐานประกอบ')}` : '';
   return `<section class="detail-head store">
       <button type="button" class="btn quiet back" data-action="back">กลับ</button>
       <div class="identity">${brandLogoMarkup(r.brand, {size: 'lg', decorative: false})}<div>
         <p class="eyebrow eyebrow-cue">${cueMarkup(r.series)}${esc(d.group?.th || '')}${r.segmentTh && r.segmentTh !== d.group?.th ? ` · ${esc(r.segmentTh)}` : ''}</p>
         <h2>${r.brand ? `<button type="button" class="link-button title-link" data-action="filter-brand" data-value="${esc(r.brand.id)}" title="ดูทุกสาขาของแบรนด์นี้">${esc(brandName)}</button>` : esc(brandName)}</h2>
         ${branch ? `<p class="branch-name">${esc(branch)}</p>` : ''}</div></div>
-      <p class="store-status">${statusPill(r.status, r.statusRaw)}${r.url ? ` ${link(r.url, 'หน้าแหล่งทางการ', 'source-link chip-link')}` : ''}</p>
+      <p class="store-status">${statusPill(r.status, r.statusRaw)}${r.url ? ` ${link(r.url, 'ดูหลักฐานสาขา', 'source-link chip-link')}` : ''}</p>
       <div class="fact-chips">${areaChip}${venueChip}${buildingChip}${coords ? '' : '<span class="fact-chip is-quiet" title="แหล่งไม่เผยแพร่พิกัด จึงไม่มีหมุดบนแผนที่">ไม่มีพิกัดจากแหล่ง</span>'}</div>
       ${actionBar({kind: 'store', row: r, area: d.area ? {place: `${w.area}${d.area.name}`, province: prov} : r.province ? {place: '', province: prov} : null,
-        point: hasPoint(r) ? {lat: r.latitude, lon: r.longitude, role: host ? 'host' : 'point'} : null})}
+        point: hasPoint(r) ? {lat: r.latitude, lon: r.longitude, role: host || externalHost ? 'host' : 'point'} : null})}
       <details class="source-details"><summary>แหล่ง สถานะ และพิกัด</summary>
         <dl class="facts">
           <dt>สถานะ</dt><dd>${esc(STATUS_RAW_TH[r.statusRaw] || STATUS_TH[r.status] || '')}${statusUrl}</dd>
