@@ -39,6 +39,7 @@ npm test    # unit tests บนข้อมูลจริง (node --test)
 - พิกัดมี 158 แถว (27 จุดของสาขาจากแหล่ง · 130 จุดอ้างอิงของศูนย์การค้า · 1 จุดอ้างอิงอาคาร AIA East Gateway จาก OpenStreetMap) · ชีตมีพิกัดจากแหล่ง 29 จุด หนึ่งจุดไม่ใช้เพราะเจ้าของข้อมูลยืนยันว่าสาขาอยู่ในศูนย์ที่ผูกไว้ (`meta.ownerConfirmedHost`) · ชีตผูกสาขากับศูนย์การค้าในทะเบียน CityMETER ด้วยรหัสเท่านั้น: 147 แถว 128 แห่ง (0.3.0 ผูกเพิ่ม 139 แถวจากหลักฐาน เขียนลงชีตวิจัยแล้วอ่านกลับยืนยัน) · 19 แถวพักไว้รอตรวจ
 - **The Fitness Platinum** มี 7 สาขาที่แหล่งระบุในรอบนี้ สาขาบางนาใช้จุดอ้างอิง AIA East Gateway จาก [© OpenStreetMap contributors (ODbL)](https://www.openstreetmap.org/copyright) · ข้อมูลผู้ดำเนินการและคู่แข่งรายสาขาอยู่ในชีตวิจัย
 - โลโก้ใช้ระบุแบรนด์ข้างชื่อ ไม่ใช่ใบอนุญาตเครื่องหมายการค้า: ไฟล์ต้นฉบับ หรือย่อขนาด/ตัดขอบใสที่บันทึกวิธีและ SHA-256 ไว้ (`data/brand-logos.json`)
+- โลโก้ศูนย์ 14 แห่งที่ทะเบียนยังไม่มี มาจาก CityMETER · Camera Shops ด้วยรหัสสถานที่เดียวกัน (รุ่น 0.6.0, ชุดกลาง `scripts/logo-kit/`) — [DATA_METHOD.md §7.1](DATA_METHOD.md)
 - ไม่คัดลอกที่อยู่ เบอร์โทร ลิงก์แผนที่ หรือบันทึกของนักวิจัย
 - รายละเอียด: [DATA_METHOD.md](DATA_METHOD.md) · [docs/CHART_SELECTION.md](docs/CHART_SELECTION.md) · [docs/BUILD_CARD.md](docs/BUILD_CARD.md) · Product Statement: [PRODUCT_STATEMENT.md](PRODUCT_STATEMENT.md)
 

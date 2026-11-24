@@ -1,0 +1,199 @@
+{
+ "meta": {
+  "schemaVersion": "1",
+  "kit": "citymeter-logos 1.1.0",
+  "checkedOn": "2026-11-24",
+  "rule": "A venue the registry (data/venue-logos.json) leaves without a logo takes the logo another CityMETER demo links to the same venue id (scId): one artwork with one role, else none; never by name or distance",
+  "rights": "โลโก้ใช้ระบุชื่อสถานที่บนจอ ไม่เปลี่ยนการนับ การรวบรวมไฟล์ไม่ใช่ใบอนุญาตเครื่องหมายการค้า สิทธิ์ยังเป็นของเจ้าของ",
+  "inputs": {
+   "fitnessSha256": "c72bcc31aa8a88155b1cecbfe881aae643094bbbb7af8d95841447557e1155e6",
+   "registrySha256": "07051a297108eec8724469e29ab2fccfabe7a60bf52aa7a8b8b8b868b794e7be"
+  },
+  "pool": {
+   "kit": "citymeter-logos 1.1.0",
+   "files": 264,
+   "venues": 163,
+   "sources": {
+    "shoppingcenter": {
+     "commit": "75c1733e2b7a6f0a40ac0ff8454ed671ba4f76c3",
+     "files": 113,
+     "links": 118,
+     "issues": 0
+    },
+    "camera": {
+     "commit": "f38d405386415795144b3214b97be1a0e1432ca3",
+     "files": 22,
+     "links": 105,
+     "issues": 0
+    },
+    "luxurybrands": {
+     "commit": "1496b942e8453c6de44019591672bcf8890dcb92",
+     "files": 2,
+     "links": 29,
+     "issues": 0
+    },
+    "fitness": {
+     "commit": "e82a7dff859c4b87fa8825b331c7a41cee9ec5e7",
+     "files": 20,
+     "links": 57,
+     "issues": 0
+    },
+    "grocery": {
+     "commit": "549be8969a89335ef8b769ef28aa124099fd5fdb",
+     "files": 34,
+     "links": 0,
+     "issues": 0
+    },
+    "restaurant": {
+     "commit": "8ed9b4b5cb1854ce943130c6232489cab393a22e",
+     "files": 73,
+     "links": 0,
+     "issues": 0
+    }
+   }
+  },
+  "counts": {
+   "venues": 128,
+   "withOwnLogo": 57,
+   "added": 14,
+   "byDemo": {
+    "camera": 14
+   },
+   "ambiguous": 0,
+   "roleConflict": 0,
+   "none": 57,
+   "noScId": 0
+  },
+  "filesRemoved": []
+ },
+ "logos": [
+  {
+   "key": "FVL-11befc263edb79a6",
+   "file": "assets/venue-logos-family/11befc263edb79a6ac64.png",
+   "mime": "image/png",
+   "bytes": 18792,
+   "sha256": "11befc263edb79a6ac64e7e15f207fb9ec51e2c291f995bd999f3f712ec948c9",
+   "width": 1146,
+   "height": 313,
+   "background": "#E5E9E6",
+   "role": "venue_specific",
+   "sourcePage": "https://www.ayutthayacitypark.com/",
+   "from": "camera",
+   "sourcePath": "assets/venue-logos/11befc263edb79a6.png"
+  },
+  {
+   "key": "FVL-5e4716d582687257",
+   "file": "assets/venue-logos-family/5e4716d582687257c83f.svg",
+   "mime": "image/svg+xml",
+   "bytes": 9583,
+   "sha256": "5e4716d582687257c83f134ed4e771b15b1315dc2b394daa7660c5126f767496",
+   "width": 160,
+   "height": 80,
+   "background": "#182327",
+   "role": "venue_specific",
+   "sourcePage": "https://seaconsquare.com/",
+   "from": "camera",
+   "sourcePath": "assets/venue-logos/5e4716d582687257.svg"
+  },
+  {
+   "key": "FVL-9928001dcd4d3593",
+   "file": "assets/venue-logos-family/9928001dcd4d35930c5c.png",
+   "mime": "image/png",
+   "bytes": 7525,
+   "sha256": "9928001dcd4d35930c5c38b8697444d2b985220c165f0175f43fbe4156f40f06",
+   "width": 270,
+   "height": 53,
+   "background": "#E5E9E6",
+   "role": "venue_specific",
+   "sourcePage": "https://marketvillage.homepro.co.th/suvarnabhumi/en/",
+   "from": "camera",
+   "sourcePath": "assets/venue-logos/9928001dcd4d3593.png"
+  },
+  {
+   "key": "FVL-aca01da96ad2787b",
+   "file": "assets/venue-logos-family/aca01da96ad2787b6e0c.png",
+   "mime": "image/png",
+   "bytes": 11921,
+   "sha256": "aca01da96ad2787b6e0c6b3de91fe47fc701ca144508c5ea077489e69be740cb",
+   "width": 551,
+   "height": 612,
+   "background": "#E5E9E6",
+   "role": "shared_chain_banner",
+   "sourcePage": "https://www.centralretail.com/en/brands/115/robinson-lifestyle",
+   "from": "camera",
+   "sourcePath": "assets/venue-logos/aca01da96ad2787b.png"
+  },
+  {
+   "key": "FVL-bf56403c653a14f8",
+   "file": "assets/venue-logos-family/bf56403c653a14f82c29.png",
+   "mime": "image/png",
+   "bytes": 7543,
+   "sha256": "bf56403c653a14f82c29d60026129c2be38f075085ac864fd5d0b157de2ac7d9",
+   "width": 1196,
+   "height": 84,
+   "background": "#E5E9E6",
+   "role": "parent_complex",
+   "sourcePage": "https://www.futurepark.co.th/",
+   "from": "camera",
+   "sourcePath": "assets/venue-logos/bf56403c653a14f8.png"
+  },
+  {
+   "key": "FVL-c1f03476f818f63a",
+   "file": "assets/venue-logos-family/c1f03476f818f63ac134.png",
+   "mime": "image/png",
+   "bytes": 3041,
+   "sha256": "c1f03476f818f63ac134f47d8e66975fac014a44777aebb639bebe491789ab9b",
+   "width": 194,
+   "height": 39,
+   "background": "#182327",
+   "role": "venue_specific",
+   "sourcePage": "https://marketvillage.homepro.co.th/hua-hin/en/",
+   "from": "camera",
+   "sourcePath": "assets/venue-logos/c1f03476f818f63a.png"
+  },
+  {
+   "key": "FVL-dcebd3735d6a3d0e",
+   "file": "assets/venue-logos-family/dcebd3735d6a3d0e5e3b.png",
+   "mime": "image/png",
+   "bytes": 11254,
+   "sha256": "dcebd3735d6a3d0e5e3bab11c8afdc3aa431d7be63cfca2b3137ac05bcdb6e94",
+   "width": 800,
+   "height": 251,
+   "background": "#182327",
+   "role": "venue_specific",
+   "sourcePage": "https://shoppingcenter.centralpattana.co.th/branch/central-si-racha/",
+   "from": "camera",
+   "sourcePath": "assets/venue-logos/dcebd3735d6a3d0e.png"
+  },
+  {
+   "key": "FVL-e3e5f7bc9461c59d",
+   "file": "assets/venue-logos-family/e3e5f7bc9461c59d4476.svg",
+   "mime": "image/svg+xml",
+   "bytes": 7844,
+   "sha256": "e3e5f7bc9461c59d44768dd7584117625cf10e7c1a49c0f3f4dbbb89a6d33645",
+   "width": 306,
+   "height": 118,
+   "background": "#E5E9E6",
+   "role": "venue_specific",
+   "sourcePage": "https://www.centralkhonkaencampus.com/en",
+   "from": "camera",
+   "sourcePath": "assets/venue-logos/e3e5f7bc9461c59d.svg"
+  }
+ ],
+ "venues": {
+  "SC-001360": "FVL-5e4716d582687257",
+  "SC-002950": "FVL-e3e5f7bc9461c59d",
+  "SC-003680": "FVL-dcebd3735d6a3d0e",
+  "SC-006510": "FVL-aca01da96ad2787b",
+  "SC-007290": "FVL-bf56403c653a14f8",
+  "SC-008030": "FVL-11befc263edb79a6",
+  "SC-012142": "FVL-9928001dcd4d3593",
+  "SC-016126": "FVL-aca01da96ad2787b",
+  "SC-C0063": "FVL-aca01da96ad2787b",
+  "SC-C0079": "FVL-aca01da96ad2787b",
+  "SC-C0316": "FVL-c1f03476f818f63a",
+  "SC-C0423": "FVL-aca01da96ad2787b",
+  "SC-C0596": "FVL-aca01da96ad2787b",
+  "SC-C2443": "FVL-aca01da96ad2787b"
+ }
+}
