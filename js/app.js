@@ -1550,6 +1550,7 @@ const PARTIAL = {
   'basemap': ['แผนที่ฐาน', 'ถนน แหล่งน้ำ และอาคารพื้นหลังอาจไม่แสดง ข้อมูลในแผงและตารางยังใช้ได้', 'Basemap', 'Roads, water and background buildings may be missing; the panel and the table still work'],
   'data/brand-logos.json': ['โลโก้แบรนด์', 'แสดงชื่อแทนโลโก้', 'Brand logos', 'Names are shown instead of logos'],
   'data/venue-logos.json': ['โลโก้สถานที่', 'แสดงชื่อแทนโลโก้', 'Venue logos', 'Names are shown instead of logos'],
+  'data/venue-logo-links.json': ['โลโก้ศูนย์จากชุดข้อมูลอื่น', 'ศูนย์ที่โลโก้มาจากชุดข้อมูลอื่นแสดงชื่ออย่างเดียว', 'Centre logos from other datasets', 'Centres whose logo comes from another dataset are shown by name only'],
 };
 function partial(key) {
   const words = PARTIAL[key];
@@ -1565,11 +1566,12 @@ async function init() {
       fetchJSON('data/provinces.geojson', {timeout: 30000}).catch(e => { partial('data/provinces.geojson'); console.warn('Province frames unavailable', e); return null; }),
     ]);
     // Logos are identity support: a missing or invalid registry only means no logos (names stay).
-    const [brandLogos, venueLogos] = await Promise.all([
+    const [brandLogos, venueLogos, venueLinks] = await Promise.all([
       fetchJSON('data/brand-logos.json').catch(e => { partial('data/brand-logos.json'); console.warn('Brand logos unavailable', e); return null; }),
       fetchJSON('data/venue-logos.json').catch(e => { partial('data/venue-logos.json'); console.warn('Venue logos unavailable', e); return null; }),
+      fetchJSON('data/venue-logo-links.json').catch(e => { partial('data/venue-logo-links.json'); console.warn('Venue logo links unavailable', e); return null; }),
     ]);
-    state.logos = configureLogos({brandLogos, venueLogos});
+    state.logos = configureLogos({brandLogos, venueLogos, venueLinks});
     if (!Array.isArray(indexJSON?.provinces) || !indexJSON.provinces.length || !Array.isArray(indexJSON?.areas?.id)) {
       const e = new Error('Invalid area index'); e.resource = 'data/area-index.json'; e.phase = 'data-schema'; throw e;
     }

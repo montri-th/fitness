@@ -10,10 +10,10 @@
  * recommended surface and is the same in the light and dark themes; a missing or invalid logo only means no logo.
  * Files load lazily (an <img> per use, cached by the browser).
  */
-const FILE = /^assets\/(brand|venue)-logos\/[A-Za-z0-9._-]+\.(svg|png|jpe?g|webp)$/;
+const FILE = /^assets\/(brand-logos|venue-logos|venue-logos-family)\/[A-Za-z0-9._-]+\.(svg|png|jpe?g|webp)$/;
 const MIME = new Set(['image/svg+xml', 'image/png', 'image/jpeg', 'image/webp']);
 const HEX = /^#[0-9A-Fa-f]{6}$/;
-let brands = new Map(), venues = new Map(), issues = [];
+let brands = new Map(), venues = new Map(), family = new Map(), issues = [];
 
 const esc = v => String(v ?? '').replace(/[&<>"']/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[c]));
 
@@ -32,9 +32,13 @@ function valid(r) {
   return r && FILE.test(r.file || '') && MIME.has(r.mime) && /^[a-f0-9]{64}$/.test(r.sha256 || '') && w > 0 && h > 0;
 }
 
-/** Load both registries (either may be null). Returns {brands, venues, issues}. */
-export function configureLogos({brandLogos = null, venueLogos = null} = {}) {
-  brands = new Map(); venues = new Map(); issues = [];
+/**
+ * Load both registries (either may be null), then the family links (data/venue-logo-links.json, kit citymeter-logos):
+ * venue logos another CityMETER demo verified for the same venue id (scId), used only for a venue the registry leaves
+ * without a logo. Returns {brands, venues, family, issues}.
+ */
+export function configureLogos({brandLogos = null, venueLogos = null, venueLinks = null} = {}) {
+  brands = new Map(); venues = new Map(); family = new Map(); issues = [];
   for (const r of brandLogos?.logos || []) {
     if (!valid(r) || !/^BR-FIT-[a-f0-9]{12}$/.test(r.brand || '') || !HEX.test(r.backing || '')) { issues.push({brand: r?.brand || '', reason: 'invalid_record'}); continue; }
     if (brands.has(r.brand)) { issues.push({brand: r.brand, reason: 'duplicate'}); continue; }
@@ -45,11 +49,17 @@ export function configureLogos({brandLogos = null, venueLogos = null} = {}) {
     if (!valid(r) || !/^[A-Za-z0-9._-]{3,80}$/.test(r.key || '')) { issues.push({venue: r?.key || '', reason: 'invalid_record'}); continue; }
     venues.set(r.key, Object.freeze({...r, ratio: r.width / r.height, backing: bg(r)}));
   }
-  return {brands: brands.size, venues: venues.size, issues: [...issues]};
+  const linked = new Map();
+  for (const r of venueLinks?.logos || []) {
+    if (!valid(r) || !/^FVL-[a-f0-9]{16}$/.test(r.key || '') || venues.has(r.key)) { issues.push({venue: r?.key || '', reason: 'invalid_link_record'}); continue; }
+    linked.set(r.key, Object.freeze({...r, ratio: r.width / r.height, backing: bg(r)}));
+  }
+  for (const [sc, key] of Object.entries(venueLinks?.venues || {})) if (linked.has(key)) family.set(sc, linked.get(key));
+  return {brands: brands.size, venues: venues.size, family: family.size, issues: [...issues]};
 }
 
 export const brandLogo = brand => (brand ? brands.get(typeof brand === 'string' ? brand : brand.id) || null : null);
-export const venueLogo = venue => (venue?.logo ? venues.get(venue.logo) || null : null);
+export const venueLogo = venue => (venue?.logo && venues.has(venue.logo) ? venues.get(venue.logo) : (venue?.scId && family.get(venue.scId)) || null);
 
 /** Chip box: height by size, width from the artwork's ratio (bounded so a square and a wide wordmark both read). */
 const SIZES = {xs: 18, sm: 22, md: 30, lg: 46};
